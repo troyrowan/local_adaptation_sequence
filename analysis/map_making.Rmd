@@ -1,0 +1,170 @@
+---
+title: "Map Creation"
+author: "Troy Rowan"
+date: "2020-07-09"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(rgdal)
+library(raster)
+library(fpc)
+library(RStoolbox)
+library(maps)
+library(ggthemes)
+```
+
+
+## Introduction
+This uses k-means clustering and 30-year normal climate variables to divide the United States into distinct ecoregions.
+
+
+
+###Reading in climate raster files
+These originate from the [Prism Climate Group's](https://prism.oregonstate.edu/normals/) website in .bil format 
+I was having issues with the rgdal package reading these or any other form, so had to read them and save as RDS files on Workstation (the only place where rgdal installs properly). SCP'd RDS files here, and these read in the individal environment variable rasters. 
+```{r}
+temp_raster = 
+  readRDS(
+    here::here("data", "prism_climate_data", "temp_raster.RDS"))
+
+precip_raster = 
+  readRDS(
+    here::here("data", "prism_climate_data", "precip_raster.RDS"))
+
+elev_raster = 
+  readRDS(
+    here::here("data", "prism_climate_data", "elev_raster.RDS"))
+
+dewpt_raster = 
+  readRDS(
+    here::here("data", "prism_climate_data", "mean_dwpt_raster.RDS")
+  )
+
+min_vap_raster = 
+  readRDS(
+    here::here("data", "prism_climate_data", "min_vpd_raster.RDS"))
+
+max_vap_raster = 
+  readRDS(
+    here::here("data", "prism_climate_data", "max_vpd_raster.RDS"))
+
+min_temp_raster = 
+  readRDS(
+    here::here("data", "prism_climate_data", "min_temp_raster.RDS"))
+
+max_temp_raster = 
+  readRDS(
+    here::here("data", "prism_climate_data", "max_temp_raster.RDS"))
+```
+
+```{r}
+stacked_raster = 
+  stack(
+    temp_raster,
+    precip_raster,
+    elev_raster,
+    dewpt_raster,
+    max_temp_raster,
+    min_temp_raster,
+    max_vap_raster,
+    min_vap_raster
+  ) 
+
+threevar_stacked_raster = 
+  stack(
+    temp_raster,
+    precip_raster,
+    elev_raster
+  )
+
+```
+
+###Identifying best K for full- and three-variable datasets
+Using fpc::pamk(), K between 3 and 20
+```{r}
+stacked_raster %>% 
+  as.data.frame() %>% 
+  na.omit() %>% 
+  sample_n(20000) %>% 
+  fviz_nbclust(FUNcluster = kmeans)
+  #pamk(krange = 3:20, criterion="multiasw", usepam=FALSE, scaling=TRUE)
+
+threevar_stacked_raster %>% 
+  as.data.frame() %>% 
+  na.omit() %>% 
+  sample_n(20000) %>% 
+  fviz_nbclust(FUNcluster = kmeans)
+  #pamk(krange = 3:20, criterion="multiasw", usepam=FALSE, scaling=TRUE)
+```
+
+
+```{r}
+all_vars = 
+  unsuperClass(stacked_raster,
+             nSamples=50000, 
+             nClasses = 9, 
+             norm=TRUE, 
+             nStarts=5, 
+             clusterMap=FALSE) %>% 
+  .$map %>% 
+  as.data.frame(xy=TRUE) %>% 
+  mutate(layer = as.factor(layer)) %>% 
+  kmeans_map()
+
+three_vars = 
+  unsuperClass(threevar_stacked_raster,
+               nSamples=50000, 
+               nClasses = 9, 
+               norm=TRUE, 
+               nStarts=5, 
+               clusterMap=FALSE) %>% 
+  .$map %>% 
+  as.data.frame(xy=TRUE) %>% 
+  mutate(layer = as.factor(layer)) %>% 
+  kmeans_map()
+  
+all_vars
+three_vars
+
+```
+
+
+
+```{r}
+#Originates from k-means clustering. Latitude, Longitude, Zone 
+#had to mutate zone names because new round of k-me
+regions = read_csv("/data/tnr343/local_adaptation/maps/coordinate_zones.csv") %>% 
+  mutate(ecoregion = case_when(zone == "1" ~ "2",
+                               zone == "2" ~ "6",
+                               zone == "3" ~ "8",
+                               zone == "4" ~ "1",
+                               zone == "5" ~ "9",
+                               zone == "6" ~ "7",
+                               zone == "7" ~ "5",
+                               zone == "8" ~ "4",
+                               zone == "9" ~ "3")) %>% 
+  mutate(ecoregion = as.factor(ecoregion))
+
+regions = 
+  read_csv("/data/tnr343/local_adaptation/maps/coordinate_zones.csv",
+           col_types = cols(ecoregion = col_factor()))
+
+#Matches colors up 
+region_colors = c("3"="springgreen3", "9"="slateblue2", "1"="tomato2", "5"="goldenrod1", "6"="gray50", "8"="gray17", "4"="brown", "2"="darkslategray4", "7"="deeppink3")
+region_names = c("1" = "Desert", "2" = "Southeast", "3" = "High Plains", "4" = "Rainforest", "5" = "Arid Prairie", "6" = "Foothills", "7" = "Forested\nMountains", "8" = "Fescue Belt", "9" = "Upper Midwest &\nNortheast")
+
+  ggplot(regions, aes(long, lat))+
+    geom_raster(aes(fill = ecoregion))+
+    scale_fill_manual("", values=redo_color, labels = region_names)+
+    geom_polygon(data = map_data("state"), aes(x = long, y = lat, group = group), color = "black", fill = NA)+
+    theme_map()+
+    theme(legend.position = "bottom",
+          legend.key.size = unit(1, "mm"),
+          legend.text = element_text(size = 5))
+  guides(fill = guide_legend(override.aes = list(size=8)))
+```
+
