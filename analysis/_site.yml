@@ -1,7 +1,7 @@
-name: "local_adaptation_sequence"
+name: local_adaptation_sequence
 output_dir: ../docs
 navbar:
-  title: "local_adaptation_sequence"
+  title: Local Adaptation in U.S. Beef Cattle
   left:
   - text: Home
     href: index.html
@@ -9,6 +9,10 @@ navbar:
     href: about.html
   - text: License
     href: license.html
+  right:
+  - icon: fa-github
+    text: Source code
+    href: https://github.com/troyrowan/local_adaptation_sequence
 output:
   workflowr::wflow_html:
     toc: yes
