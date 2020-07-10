@@ -157,7 +157,7 @@ threevar_stacked_raster %>%
 plotlist = readRDS(here::here("output", "kmeans_plotlist.RDS"))
 
 for (i in 1:length(plotlist)){
-  cat("####", i, " \n")
+  cat("###", i, " \n")
   print(plotlist[[i]])
   cat(' \n\n')
 }
