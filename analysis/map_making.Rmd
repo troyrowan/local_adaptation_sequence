@@ -100,7 +100,7 @@ threevar_stacked_raster =
 Using fpc::pamk(), K between 3 and 10
 This doesn't run, but appears that based on the fviz_nbclust() function in that the appropriate 
  
-It appears that k=2 is optimal 
+It appears that k=2 is optimal by these metrics, but for some reason this step exceeds memory necessary to add to website. 
 ```{r, eval=FALSE, warning=FALSE}
 stacked_raster %>% 
   as.data.frame() %>% 
@@ -119,7 +119,7 @@ threevar_stacked_raster %>%
   #pamk(krange = 3:20, criterion="multiasw", usepam=FALSE, scaling=TRUE)
 ```
 
-## K-means clustering climate maps
+## K-means clustering climate maps {.tabset}
 
 ```{r K-means Maps, fig.height=4, fig.width=12, warning=FALSE}
 
@@ -154,8 +154,13 @@ threevar_stacked_raster %>%
 #   
 # saveRDS(plotlist, "../output/kmeans_plotlist.RDS")
 
-readRDS(here::here("output", "kmeans_plotlist.RDS"))
+plotlist = readRDS(here::here("output", "kmeans_plotlist.RDS"))
 
+for (i in 1:length(plotlist)){
+  cat("####", i, " \n")
+  print(plotlist[[i]])
+  cat(' \n\n')
+}
 ```
 
 
