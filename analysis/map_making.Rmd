@@ -99,7 +99,7 @@ threevar_stacked_raster =
 
 Using fpc::pamk(), K between 3 and 10
 This doesn't run, but appears that based on the fviz_nbclust() function in that the appropriate 
-
+ 
 It appears that k=2 is optimal 
 ```{r, eval=FALSE, warning=FALSE}
 stacked_raster %>% 

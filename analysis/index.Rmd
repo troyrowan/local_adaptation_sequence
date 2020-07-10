@@ -10,4 +10,4 @@ editor_options:
 
 Welcome to my research website.
 
-Click [here]("map_making.html") to see how we made U.S. ecoregions with long-term climate data
+Click [here](map_making.html) to see how we made U.S. ecoregions with long-term climate data.
