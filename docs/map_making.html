@@ -516,16 +516,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree897d00b2c0844add07d793cc7f0081f08165028ctargetblank897d00ba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/897d00b2c0844add07d793cc7f0081f08165028c" target="_blank">897d00b</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree5dad0637747d3e9114621facadce6e7e2f823b1dtargetblank5dad063a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/5dad0637747d3e9114621facadce6e7e2f823b1d" target="_blank">5dad063</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree897d00b2c0844add07d793cc7f0081f08165028ctargetblank897d00ba" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree5dad0637747d3e9114621facadce6e7e2f823b1dtargetblank5dad063a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/897d00b2c0844add07d793cc7f0081f08165028c" target="_blank">897d00b</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/5dad0637747d3e9114621facadce6e7e2f823b1d" target="_blank">5dad063</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -536,7 +536,6 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
-    Untracked:  code/map_functions.R
     Untracked:  data/PRISM_ppt_30yr_normal_4kmM2_annual_asc.asc
     Untracked:  data/prism_climate_data/
     Untracked:  desktop.ini
@@ -580,6 +579,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/5dad0637747d3e9114621facadce6e7e2f823b1d/analysis/map_making.Rmd" target="_blank">5dad063</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-07-10
+</td>
+<td>
+Fixed tabset plotting for kmeans maps
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/troyrowan/local_adaptation_sequence/d64c6ee2f421a5fc6be96e3f6d7a5488e431e025/docs/map_making.html" target="_blank">d64c6ee</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-07-10
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -716,7 +749,7 @@ threevar_stacked_raster =
 <div id="identifying-best-k-for-full--and-three-variable-datasets" class="section level2">
 <h2>Identifying best K for full- and three-variable datasets</h2>
 <p>Using fpc::pamk(), K between 3 and 10 This doesn’t run, but appears that based on the fviz_nbclust() function in that the appropriate</p>
-<p>It appears that k=2 is optimal</p>
+<p>It appears that k=2 is optimal by these metrics, but for some reason this step exceeds memory necessary to add to website.</p>
 <pre class="r"><code>stacked_raster %&gt;% 
   as.data.frame() %&gt;% 
   na.omit() %&gt;% 
@@ -733,7 +766,7 @@ threevar_stacked_raster %&gt;%
   ggtitle(&quot;Three Environmental Variables &quot;)
   #pamk(krange = 3:20, criterion=&quot;multiasw&quot;, usepam=FALSE, scaling=TRUE)</code></pre>
 </div>
-<div id="k-means-clustering-climate-maps" class="section level2">
+<div id="k-means-clustering-climate-maps" class="section level2 tabset">
 <h2>K-means clustering climate maps</h2>
 <pre class="r"><code># plotlist =
 #   seq(2,10) %&gt;% 
@@ -766,32 +799,46 @@ threevar_stacked_raster %&gt;%
 #   
 # saveRDS(plotlist, &quot;../output/kmeans_plotlist.RDS&quot;)
 
-readRDS(here::here(&quot;output&quot;, &quot;kmeans_plotlist.RDS&quot;))</code></pre>
-<pre><code>[[1]]</code></pre>
+plotlist = readRDS(here::here(&quot;output&quot;, &quot;kmeans_plotlist.RDS&quot;))
+
+for (i in 1:length(plotlist)){
+  cat(&quot;####&quot;, i, &quot; \n&quot;)
+  print(plotlist[[i]])
+  cat(&#39; \n\n&#39;)
+}</code></pre>
+<pre><code>#### 1  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-1.png" width="1152" style="display: block; margin: auto;" /></p>
-<pre><code>
-[[2]]</code></pre>
+<pre><code> 
+
+#### 2  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-2.png" width="1152" style="display: block; margin: auto;" /></p>
-<pre><code>
-[[3]]</code></pre>
+<pre><code> 
+
+#### 3  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-3.png" width="1152" style="display: block; margin: auto;" /></p>
-<pre><code>
-[[4]]</code></pre>
+<pre><code> 
+
+#### 4  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-4.png" width="1152" style="display: block; margin: auto;" /></p>
-<pre><code>
-[[5]]</code></pre>
+<pre><code> 
+
+#### 5  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-5.png" width="1152" style="display: block; margin: auto;" /></p>
-<pre><code>
-[[6]]</code></pre>
+<pre><code> 
+
+#### 6  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-6.png" width="1152" style="display: block; margin: auto;" /></p>
-<pre><code>
-[[7]]</code></pre>
+<pre><code> 
+
+#### 7  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-7.png" width="1152" style="display: block; margin: auto;" /></p>
-<pre><code>
-[[8]]</code></pre>
+<pre><code> 
+
+#### 8  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-8.png" width="1152" style="display: block; margin: auto;" /></p>
-<pre><code>
-[[9]]</code></pre>
+<pre><code> 
+
+#### 9  </code></pre>
 <p><img src="figure/map_making.Rmd/K-means%20Maps-9.png" width="1152" style="display: block; margin: auto;" /></p>
 <br>
 <p>
