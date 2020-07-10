@@ -2,12 +2,17 @@
 title: "Map Creation"
 author: "Troy Rowan"
 date: "2020-07-09"
-output: workflowr::wflow_html
+output: 
+  html_document:
+    code_folding: show
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
-```{r}
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(workflowr)
 library(tidyverse)
 library(rgdal)
 library(raster)
@@ -15,6 +20,11 @@ library(fpc)
 library(RStoolbox)
 library(maps)
 library(ggthemes)
+library(cowplot)
+library(purrr)
+library(factoextra)
+source(here::here("code", "map_functions.R"))
+
 ```
 
 
@@ -23,10 +33,11 @@ This uses k-means clustering and 30-year normal climate variables to divide the 
 
 
 
-###Reading in climate raster files
+## Reading in climate raster files
+
 These originate from the [Prism Climate Group's](https://prism.oregonstate.edu/normals/) website in .bil format 
 I was having issues with the rgdal package reading these or any other form, so had to read them and save as RDS files on Workstation (the only place where rgdal installs properly). SCP'd RDS files here, and these read in the individal environment variable rasters. 
-```{r}
+```{r, eval=TRUE, warning=FALSE}
 temp_raster = 
   readRDS(
     here::here("data", "prism_climate_data", "temp_raster.RDS"))
@@ -61,7 +72,7 @@ max_temp_raster =
     here::here("data", "prism_climate_data", "max_temp_raster.RDS"))
 ```
 
-```{r}
+```{r, eval=TRUE, echo=TRUE, warning=FALSE}
 stacked_raster = 
   stack(
     temp_raster,
@@ -83,88 +94,69 @@ threevar_stacked_raster =
 
 ```
 
-###Identifying best K for full- and three-variable datasets
-Using fpc::pamk(), K between 3 and 20
-```{r}
+
+## Identifying best K for full- and three-variable datasets
+
+Using fpc::pamk(), K between 3 and 10
+This doesn't run, but appears that based on the fviz_nbclust() function in that the appropriate 
+
+It appears that k=2 is optimal 
+```{r, eval=FALSE, warning=FALSE}
 stacked_raster %>% 
   as.data.frame() %>% 
   na.omit() %>% 
   sample_n(20000) %>% 
-  fviz_nbclust(FUNcluster = kmeans)
+  fviz_nbclust(FUNcluster = kmeans)+
+  ggtitle("Full Environmental Data")
   #pamk(krange = 3:20, criterion="multiasw", usepam=FALSE, scaling=TRUE)
 
 threevar_stacked_raster %>% 
   as.data.frame() %>% 
   na.omit() %>% 
   sample_n(20000) %>% 
-  fviz_nbclust(FUNcluster = kmeans)
+  fviz_nbclust(FUNcluster = kmeans)+
+  ggtitle("Three Environmental Variables ")
   #pamk(krange = 3:20, criterion="multiasw", usepam=FALSE, scaling=TRUE)
 ```
 
+## K-means clustering climate maps
 
-```{r}
-all_vars = 
-  unsuperClass(stacked_raster,
-             nSamples=50000, 
-             nClasses = 9, 
-             norm=TRUE, 
-             nStarts=5, 
-             clusterMap=FALSE) %>% 
-  .$map %>% 
-  as.data.frame(xy=TRUE) %>% 
-  mutate(layer = as.factor(layer)) %>% 
-  kmeans_map()
+```{r K-means Maps, fig.height=4, fig.width=12, warning=FALSE}
 
-three_vars = 
-  unsuperClass(threevar_stacked_raster,
-               nSamples=50000, 
-               nClasses = 9, 
-               norm=TRUE, 
-               nStarts=5, 
-               clusterMap=FALSE) %>% 
-  .$map %>% 
-  as.data.frame(xy=TRUE) %>% 
-  mutate(layer = as.factor(layer)) %>% 
-  kmeans_map()
-  
-all_vars
-three_vars
+# plotlist =
+#   seq(2,10) %>% 
+#   purrr::map(
+#   ~plot_grid(
+#     unsuperClass(stacked_raster,
+#                nSamples=1000,
+#                nClasses = .x,
+#                norm=TRUE,
+#                nStarts=5,
+#                clusterMap=FALSE) %>%
+#     .$map %>%
+#     as.data.frame(xy=TRUE) %>%
+#     mutate(layer = as.factor(layer)) %>%
+#     kmeans_map()+
+#       ggtitle(paste("All Variables, k =", .x)),
+#     unsuperClass(threevar_stacked_raster,
+#                  nSamples=1000,
+#                  nClasses = .x,
+#                  norm=TRUE,
+#                  nStarts=5,
+#                  clusterMap=FALSE) %>%
+#     .$map %>%
+#     as.data.frame(xy=TRUE) %>%
+#     mutate(layer = as.factor(layer)) %>%
+#     kmeans_map()+
+#       ggtitle(paste("Three Variables, k =", .x))
+#     )
+#   )
+#   
+# saveRDS(plotlist, "../output/kmeans_plotlist.RDS")
+
+readRDS(here::here("output", "kmeans_plotlist.RDS"))
 
 ```
 
 
-
-```{r}
-#Originates from k-means clustering. Latitude, Longitude, Zone 
-#had to mutate zone names because new round of k-me
-regions = read_csv("/data/tnr343/local_adaptation/maps/coordinate_zones.csv") %>% 
-  mutate(ecoregion = case_when(zone == "1" ~ "2",
-                               zone == "2" ~ "6",
-                               zone == "3" ~ "8",
-                               zone == "4" ~ "1",
-                               zone == "5" ~ "9",
-                               zone == "6" ~ "7",
-                               zone == "7" ~ "5",
-                               zone == "8" ~ "4",
-                               zone == "9" ~ "3")) %>% 
-  mutate(ecoregion = as.factor(ecoregion))
-
-regions = 
-  read_csv("/data/tnr343/local_adaptation/maps/coordinate_zones.csv",
-           col_types = cols(ecoregion = col_factor()))
-
-#Matches colors up 
-region_colors = c("3"="springgreen3", "9"="slateblue2", "1"="tomato2", "5"="goldenrod1", "6"="gray50", "8"="gray17", "4"="brown", "2"="darkslategray4", "7"="deeppink3")
-region_names = c("1" = "Desert", "2" = "Southeast", "3" = "High Plains", "4" = "Rainforest", "5" = "Arid Prairie", "6" = "Foothills", "7" = "Forested\nMountains", "8" = "Fescue Belt", "9" = "Upper Midwest &\nNortheast")
-
-  ggplot(regions, aes(long, lat))+
-    geom_raster(aes(fill = ecoregion))+
-    scale_fill_manual("", values=redo_color, labels = region_names)+
-    geom_polygon(data = map_data("state"), aes(x = long, y = lat, group = group), color = "black", fill = NA)+
-    theme_map()+
-    theme(legend.position = "bottom",
-          legend.key.size = unit(1, "mm"),
-          legend.text = element_text(size = 5))
-  guides(fill = guide_legend(override.aes = list(size=8)))
-```
 

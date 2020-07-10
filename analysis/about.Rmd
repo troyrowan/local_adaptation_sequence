@@ -1,10 +1,12 @@
 ---
 title: "About"
 output:
+  html_document:
+    code_folding: show
   workflowr::wflow_html:
     toc: false
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 This analysis builds on work from [Rowan et al. 2020: Powerful detection of polygenic selection and environmental adaptation in U.S. beef cattle](https://www.biorxiv.org/content/10.1101/2020.03.11.988121v3)
