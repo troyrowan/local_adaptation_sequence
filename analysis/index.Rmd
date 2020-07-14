@@ -8,6 +8,9 @@ editor_options:
   chunk_output_type: inline
 ---
 
-Welcome to my research website.
+Welcome to the Local Adaptation Sequence-Level Analysis Project Site
 
-Click [here](map_making.html) to see how we made U.S. ecoregions with long-term climate data.
+
+[Map Making](map_making.html): This describes how we used long-term climate data to break the United States into distinct ecoregions.
+
+
