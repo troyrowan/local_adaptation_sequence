@@ -13,6 +13,7 @@ editor_options:
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(workflowr)
+library(knitr)
 library(tidyverse)
 library(rgdal)
 library(raster)
@@ -24,7 +25,8 @@ library(cowplot)
 library(purrr)
 library(factoextra)
 source(here::here("code", "map_functions.R"))
-
+library(corrr)
+library(ggcorrplot)
 ```
 
 
@@ -94,13 +96,58 @@ threevar_stacked_raster =
 
 ```
 
+## Environmental varible correlations
+
+### Numerical Correlations for complete environmental data 
+```{r}
+env_correlations = 
+  stacked_raster %>% 
+    as.data.frame() %>% 
+    rename("Temperature" = "band1.1",
+      "Precipitation" = "band1.2",
+      "Elevation" = "band1.3",
+      "DewPoint" = "band1.4",
+      "MaxTemperature" = "band1.5",
+      "MinTemperature" = "band1.6",
+      "MaxVaporPressure" = "band1.7",
+      "MinVaporPressure" = "band1.8") %>% 
+    na.omit() %>% 
+    cor()
+
+env_correlations_p_values = 
+  stacked_raster %>% 
+    as.data.frame() %>% 
+    rename("Temperature" = "band1.1",
+      "Precipitation" = "band1.2",
+      "Elevation" = "band1.3",
+      "DewPoint" = "band1.4",
+      "MaxTemperature" = "band1.5",
+      "MinTemperature" = "band1.6",
+      "MaxVaporPressure" = "band1.7",
+      "MinVaporPressure" = "band1.8") %>% 
+    na.omit() %>% 
+  cor_pmat()
+
+kable(round(env_correlations, 3))
+```
+
+
+### Correlation heat plots
+This plot uses heirchical clustering to group variables
+
+
+```{r}
+ggcorrplot(env_correlations,
+           hc.order = TRUE)
+```
+
 
 ## Identifying best K for full- and three-variable datasets
 
 Using fpc::pamk(), K between 3 and 10
 This doesn't run, but appears that based on the fviz_nbclust() function in that the appropriate 
  
-It appears that k=2 is optimal by these metrics, but for some reason this step exceeds memory necessary to add to website. 
+It appears that k=2 is optimal by these metrics, but for some reason this step exceeds memory necessary to add to website. While K = 2 may be optimal in a statistical sense, it doesn't necessarily mean that it's useful for our analysis (being able to group individuals into subpopulations)
 ```{r, eval=FALSE, warning=FALSE}
 stacked_raster %>% 
   as.data.frame() %>% 
@@ -120,7 +167,11 @@ threevar_stacked_raster %>%
 ```
 
 ## K-means clustering climate maps {.tabset}
+These are the resulting maps from using the full PRISM dataset (all 8 variables) or just three (Temperature, Precipitation, Elevation).
 
+Here, since this is a completely stochastic process, colors don't have any meaning between K's or between all data vs. three variables. 
+
+I'm particulary intersted in how K=10 breaks out the "Fescue Belt" in both the ALL and Three variable cases. 
 ```{r K-means Maps, fig.height=4, fig.width=12, warning=FALSE}
 
 # plotlist =
@@ -154,13 +205,69 @@ threevar_stacked_raster %>%
 #   
 # saveRDS(plotlist, "../output/kmeans_plotlist.RDS")
 
-plotlist = readRDS(here::here("output", "kmeans_plotlist.RDS"))
 
-for (i in 1:length(plotlist)){
-  cat("###", i, " \n")
-  print(plotlist[[i]])
-  cat(' \n\n')
-}
+plotlist = readRDS(here::here("output", "kmeans_plotlist.RDS"))
+# 
+# for (i in 1:length(plotlist)){
+#   cat("### ", i)
+#   print(plotlist[[i]])
+#   #cat(' \n\n')
+# }
+```
+
+### K = 2
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[1]]
+```
+
+### K = 3
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[2]]
+```
+
+### K = 4
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[3]]
+```
+
+### K = 5
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[4]]
+```
+
+### K = 6
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[5]]
+```
+
+### K = 7
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[6]]
+```
+
+### K = 8
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[7]]
+```
+
+### K = 9
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[8]]
+```
+
+
+### K = 10
+
+```{r, fig.height=4, fig.width=12, warning=FALSE}
+plotlist[[9]]
 ```
 
 
