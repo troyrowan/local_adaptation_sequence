@@ -425,7 +425,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-07-14
+<strong>Last updated:</strong> 2020-07-28
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -516,16 +516,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreebb4e504637382e90be2e4bdc45adebecfebf6bb3targetblankbb4e504a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/bb4e504637382e90be2e4bdc45adebecfebf6bb3" target="_blank">bb4e504</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree31b23afe36e6e218f680c7d2a7943ac332ae5990targetblank31b23afa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/31b23afe36e6e218f680c7d2a7943ac332ae5990" target="_blank">31b23af</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreebb4e504637382e90be2e4bdc45adebecfebf6bb3targetblankbb4e504a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree31b23afe36e6e218f680c7d2a7943ac332ae5990targetblank31b23afa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/bb4e504637382e90be2e4bdc45adebecfebf6bb3" target="_blank">bb4e504</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/31b23afe36e6e218f680c7d2a7943ac332ae5990" target="_blank">31b23af</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -541,9 +541,6 @@ Untracked files:
     Untracked:  desktop.ini
     Untracked:  output/desktop.ini
     Untracked:  output/kmeans_plotlist.RDS
-
-Unstaged changes:
-    Modified:   analysis/index.Rmd
 
 </code></pre>
 <p>
@@ -582,6 +579,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/31b23afe36e6e218f680c7d2a7943ac332ae5990/analysis/map_making.Rmd" target="_blank">31b23af</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-07-28
+</td>
+<td>
+Added environmental variable PCA
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/troyrowan/local_adaptation_sequence/3b006f8bad62b4ce8b12907048469f63fe9b0c6d/docs/map_making.html" target="_blank">3b006f8</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-07-14
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -964,6 +995,26 @@ kable(round(env_correlations, 3))</code></pre>
 <p><img src="figure/map_making.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
+<div id="pca-of-all-prism-environmental-variables" class="section level2 tabset">
+<h2>PCA of all PRISM environmental variables</h2>
+<div id="scree-plot" class="section level3">
+<h3>Scree Plot</h3>
+<p>Vast majority of environmental variance is explained by first two PCs</p>
+<pre class="r"><code>fviz_eig(env_pca)</code></pre>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="pca-plot-pc-1-pc-2" class="section level3">
+<h3>PCA Plot (PC 1 &amp; PC 2)</h3>
+<p>This shows only loadings of variables (thought that 481,630 was too many points)</p>
+<pre class="r"><code>fviz_pca_var(env_pca,
+             col.var = &quot;contrib&quot;, # Color by contributions to the PC
+             gradient.cols = c(&quot;#00AFBB&quot;, &quot;#E7B800&quot;, &quot;#FC4E07&quot;),
+             repel = TRUE     # Avoid text overlapping
+             )+
+  ggtitle(&quot;Environmental Variable PCA (PC1 &amp; PC2&quot;)</code></pre>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
 <div id="identifying-best-k-for-full--and-three-variable-datasets" class="section level2">
 <h2>Identifying best K for full- and three-variable datasets</h2>
 <p>Using fpc::pamk(), K between 3 and 10 This doesn’t run, but appears that based on the fviz_nbclust() function in that the appropriate</p>
@@ -1031,47 +1082,52 @@ plotlist = readRDS(here::here(&quot;output&quot;, &quot;kmeans_plotlist.RDS&quot
 <div id="k-2" class="section level3">
 <h3>K = 2</h3>
 <pre class="r"><code>plotlist[[1]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-7-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-10-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k-3" class="section level3">
 <h3>K = 3</h3>
 <pre class="r"><code>plotlist[[2]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-8-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-11-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k-4" class="section level3">
 <h3>K = 4</h3>
 <pre class="r"><code>plotlist[[3]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-9-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-12-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k-5" class="section level3">
 <h3>K = 5</h3>
 <pre class="r"><code>plotlist[[4]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-10-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-13-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k-6" class="section level3">
 <h3>K = 6</h3>
 <pre class="r"><code>plotlist[[5]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-11-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-14-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k-7" class="section level3">
 <h3>K = 7</h3>
 <pre class="r"><code>plotlist[[6]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-12-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-15-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k-8" class="section level3">
 <h3>K = 8</h3>
 <pre class="r"><code>plotlist[[7]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-13-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-16-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k-9" class="section level3">
 <h3>K = 9</h3>
 <pre class="r"><code>plotlist[[8]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-14-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-17-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k-10" class="section level3">
 <h3>K = 10</h3>
 <pre class="r"><code>plotlist[[9]]</code></pre>
-<p><img src="figure/map_making.Rmd/unnamed-chunk-15-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-18-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="methods-climate-data-and-ecoregion-definitions" class="section level1">
+<h1>Methods: Climate data and ecoregion definitions</h1>
+<p>We used 30-year normal (1981-2010) environmental data from the PRISM Climate Group (CITATION) to define discrete ecoregions.</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1105,40 +1161,43 @@ other attached packages:
 [21] knitr_1.28       workflowr_1.6.2 
 
 loaded via a namespace (and not attached):
- [1] colorspace_1.4-1     ellipsis_0.3.0       class_7.3-15        
- [4] modeltools_0.2-23    mclust_5.4.6         rprojroot_1.3-2     
- [7] fs_1.4.1             rstudioapi_0.11      farver_2.0.3        
-[10] ggrepel_0.8.2        flexmix_2.3-15       prodlim_2019.11.13  
-[13] fansi_0.4.1          lubridate_1.7.8      xml2_1.3.2          
-[16] codetools_0.2-16     splines_3.6.1        doParallel_1.0.15   
-[19] robustbase_0.93-6    jsonlite_1.6.1       pROC_1.16.2         
-[22] caret_6.0-86         broom_0.5.6          cluster_2.1.0       
-[25] kernlab_0.9-29       dbplyr_1.4.3         rgeos_0.5-3         
-[28] compiler_3.6.1       httr_1.4.1           backports_1.1.6     
-[31] assertthat_0.2.1     Matrix_1.2-17        cli_2.0.2           
-[34] later_1.0.0          htmltools_0.4.0      tools_3.6.1         
-[37] gtable_0.3.0         glue_1.4.0           reshape2_1.4.4      
-[40] Rcpp_1.0.4.6         cellranger_1.1.0     vctrs_0.2.4         
-[43] nlme_3.1-140         iterators_1.0.12     timeDate_3043.102   
-[46] xfun_0.13            gower_0.2.2          rvest_0.3.5         
-[49] lifecycle_0.2.0      XML_3.99-0.3         DEoptimR_1.0-8      
-[52] MASS_7.3-51.4        scales_1.1.0         ipred_0.9-9         
-[55] hms_0.5.3            promises_1.1.0       parallel_3.6.1      
-[58] yaml_2.2.1           geosphere_1.5-10     rpart_4.1-15        
-[61] stringi_1.4.6        highr_0.8            foreach_1.5.0       
-[64] lava_1.6.7           rlang_0.4.6          pkgconfig_2.0.3     
-[67] prabclus_2.3-2       evaluate_0.14        lattice_0.20-38     
-[70] labeling_0.3         recipes_0.1.13       tidyselect_1.0.0    
-[73] here_0.1             plyr_1.8.6           magrittr_1.5        
-[76] R6_2.4.1             generics_0.0.2       DBI_1.1.0           
-[79] pillar_1.4.4         haven_2.2.0          whisker_0.4         
-[82] withr_2.2.0          survival_2.44-1.1    nnet_7.3-12         
-[85] modelr_0.1.7         crayon_1.3.4         rmarkdown_2.1       
-[88] grid_3.6.1           readxl_1.3.1         data.table_1.12.8   
-[91] git2r_0.27.1         ModelMetrics_1.2.2.2 reprex_0.3.0        
-[94] digest_0.6.25        diptest_0.75-7       httpuv_1.5.2        
-[97] stats4_3.6.1         munsell_0.5.0       </code></pre>
-</div>
+  [1] colorspace_1.4-1     ggsignif_0.6.0       rio_0.5.16          
+  [4] ellipsis_0.3.0       class_7.3-15         modeltools_0.2-23   
+  [7] mclust_5.4.6         rprojroot_1.3-2      fs_1.4.1            
+ [10] rstudioapi_0.11      ggpubr_0.4.0         farver_2.0.3        
+ [13] ggrepel_0.8.2        flexmix_2.3-15       prodlim_2019.11.13  
+ [16] fansi_0.4.1          lubridate_1.7.8      xml2_1.3.2          
+ [19] codetools_0.2-16     splines_3.6.1        doParallel_1.0.15   
+ [22] robustbase_0.93-6    jsonlite_1.6.1       pROC_1.16.2         
+ [25] caret_6.0-86         broom_0.5.6          cluster_2.1.0       
+ [28] kernlab_0.9-29       dbplyr_1.4.3         rgeos_0.5-3         
+ [31] compiler_3.6.1       httr_1.4.1           backports_1.1.6     
+ [34] assertthat_0.2.1     Matrix_1.2-17        cli_2.0.2           
+ [37] later_1.0.0          htmltools_0.4.0      tools_3.6.1         
+ [40] gtable_0.3.0         glue_1.4.0           reshape2_1.4.4      
+ [43] Rcpp_1.0.4.6         carData_3.0-4        cellranger_1.1.0    
+ [46] vctrs_0.2.4          nlme_3.1-140         iterators_1.0.12    
+ [49] timeDate_3043.102    xfun_0.13            gower_0.2.2         
+ [52] openxlsx_4.1.5       rvest_0.3.5          lifecycle_0.2.0     
+ [55] rstatix_0.6.0        XML_3.99-0.3         DEoptimR_1.0-8      
+ [58] MASS_7.3-51.4        scales_1.1.0         ipred_0.9-9         
+ [61] hms_0.5.3            promises_1.1.0       parallel_3.6.1      
+ [64] curl_4.3             yaml_2.2.1           geosphere_1.5-10    
+ [67] rpart_4.1-15         stringi_1.4.6        highr_0.8           
+ [70] foreach_1.5.0        zip_2.0.4            lava_1.6.7          
+ [73] rlang_0.4.6          pkgconfig_2.0.3      prabclus_2.3-2      
+ [76] evaluate_0.14        lattice_0.20-38      labeling_0.3        
+ [79] recipes_0.1.13       tidyselect_1.0.0     here_0.1            
+ [82] plyr_1.8.6           magrittr_1.5         R6_2.4.1            
+ [85] generics_0.0.2       DBI_1.1.0            foreign_0.8-71      
+ [88] pillar_1.4.4         haven_2.2.0          whisker_0.4         
+ [91] withr_2.2.0          abind_1.4-5          survival_2.44-1.1   
+ [94] nnet_7.3-12          car_3.0-8            modelr_0.1.7        
+ [97] crayon_1.3.4         rmarkdown_2.1        grid_3.6.1          
+[100] readxl_1.3.1         data.table_1.12.8    git2r_0.27.1        
+[103] ModelMetrics_1.2.2.2 reprex_0.3.0         digest_0.6.25       
+[106] diptest_0.75-7       httpuv_1.5.2         stats4_3.6.1        
+[109] munsell_0.5.0       </code></pre>
 </div>
 </div>
 
