@@ -27,6 +27,7 @@ library(factoextra)
 source(here::here("code", "map_functions.R"))
 library(corrr)
 library(ggcorrplot)
+library(factoextra)
 ```
 
 
@@ -139,6 +140,42 @@ This plot uses heirchical clustering to group variables
 ```{r}
 ggcorrplot(env_correlations,
            hc.order = TRUE)
+```
+
+## PCA of all PRISM environmental variables {.tabset}
+
+```{r, eval=TRUE, echo=FALSE}
+env_pca =
+  stacked_raster %>% 
+    as.data.frame() %>%
+    na.omit() %>% 
+    rename("Temperature" = "band1.1",
+      "Precipitation" = "band1.2",
+      "Elevation" = "band1.3",
+      "DewPoint" = "band1.4",
+      "MaxTemperature" = "band1.5",
+      "MinTemperature" = "band1.6",
+      "MaxVaporPressure" = "band1.7",
+      "MinVaporPressure" = "band1.8") %>%
+    prcomp(scale = TRUE)
+```
+
+### Scree Plot
+Vast majority of environmental variance is explained by first two PCs
+
+```{r}
+fviz_eig(env_pca)
+```
+
+### PCA Plot (PC 1 & PC 2)
+This shows only loadings of variables (thought that 481,630 was too many points)
+```{r}
+fviz_pca_var(env_pca,
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )+
+  ggtitle("Environmental Variable PCA (PC1 & PC2")
 ```
 
 
@@ -270,5 +307,7 @@ plotlist[[8]]
 plotlist[[9]]
 ```
 
+# Methods: Climate data and ecoregion definitions
 
+We used 30-year normal (1981-2010) environmental data from the PRISM Climate Group (CITATION) to define discrete ecoregions. 
 
