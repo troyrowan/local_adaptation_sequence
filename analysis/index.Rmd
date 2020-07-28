@@ -10,6 +10,7 @@ editor_options:
 
 Welcome to the Local Adaptation Sequence-Level Analysis Project Site
 
+[Imputation](https://github.com/troyrowan/imputation-pipeline): GitHub page for our sequence-level imputation pipeline
 
 [Map Making](map_making.html): This describes how we used long-term climate data to break the United States into distinct ecoregions.
 
