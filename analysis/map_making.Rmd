@@ -11,10 +11,10 @@ editor_options:
 
 
 ```{r, include=FALSE}
+set.seed(45288)
 knitr::opts_chunk$set(echo = TRUE)
 library(workflowr)
 library(knitr)
-library(tidyverse)
 library(rgdal)
 library(raster)
 library(fpc)
@@ -28,6 +28,9 @@ source(here::here("code", "map_functions.R"))
 library(corrr)
 library(ggcorrplot)
 library(factoextra)
+library(here)
+library(tidyverse)
+setwd(here())
 ```
 
 
@@ -212,11 +215,11 @@ I'm particulary intersted in how K=10 breaks out the "Fescue Belt" in both the A
 ```{r K-means Maps, fig.height=4, fig.width=12, warning=FALSE}
 
 # plotlist =
-#   seq(2,10) %>% 
+#   seq(2,10) %>%
 #   purrr::map(
 #   ~plot_grid(
 #     unsuperClass(stacked_raster,
-#                nSamples=1000,
+#                nSamples=2000,
 #                nClasses = .x,
 #                norm=TRUE,
 #                nStarts=5,
@@ -239,7 +242,7 @@ I'm particulary intersted in how K=10 breaks out the "Fescue Belt" in both the A
 #       ggtitle(paste("Three Variables, k =", .x))
 #     )
 #   )
-#   
+# 
 # saveRDS(plotlist, "../output/kmeans_plotlist.RDS")
 
 
@@ -250,6 +253,10 @@ plotlist = readRDS(here::here("output", "kmeans_plotlist.RDS"))
 #   print(plotlist[[i]])
 #   #cat(' \n\n')
 # }
+
+
+
+  
 ```
 
 ### K = 2
@@ -307,7 +314,154 @@ plotlist[[8]]
 plotlist[[9]]
 ```
 
-# Methods: Climate data and ecoregion definitions
 
-We used 30-year normal (1981-2010) environmental data from the PRISM Climate Group (CITATION) to define discrete ecoregions. 
+## K = 9 ecoregion changes 
 
+I'd noticed eariler that there were major changes that occurred in the K = 9 map when using a different seed. In some cases, when using the these look similar to the original 3-variable ecoregions, and occasionally they break out the Fescue Belt into an extra region. 
+
+NOTE: The colors here aren't corresponding from map to map because "zone number" is stochastically determined from run to run 
+
+Here, generate a k-means clustering map with K = 9 four times. I use each combination of all environmental variables and the three main variables and two different random seeds. 
+
+Using all variables actually makes more sense to me. Correlated variables don't necessarily drive the assignments one way or another. 
+
+Observations:
+* More accurate "Fescue Belt" in ALL-Seed 1, that said, still likely too far West, not far enough North, disappears with Seed 2
+* Rainforest ecoregion disappears with ALL-Seed 1 map (which is probably okay)
+* All-variable maps division of Dakotas tracks Missouri River (and a real chang in production environment)
+* ALL-Seed 1 is much less "granular" in elevation divisions. Should result in less weird "regional islands" due to (usually) elevation being created.
+* Not sure about the "rain line" in Texas, it certainly gets shifted to the West a bit
+* California is a bit strange in all of these maps still, but I think the differences that it picks up are real. 
+
+*My suggestion moving forward* 
+Use all-variable map (seed #1 version). I think that it makese divisions closer to how I'd divide the US based on what I know about these production environments. I'm interested in potentially partitioning out the Fescue Belt and Southeast further. 
+```{r, fig.height=8, fig.width=13, warning=FALSE}
+set.seed(325333)
+k9_all =
+  unsuperClass(stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %>%
+    .$map %>%
+    as.data.frame(xy=TRUE) %>%
+    mutate(layer = as.factor(layer)) %>% 
+    filter(!is.na(layer)) %>% 
+  mutate(region = case_when(layer == 1 ~ "HighPlains",
+                            layer == 2 ~ "Desert",
+                            layer == 3 ~ "Southeast",
+                            layer == 4 ~ "CornBelt",
+                            layer == 5 ~ "FescueBelt",
+                            layer == 6 ~ "ForestedMountains",
+                            layer == 7 ~ "UpperMidwest",
+                            layer == 8 ~ "AridPrairie",
+                            layer == 9 ~ "ExtremeDesert"))
+saveRDS(k9_all, "output/k9.allvars.seed1.rds")
+
+k9_three =
+  unsuperClass(threevar_stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %>%
+    .$map %>%
+    as.data.frame(xy=TRUE) %>%
+    mutate(layer = as.factor(layer)) %>% 
+    filter(!is.na(layer)) %>% 
+  mutate(region = case_when(layer == 7 ~ "HighPlains",
+                            layer == 5 ~ "Desert",
+                            layer == 2 ~ "Southeast",
+                            layer == 8 ~ "Rainforest",
+                            layer == 1 ~ "FescueBelt",
+                            layer == 9 ~ "ForestedMountains",
+                            layer == 6 ~ "UpperMidwest",
+                            layer == 4 ~ "AridPrairie",
+                            layer == 3 ~ "Foothills"))
+saveRDS(k9_three, "output/k9.threevars.seed1.rds")
+
+
+set.seed(8675305)
+k9_all_newseed =
+  unsuperClass(stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %>%
+    .$map %>%
+    as.data.frame(xy=TRUE) %>%
+    mutate(layer = as.factor(layer)) %>% 
+    filter(!is.na(layer))%>% 
+  mutate(region = case_when(layer == 1 ~ "HighPlains",
+                            layer == 5 ~ "Desert",
+                            layer == 9 ~ "Southeast",
+                            layer == 4 ~ "Rainforest",
+                            layer == 7 ~ "FescueBelt",
+                            layer == 2 ~ "ForestedMountains",
+                            layer == 3 ~ "UpperMidwest",
+                            layer == 8 ~ "AridPrairie",
+                            layer == 3 ~ "ExtremeDesert"))
+saveRDS(k9_all_newseed, "output/k9.allvars.seed2.rds")  
+
+k9_three_newseed =
+  unsuperClass(threevar_stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %>%
+    .$map %>%
+    as.data.frame(xy=TRUE) %>%
+    mutate(layer = as.factor(layer)) %>% 
+    filter(!is.na(layer))
+saveRDS(k9_three_newseed, "output/k9.threevars.seed2.rds")
+set.seed(325333)
+k10 =
+  unsuperClass(threevar_stacked_raster,
+               nSamples=2000,
+               nClasses = 10,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %>%
+    .$map %>%
+    as.data.frame(xy=TRUE) %>%
+    mutate(layer = as.factor(layer)) %>% 
+    filter(!is.na(layer))%>% 
+    mutate(region = case_when(layer == 1 ~ "HighPlains",
+                              layer == 2 ~ "Desert",
+                              layer == 3 ~ "Southeast",
+                              layer == 4 ~ "CornBelt",
+                              layer == 5 ~ "FescueBelt",
+                              layer == 6 ~ "ForestedMountains",
+                              layer == 6 ~ "UpperMidwest",
+                              layer == 8 ~ "Rainforest",
+                              layer == 9 ~ "ExtremeDesert",
+                              layer == 10 ~ "Foothills"))
+
+saveRDS(k10, "output/k10.allvars.seed2.rds")
+
+colorkey = c("HighPlains"="springgreen3", "UpperMidwest"="slateblue2", "Desert"="tomato2", "AridPrairie"="goldenrod1", "FescueBelt"="gray17", "Rainforest" = "brown", "CornBelt"="brown", "Southeast"="darkslategray4", "ForestedMountains"="deeppink3", "Foothills" = "gray50", "ExtremeDesert" = "gray50")
+colour = c("10" = "white", "3"="springgreen3", "9"="slateblue2", "1"="tomato2", "5"="goldenrod1", "6"="gray50", "8"="gray17", "4"="brown", "2"="darkslategray4", "7"="deeppink3")
+    
+
+
+plot_grid(
+  k9_all %>% 
+    kmeans_map(region = region, color = colorkey)+
+      ggtitle(paste("    All Variables, k = 9, Seed #1")),
+  k9_all_newseed %>% 
+    kmeans_map(region = region, color = colorkey)+
+      ggtitle(paste("    All Variables, k = 9, Seed #2")),  
+  k9_three %>% 
+    kmeans_map(region = region, color = colorkey)+
+      ggtitle(paste("    Three Variables, k = 9, Seed #1")),
+  k10 %>% 
+    kmeans_map(region = region, color = colorkey)+
+      ggtitle(paste("    All Variables, k = 10, Seed #1")),
+  nrow = 2
+  )
+k10 %>% 
+  kmeans_map(region = layer, colors = colorkey)
+```

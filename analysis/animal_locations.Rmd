@@ -1,0 +1,298 @@
+---
+title: "Simmental Animal Locations"
+author: "Troy Rowan"
+date: "2020-07-31"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(workflowr)
+library(knitr)
+library(rgdal)
+library(raster)
+library(fpc)
+library(RStoolbox)
+library(maps)
+library(ggthemes)
+library(cowplot)
+library(purrr)
+library(factoextra)
+source(here::here("code", "map_functions.R"))
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
+```
+
+
+### Reading in phenotypes, pedigree, etc. 
+
+```{r}
+
+sim_animals = 
+  read_csv("data/mizzou-data-request/perf.csv") %>% 
+  left_join(read_csv("data/mizzou-data-request/xref.csv")) %>% 
+  rename(international_id = animal) 
+
+
+sim_pedigree = 
+  read_csv("data/mizzou-data-request/6-gen-ped.csv")
+sim_xref = 
+  read_csv("data/mizzou-data-request/xref.csv")
+
+zip_info = 
+  read_csv("data/uszips.csv") %>% 
+  dplyr::select(zip, x = lng, y = lat, city, state_id)%>% 
+  mutate(lat = round(y, 1),
+         long = round(x, 1)) %>% 
+  select(-x, -y)
+
+k9_all_s1 = readRDS("output/k9.allvars.seed1.rds") #Breaks out Fescue Belt
+k9_all_s2 = readRDS("output/k9.allvars.seed2.rds") #Similar fescue belt to 3-var 
+k9_three_s1 = readRDS("output/k9.threevars.seed1.rds") #These are basically equivalent, just with different seeds
+k9_three_s2 = readRDS("output/k9.threevars.seed2.rds")
+k10 = readRDS("output/k10.allvars.seed2.rds") #Ten variable 
+```
+### Pulling lab IDs for genotype dump
+This is from the animal table as of August 21st, 2020
+Harly turned this into an RDS file using one of her scripts and weird suite of packages (almost broke her computer)
+This behaved a bit curiously as I kept dropping ~10 K animals from the Simmental data sheet that I read in. Turns out that they had repeated records for mature weight, so the same cow could be listed multiple times. Upon filtering those out and matching as many animals as possible to a Reg or Ref_ID based on their ASA Registration number, I get 100,559 distinct lab IDs. They're written out and sent to Bob for a data dump on CIFS prior to imputation on Lewis. 
+
+There are 99,932 individuals that are adequately accoutned for in the database
+
+```{r}
+animal_table = 
+  readRDS("data/animal_table.rds")
+SIM =
+  rbind(
+    animal_table %>% 
+      filter(Reg %in% sim_animals$asa_nbr), 
+    animal_table %>% 
+      filter(!is.na(Ref_ID) & Ref_ID %in% sim_animals$asa_nbr), 
+    animal_table %>% 
+      filter(!is.na(Ref_ID2) & Ref_ID2 %in% sim_animals$asa_nbr),
+    animal_table %>% 
+      filter(!is.na(Ref_ID3) & Ref_ID3 %in% sim_animals$asa_nbr))
+
+#This showed me animals that have multiple entries in the "sim_animal" file 
+sim_animals %>% group_by(asa_nbr) %>% count(sort = TRUE)
+#filter(sim_animals, !asa_nbr %in% c(SIM$Reg, SIM$Ref_ID, SIM$Ref_ID2, SIM$Ref_ID3))
+
+SIM %>% 
+  select(Lab_ID) %>% 
+  distinct() %>%
+  write_csv("output/200822_Lab_IDs.csv")
+
+print(paste)
+length(unique(SIM$Lab_ID))
+
+```
+
+
+
+### Completeness of data
+
+98,335 individuals (unique ASA reg numbers) match up to entries in the database
+```{r}
+as.data.frame(colSums(!is.na(sim_animals)))
+
+
+sim_animals %>% 
+  filter(asa_nbr %in% c(SIM$Reg, SIM$Ref_ID, SIM$Ref_ID2, SIM$Ref_ID3)) %>% 
+  select(asa_nbr) %>% 
+  unique() %>% 
+  count()
+```
+
+It actually looks 
+
+## Simmental Location Counts {.tabset}
+
+### K=9 All Variables (Seed #1)
+
+```{r}
+k9_zips = 
+  left_join(zip_info, k9_all_s1 %>% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c("lat", "long")) %>% 
+    select(-x, -y) %>% 
+    filter(!is.na(layer)) %>% 
+    distinct() %>% 
+  mutate(region = 
+           case_when(
+            layer == 5 ~ "Fescue Belt",
+            layer == 3 ~ "Southeast",
+            layer == 6 ~ "Forested Mountains",
+            layer == 9 ~ "Desert",
+            layer == 8 ~ "Arid Prairie",
+            layer == 4 ~ "Corn Belt",
+            layer == 7 ~ "Upper Midwest",
+            layer == 2 ~ "Foothills",
+            layer == 1 ~ "High Plains"
+          )
+         ) %>% 
+  rename(zone = layer)
+
+
+
+sim_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k9_zips$zip) %>% 
+  select(asa_nbr, breeder_zip, international_id) %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip")) %>% 
+  group_by(region) %>% 
+  count() 
+
+```
+
+### K=9 All Variables (Seed #2)
+
+```{r}
+k9_zip_s2 = 
+  left_join(zip_info, k9_all_s2 %>% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c("lat", "long")) %>% 
+    select(-x, -y) %>% 
+    filter(!is.na(layer)) %>% 
+    distinct() %>% 
+  mutate(region = 
+           case_when(
+            layer == 7 ~ "Fescue Belt",
+            layer == 9 ~ "Southeast",
+            layer == 2 ~ "Forested Mountains",
+            layer == 6 ~ "Desert",
+            layer == 8 ~ "Arid Prairie",
+            layer == 4 ~ "Rainforest",
+            layer == 3 ~ "Upper Midwest",
+            layer == 5 ~ "Foothills",
+            layer == 1 ~ "High Plains"
+          )
+         ) %>% 
+  rename(zone = layer)
+
+
+sim_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k9_zip_s2$zip) %>% 
+  select(asa_nbr, breeder_zip, international_id) %>%  
+  left_join(k9_zip_s2, by = c("breeder_zip" = "zip")) %>% 
+  group_by(region) %>% 
+  count() 
+```
+
+### K=9 Three Variables ()
+Seed doesn't appear to cause any issues here
+
+```{r}
+k9_zips_threevar = 
+  left_join(zip_info, k9_three_s1 %>% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c("lat", "long")) %>% 
+    select(-x, -y) %>% 
+    filter(!is.na(layer)) %>% 
+    distinct() %>% 
+  mutate(region = 
+           case_when(
+            layer == 1 ~ "Fescue Belt",
+            layer == 2 ~ "Southeast",
+            layer == 9 ~ "Forested Mountains",
+            layer == 4 ~ "Desert",
+            layer == 5 ~ "Arid Prairie",
+            layer == 8 ~ "Rainforest",
+            layer == 6 ~ "Upper Midwest",
+            layer == 3 ~ "Foothills",
+            layer == 7 ~ "High Plains"
+          )
+         ) %>% 
+  rename(zone = layer)
+
+
+
+sim_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k9_zips_threevar$zip) %>% 
+  select(asa_nbr, breeder_zip, international_id) %>%  
+  left_join(k9_zips_threevar, by = c("breeder_zip" = "zip")) %>% 
+  group_by(region) %>% 
+  count() 
+
+
+```
+
+
+### K = 10 Counts
+Something is up with these region assignments... Way too many individuals say that they're from "VERY HOT PLACE"
+```{r, echo=FALSE, eval=FALSE}
+k10_zips = 
+  left_join(zip_info, k10 %>% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c("lat", "long")) %>% 
+    select(-x, -y) %>% 
+    filter(!is.na(layer)) %>% 
+    distinct() %>% 
+  mutate(region = 
+           case_when(
+            layer == 1 ~ "Fescue Belt (orange)",
+            layer == 2 ~ "Southeast (teal)",
+            layer == 3 ~ "Forested Mountains (green)",
+            layer == 4 ~ "Desert (red)",
+            layer == 5 ~ "Arid Prairie (yellow)",
+            layer == 6 ~ "Corn Belt (grey)",
+            layer == 7 ~ "Upper Midwest (pink)",
+            layer == 8 ~ "Rainforest (black)",
+            layer == 9 ~ "High Plains (purple)",
+            layer == 10 ~ "VERY HOT PLACE (white)"
+          )
+         ) %>% 
+  rename(zone = layer)
+
+sim_animals %>% 
+  filter(asa_nbr %in% c(SIM$Reg, SIM$Ref_ID, SIM$Ref_ID2, SIM$Ref_ID3)) %>% 
+  filter(breeder_zip %in% k10_zips$zip) %>% 
+  select(asa_nbr, breeder_zip, international_id) %>%
+  left_join(k10_zips, by = c("breeder_zip" = "zip")) %>% 
+  group_by(region) %>% 
+  count() 
+```
+
+## Simmental Location Maps {.tabset}
+
+### K = 9 Map
+
+```{r, fig.height=4, fig.width=8}
+sim_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k9_zips$zip) %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip")) %>% 
+  #rename(zone = layer) %>% 
+  mapplotting(max = 20)
+```
+
+
+
+
+
+
+#### K=10 Map 
+```{r, fig.height=4, fig.width=8, echo=FALSE, eval=FALSE}
+sim_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k10_zips$zip) %>% 
+  left_join(k10_zips, by = c("breeder_zip" = "zip")) %>% 
+  #rename(zone = layer) %>% 
+  mapplotting(max = 20)
+```
+
+
