@@ -333,6 +333,8 @@ Observations:
 * Not sure about the "rain line" in Texas, it certainly gets shifted to the West a bit
 * California is a bit strange in all of these maps still, but I think the differences that it picks up are real. 
 
+NOTE: There are definitely issues with coloring in the K = 10 for some reason.
+
 *My suggestion moving forward* 
 Use all-variable map (seed #1 version). I think that it makese divisions closer to how I'd divide the US based on what I know about these production environments. I'm interested in potentially partitioning out the Fescue Belt and Southeast further. 
 ```{r, fig.height=8, fig.width=13, warning=FALSE}
@@ -462,6 +464,4 @@ plot_grid(
       ggtitle(paste("    All Variables, k = 10, Seed #1")),
   nrow = 2
   )
-k10 %>% 
-  kmeans_map(region = layer, colors = colorkey)
 ```
