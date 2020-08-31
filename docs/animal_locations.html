@@ -540,16 +540,16 @@ C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree222e47bcfba4f961e6dfd3688a8ea919ae4a3a6ftargetblank222e47ba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/222e47bcfba4f961e6dfd3688a8ea919ae4a3a6f" target="_blank">222e47b</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree1672558211c9c88d55806493ccca28c2a3803fc9targetblank1672558a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/1672558211c9c88d55806493ccca28c2a3803fc9" target="_blank">1672558</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree222e47bcfba4f961e6dfd3688a8ea919ae4a3a6ftargetblank222e47ba" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree1672558211c9c88d55806493ccca28c2a3803fc9targetblank1672558a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/222e47bcfba4f961e6dfd3688a8ea919ae4a3a6f" target="_blank">222e47b</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/1672558211c9c88d55806493ccca28c2a3803fc9" target="_blank">1672558</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -626,6 +626,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/1672558211c9c88d55806493ccca28c2a3803fc9/analysis/animal_locations.Rmd" target="_blank">1672558</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-08-31
+</td>
+<td>
+Altered header sizes
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/troyrowan/local_adaptation_sequence/a660a624aa13666af11813962ce734e7d5fa6dfe/docs/animal_locations.html" target="_blank">a660a62</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-08-31
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/222e47bcfba4f961e6dfd3688a8ea919ae4a3a6f/analysis/animal_locations.Rmd" target="_blank">222e47b</a>
 </td>
 <td>
@@ -679,8 +713,8 @@ Simmental data dump locations
 </div>
 </div>
 </div>
-<div id="reading-in-phenotypes-pedigree-etc." class="section level3">
-<h3>Reading in phenotypes, pedigree, etc.</h3>
+<div id="reading-in-phenotypes-pedigree-etc." class="section level2">
+<h2>Reading in phenotypes, pedigree, etc.</h2>
 <pre class="r"><code>sim_animals = 
   read_csv(&quot;data/mizzou-data-request/perf.csv&quot;) %&gt;% 
   left_join(read_csv(&quot;data/mizzou-data-request/xref.csv&quot;)) %&gt;% 
@@ -704,7 +738,6 @@ k9_all_s2 = readRDS(&quot;output/k9.allvars.seed2.rds&quot;) #Similar fescue bel
 k9_three_s1 = readRDS(&quot;output/k9.threevars.seed1.rds&quot;) #These are basically equivalent, just with different seeds
 k9_three_s2 = readRDS(&quot;output/k9.threevars.seed2.rds&quot;)
 k10 = readRDS(&quot;output/k10.allvars.seed2.rds&quot;) #Ten variable </code></pre>
-</div>
 <div id="pulling-lab-ids-for-genotype-dump" class="section level3">
 <h3>Pulling lab IDs for genotype dump</h3>
 <p>This is from the animal table as of August 21st, 2020 Harly turned this into an RDS file using one of her scripts and weird suite of packages (almost broke her computer) This behaved a bit curiously as I kept dropping ~10 K animals from the Simmental data sheet that I read in. Turns out that they had repeated records for mature weight, so the same cow could be listed multiple times. Upon filtering those out and matching as many animals as possible to a Reg or Ref_ID based on their ASA Registration number, I get 100,559 distinct lab IDs. They’re written out and sent to Bob for a data dump on CIFS prior to imputation on Lewis.</p>
@@ -731,8 +764,9 @@ SIM %&gt;%
   distinct() %&gt;%
   write_csv(&quot;output/200822_Lab_IDs.csv&quot;)</code></pre>
 </div>
-<div id="completeness-of-data" class="section level3">
-<h3>Completeness of data</h3>
+</div>
+<div id="completeness-of-data" class="section level2">
+<h2>Completeness of data</h2>
 <p>98,335 individuals (unique ASA reg numbers) match up to entries in the database</p>
 <p>Important to note that many of these are repeats caused by mature weight phenotypes being different for a single animal (up to 7 repeated records).</p>
 <p>This does, however show the number of BW, WW, and YW that we have access to</p>
