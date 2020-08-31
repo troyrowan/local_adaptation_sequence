@@ -540,16 +540,16 @@ C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree27eb0df83e1e8dc75cde6cc1441f2ae622127c08targetblank27eb0dfa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/27eb0df83e1e8dc75cde6cc1441f2ae622127c08" target="_blank">27eb0df</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree222e47bcfba4f961e6dfd3688a8ea919ae4a3a6ftargetblank222e47ba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/222e47bcfba4f961e6dfd3688a8ea919ae4a3a6f" target="_blank">222e47b</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree27eb0df83e1e8dc75cde6cc1441f2ae622127c08targetblank27eb0dfa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree222e47bcfba4f961e6dfd3688a8ea919ae4a3a6ftargetblank222e47ba" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/27eb0df83e1e8dc75cde6cc1441f2ae622127c08" target="_blank">27eb0df</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/222e47bcfba4f961e6dfd3688a8ea919ae4a3a6f" target="_blank">222e47b</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -582,7 +582,6 @@ Untracked files:
     Untracked:  output/zipcode_zones.csv
 
 Unstaged changes:
-    Modified:   analysis/index.Rmd
     Modified:   code/map_functions.R
 
 </code></pre>
@@ -627,6 +626,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/222e47bcfba4f961e6dfd3688a8ea919ae4a3a6f/analysis/animal_locations.Rmd" target="_blank">222e47b</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-08-31
+</td>
+<td>
+cleaned up tables and removed K=10 from animal locations file
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/troyrowan/local_adaptation_sequence/4b17e7e3b9363398e70f7ea3ba388cf0f8854192/docs/animal_locations.html" target="_blank">4b17e7e</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-08-31
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/27eb0df83e1e8dc75cde6cc1441f2ae622127c08/analysis/animal_locations.Rmd" target="_blank">27eb0df</a>
 </td>
 <td>
@@ -648,117 +681,345 @@ Simmental data dump locations
 </div>
 <div id="reading-in-phenotypes-pedigree-etc." class="section level3">
 <h3>Reading in phenotypes, pedigree, etc.</h3>
+<pre class="r"><code>sim_animals = 
+  read_csv(&quot;data/mizzou-data-request/perf.csv&quot;) %&gt;% 
+  left_join(read_csv(&quot;data/mizzou-data-request/xref.csv&quot;)) %&gt;% 
+  rename(international_id = animal) 
+
+
+sim_pedigree = 
+  read_csv(&quot;data/mizzou-data-request/6-gen-ped.csv&quot;)
+sim_xref = 
+  read_csv(&quot;data/mizzou-data-request/xref.csv&quot;)
+
+zip_info = 
+  read_csv(&quot;data/uszips.csv&quot;) %&gt;% 
+  dplyr::select(zip, x = lng, y = lat, city, state_id)%&gt;% 
+  mutate(lat = round(y, 1),
+         long = round(x, 1)) %&gt;% 
+  select(-x, -y)
+
+k9_all_s1 = readRDS(&quot;output/k9.allvars.seed1.rds&quot;) #Breaks out Fescue Belt
+k9_all_s2 = readRDS(&quot;output/k9.allvars.seed2.rds&quot;) #Similar fescue belt to 3-var 
+k9_three_s1 = readRDS(&quot;output/k9.threevars.seed1.rds&quot;) #These are basically equivalent, just with different seeds
+k9_three_s2 = readRDS(&quot;output/k9.threevars.seed2.rds&quot;)
+k10 = readRDS(&quot;output/k10.allvars.seed2.rds&quot;) #Ten variable </code></pre>
 </div>
 <div id="pulling-lab-ids-for-genotype-dump" class="section level3">
 <h3>Pulling lab IDs for genotype dump</h3>
 <p>This is from the animal table as of August 21st, 2020 Harly turned this into an RDS file using one of her scripts and weird suite of packages (almost broke her computer) This behaved a bit curiously as I kept dropping ~10 K animals from the Simmental data sheet that I read in. Turns out that they had repeated records for mature weight, so the same cow could be listed multiple times. Upon filtering those out and matching as many animals as possible to a Reg or Ref_ID based on their ASA Registration number, I get 100,559 distinct lab IDs. They’re written out and sent to Bob for a data dump on CIFS prior to imputation on Lewis.</p>
 <p>There are 99,932 individuals that are adequately accoutned for in the database</p>
-<pre><code># A tibble: 98,432 x 2
-# Groups:   asa_nbr [98,432]
-   asa_nbr     n
-   &lt;chr&gt;   &lt;int&gt;
- 1 2378503     7
- 2 2585172     7
- 3 2618240     7
- 4 2671799     7
- 5 2724093     7
- 6 2724097     7
- 7 2724108     7
- 8 2724110     7
- 9 2724117     7
-10 2724129     7
-# ... with 98,422 more rows</code></pre>
-<pre><code>function (..., sep = &quot; &quot;, collapse = NULL) 
-.Internal(paste(list(...), sep, collapse))
-&lt;bytecode: 0x0000000014cf61e0&gt;
-&lt;environment: namespace:base&gt;</code></pre>
-<pre><code>[1] 99932</code></pre>
+<pre class="r"><code>animal_table = 
+  readRDS(&quot;data/animal_table.rds&quot;)
+SIM =
+  rbind(
+    animal_table %&gt;% 
+      filter(Reg %in% sim_animals$asa_nbr), 
+    animal_table %&gt;% 
+      filter(!is.na(Ref_ID) &amp; Ref_ID %in% sim_animals$asa_nbr), 
+    animal_table %&gt;% 
+      filter(!is.na(Ref_ID2) &amp; Ref_ID2 %in% sim_animals$asa_nbr),
+    animal_table %&gt;% 
+      filter(!is.na(Ref_ID3) &amp; Ref_ID3 %in% sim_animals$asa_nbr))
+
+#This showed me animals that have multiple entries in the &quot;sim_animal&quot; file 
+#sim_animals %&gt;% group_by(asa_nbr) %&gt;% count(sort = TRUE)
+#filter(sim_animals, !asa_nbr %in% c(SIM$Reg, SIM$Ref_ID, SIM$Ref_ID2, SIM$Ref_ID3))
+
+SIM %&gt;% 
+  select(Lab_ID) %&gt;% 
+  distinct() %&gt;%
+  write_csv(&quot;output/200822_Lab_IDs.csv&quot;)</code></pre>
 </div>
 <div id="completeness-of-data" class="section level3">
 <h3>Completeness of data</h3>
 <p>98,335 individuals (unique ASA reg numbers) match up to entries in the database</p>
-<pre><code>                 colSums(!is.na(sim_animals))
-asa_nbr                                110710
-breeder_zip                            109352
-owner_zip                              105406
-bw                                      96064
-bw_adj                                 110710
-bw_cg                                  109549
-ww                                      89595
-ww_adj                                 110710
-ww_cg                                   86410
-yw                                      64608
-yw_adj                                 110293
-mw                                      46580
-international_id                       110703</code></pre>
-<pre><code># A tibble: 1 x 1
-      n
-  &lt;int&gt;
-1 98335</code></pre>
-<p>It actually looks</p>
+<p>Important to note that many of these are repeats caused by mature weight phenotypes being different for a single animal (up to 7 repeated records).</p>
+<p>This does, however show the number of BW, WW, and YW that we have access to</p>
+<pre class="r"><code>sim_animals %&gt;% 
+  select(BW = bw, WW = ww, YW = yw, MW = mw) %&gt;% 
+ summarise_all(funs(sum(!is.na(.)))) %&gt;% 
+  kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">BW</th>
+<th align="right">WW</th>
+<th align="right">YW</th>
+<th align="right">MW</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">96064</td>
+<td align="right">89595</td>
+<td align="right">64608</td>
+<td align="right">46580</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>sim_animals %&gt;% 
+  filter(asa_nbr %in% c(SIM$Reg, SIM$Ref_ID, SIM$Ref_ID2, SIM$Ref_ID3)) %&gt;% 
+  select(asa_nbr) %&gt;%
+  unique() %&gt;% 
+  count() %&gt;% .$n %&gt;% 
+  paste(., &quot;individuals in MU database&quot;)</code></pre>
+<pre><code>[1] &quot;98335 individuals in MU database&quot;</code></pre>
 </div>
 <div id="simmental-location-counts" class="section level2 tabset">
 <h2>Simmental Location Counts</h2>
 <div id="k9-all-variables-seed-1" class="section level3">
 <h3>K=9 All Variables (Seed #1)</h3>
-<pre><code># A tibble: 9 x 2
-# Groups:   region [9]
-  region                 n
-  &lt;chr&gt;              &lt;int&gt;
-1 Arid Prairie        1069
-2 Corn Belt          13887
-3 Desert                16
-4 Fescue Belt        24485
-5 Foothills           1787
-6 Forested Mountains  8912
-7 High Plains        29195
-8 Southeast           6733
-9 Upper Midwest      20270</code></pre>
+<pre class="r"><code>k9_zips = 
+  left_join(zip_info, k9_all_s1 %&gt;% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c(&quot;lat&quot;, &quot;long&quot;)) %&gt;% 
+    select(-x, -y) %&gt;% 
+    filter(!is.na(layer)) %&gt;% 
+    distinct() %&gt;% 
+  mutate(region = 
+           case_when(
+            layer == 5 ~ &quot;FescueBelt&quot;,
+            layer == 3 ~ &quot;Southeast&quot;,
+            layer == 6 ~ &quot;ForestedMountains&quot;,
+            layer == 9 ~ &quot;Desert&quot;,
+            layer == 8 ~ &quot;AridPrairie&quot;,
+            layer == 4 ~ &quot;CornBelt&quot;,
+            layer == 7 ~ &quot;UpperMidwest&quot;,
+            layer == 2 ~ &quot;Foothills&quot;,
+            layer == 1 ~ &quot;HighPlains&quot;
+          )
+         ) %&gt;% 
+  rename(zone = layer)
+
+
+
+sim_animals %&gt;% 
+  #mutate(zip = as.numeric(breeder_zip)) %&gt;% 
+  filter(breeder_zip %in% k9_zips$zip) %&gt;% 
+  select(asa_nbr, breeder_zip, international_id) %&gt;% 
+  left_join(k9_zips, by = c(&quot;breeder_zip&quot; = &quot;zip&quot;)) %&gt;% 
+  group_by(region) %&gt;% 
+  count() %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">region</th>
+<th align="right">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">AridPrairie</td>
+<td align="right">1069</td>
+</tr>
+<tr class="even">
+<td align="left">CornBelt</td>
+<td align="right">13887</td>
+</tr>
+<tr class="odd">
+<td align="left">Desert</td>
+<td align="right">16</td>
+</tr>
+<tr class="even">
+<td align="left">FescueBelt</td>
+<td align="right">24485</td>
+</tr>
+<tr class="odd">
+<td align="left">Foothills</td>
+<td align="right">1787</td>
+</tr>
+<tr class="even">
+<td align="left">ForestedMountains</td>
+<td align="right">8912</td>
+</tr>
+<tr class="odd">
+<td align="left">HighPlains</td>
+<td align="right">29195</td>
+</tr>
+<tr class="even">
+<td align="left">Southeast</td>
+<td align="right">6733</td>
+</tr>
+<tr class="odd">
+<td align="left">UpperMidwest</td>
+<td align="right">20270</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="k9-all-variables-seed-2" class="section level3">
 <h3>K=9 All Variables (Seed #2)</h3>
-<pre><code># A tibble: 8 x 2
-# Groups:   region [8]
-  region                 n
-  &lt;chr&gt;              &lt;int&gt;
-1 Arid Prairie        1501
-2 Desert                16
-3 Fescue Belt        30276
-4 Foothills           1391
-5 Forested Mountains  7606
-6 High Plains        31632
-7 Southeast          10518
-8 Upper Midwest      25723</code></pre>
+<p>Here, Rainforest becomes a region, but isn’t counted here when we do K=9 with all variables and this seed</p>
+<pre class="r"><code>k9_zip_s2 = 
+  left_join(zip_info, k9_all_s2 %&gt;% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c(&quot;lat&quot;, &quot;long&quot;)) %&gt;% 
+    select(-x, -y) %&gt;% 
+    filter(!is.na(layer)) %&gt;% 
+    distinct() %&gt;% 
+  mutate(region = 
+           case_when(
+            layer == 7 ~ &quot;Fescue Belt&quot;,
+            layer == 9 ~ &quot;Southeast&quot;,
+            layer == 2 ~ &quot;Forested Mountains&quot;,
+            layer == 6 ~ &quot;Desert&quot;,
+            layer == 8 ~ &quot;Arid Prairie&quot;,
+            layer == 4 ~ &quot;Rainforest&quot;,
+            layer == 3 ~ &quot;Upper Midwest&quot;,
+            layer == 5 ~ &quot;Foothills&quot;,
+            layer == 1 ~ &quot;High Plains&quot;
+          )
+         ) %&gt;% 
+  rename(zone = layer)
+
+
+sim_animals %&gt;% 
+  #mutate(zip = as.numeric(breeder_zip)) %&gt;% 
+  filter(breeder_zip %in% k9_zip_s2$zip) %&gt;% 
+  select(asa_nbr, breeder_zip, international_id) %&gt;%  
+  left_join(k9_zip_s2, by = c(&quot;breeder_zip&quot; = &quot;zip&quot;)) %&gt;% 
+  group_by(region) %&gt;% 
+  count() %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">region</th>
+<th align="right">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Arid Prairie</td>
+<td align="right">1501</td>
+</tr>
+<tr class="even">
+<td align="left">Desert</td>
+<td align="right">16</td>
+</tr>
+<tr class="odd">
+<td align="left">Fescue Belt</td>
+<td align="right">30276</td>
+</tr>
+<tr class="even">
+<td align="left">Foothills</td>
+<td align="right">1391</td>
+</tr>
+<tr class="odd">
+<td align="left">Forested Mountains</td>
+<td align="right">7606</td>
+</tr>
+<tr class="even">
+<td align="left">High Plains</td>
+<td align="right">31632</td>
+</tr>
+<tr class="odd">
+<td align="left">Southeast</td>
+<td align="right">10518</td>
+</tr>
+<tr class="even">
+<td align="left">Upper Midwest</td>
+<td align="right">25723</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="k9-three-variables" class="section level3">
-<h3>K=9 Three Variables ()</h3>
-<p>Seed doesn’t appear to cause any issues here</p>
-<pre><code># A tibble: 9 x 2
-# Groups:   region [9]
-  region                 n
-  &lt;chr&gt;              &lt;int&gt;
-1 Arid Prairie        2460
-2 Desert              1435
-3 Fescue Belt        26561
-4 Foothills          18684
-5 Forested Mountains  1436
-6 High Plains        34624
-7 Rainforest            15
-8 Southeast          11828
-9 Upper Midwest      15700</code></pre>
+<h3>K=9 Three Variables</h3>
+<p>Seed doesn’t appear to cause any issues with major region changes so far as I can see.</p>
+<pre class="r"><code>k9_zips_threevar = 
+  left_join(zip_info, k9_three_s1 %&gt;% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c(&quot;lat&quot;, &quot;long&quot;)) %&gt;% 
+    select(-x, -y) %&gt;% 
+    filter(!is.na(layer)) %&gt;% 
+    distinct() %&gt;% 
+  mutate(region = 
+           case_when(
+            layer == 1 ~ &quot;Fescue Belt&quot;,
+            layer == 2 ~ &quot;Southeast&quot;,
+            layer == 9 ~ &quot;Forested Mountains&quot;,
+            layer == 4 ~ &quot;Desert&quot;,
+            layer == 5 ~ &quot;Arid Prairie&quot;,
+            layer == 8 ~ &quot;Rainforest&quot;,
+            layer == 6 ~ &quot;Upper Midwest&quot;,
+            layer == 3 ~ &quot;Foothills&quot;,
+            layer == 7 ~ &quot;High Plains&quot;
+          )
+         ) %&gt;% 
+  rename(zone = layer)
+
+
+
+sim_animals %&gt;% 
+  #mutate(zip = as.numeric(breeder_zip)) %&gt;% 
+  filter(breeder_zip %in% k9_zips_threevar$zip) %&gt;% 
+  select(asa_nbr, breeder_zip, international_id) %&gt;%  
+  left_join(k9_zips_threevar, by = c(&quot;breeder_zip&quot; = &quot;zip&quot;)) %&gt;% 
+  group_by(region) %&gt;% 
+  count() %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">region</th>
+<th align="right">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Arid Prairie</td>
+<td align="right">2460</td>
+</tr>
+<tr class="even">
+<td align="left">Desert</td>
+<td align="right">1435</td>
+</tr>
+<tr class="odd">
+<td align="left">Fescue Belt</td>
+<td align="right">26561</td>
+</tr>
+<tr class="even">
+<td align="left">Foothills</td>
+<td align="right">18684</td>
+</tr>
+<tr class="odd">
+<td align="left">Forested Mountains</td>
+<td align="right">1436</td>
+</tr>
+<tr class="even">
+<td align="left">High Plains</td>
+<td align="right">34624</td>
+</tr>
+<tr class="odd">
+<td align="left">Rainforest</td>
+<td align="right">15</td>
+</tr>
+<tr class="even">
+<td align="left">Southeast</td>
+<td align="right">11828</td>
+</tr>
+<tr class="odd">
+<td align="left">Upper Midwest</td>
+<td align="right">15700</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="k-10-counts" class="section level3">
-<h3>K = 10 Counts</h3>
-<p>Something is up with these region assignments… Way too many individuals say that they’re from “VERY HOT PLACE”</p>
 </div>
-</div>
-<div id="simmental-location-maps" class="section level2 tabset">
+<div id="simmental-location-maps" class="section level2">
 <h2>Simmental Location Maps</h2>
 <div id="k-9-map" class="section level3">
 <h3>K = 9 Map</h3>
-<p><img src="figure/animal_locations.Rmd/unnamed-chunk-9-1.png" width="768" style="display: block; margin: auto;" /></p>
-<div id="k10-map" class="section level4">
-<h4>K=10 Map</h4>
+<pre class="r"><code>sim_animals %&gt;% 
+  #mutate(zip = as.numeric(breeder_zip)) %&gt;% 
+  filter(breeder_zip %in% k9_zips$zip) %&gt;% 
+  left_join(k9_zips, by = c(&quot;breeder_zip&quot; = &quot;zip&quot;)) %&gt;%
+  #rename(zone = layer) %&gt;% 
+  mapplotting(max = 20)</code></pre>
+<p><img src="figure/animal_locations.Rmd/unnamed-chunk-8-1.png" width="768" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -766,6 +1027,7 @@ international_id                       110703</code></pre>
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.6.1 (2019-07-05)
 Platform: x86_64-w64-mingw32/x64 (64-bit)
 Running under: Windows 10 x64 (build 19041)
@@ -819,12 +1081,11 @@ loaded via a namespace (and not attached):
 [76] generics_0.0.2       DBI_1.1.0            pillar_1.4.4        
 [79] haven_2.2.0          whisker_0.4          withr_2.2.0         
 [82] survival_2.44-1.1    nnet_7.3-12          modelr_0.1.7        
-[85] crayon_1.3.4         utf8_1.1.4           rmarkdown_2.1       
-[88] grid_3.6.1           readxl_1.3.1         data.table_1.12.8   
-[91] git2r_0.27.1         ModelMetrics_1.2.2.2 reprex_0.3.0        
-[94] digest_0.6.25        diptest_0.75-7       httpuv_1.5.2        
-[97] stats4_3.6.1         munsell_0.5.0       </code></pre>
-</div>
+[85] crayon_1.3.4         rmarkdown_2.1        grid_3.6.1          
+[88] readxl_1.3.1         data.table_1.12.8    git2r_0.27.1        
+[91] ModelMetrics_1.2.2.2 reprex_0.3.0         digest_0.6.25       
+[94] diptest_0.75-7       httpuv_1.5.2         stats4_3.6.1        
+[97] munsell_0.5.0       </code></pre>
 </div>
 </div>
 </div>
