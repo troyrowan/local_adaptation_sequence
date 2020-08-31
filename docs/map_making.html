@@ -425,7 +425,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-07-28
+<strong>Last updated:</strong> 2020-08-31
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -516,16 +516,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree31b23afe36e6e218f680c7d2a7943ac332ae5990targetblank31b23afa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/31b23afe36e6e218f680c7d2a7943ac332ae5990" target="_blank">31b23af</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree27eb0df83e1e8dc75cde6cc1441f2ae622127c08targetblank27eb0dfa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/27eb0df83e1e8dc75cde6cc1441f2ae622127c08" target="_blank">27eb0df</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree31b23afe36e6e218f680c7d2a7943ac332ae5990targetblank31b23afa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree27eb0df83e1e8dc75cde6cc1441f2ae622127c08targetblank27eb0dfa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/31b23afe36e6e218f680c7d2a7943ac332ae5990" target="_blank">31b23af</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/27eb0df83e1e8dc75cde6cc1441f2ae622127c08" target="_blank">27eb0df</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -536,11 +536,30 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
+    Untracked:  data/200730_ASA_AllGenotypes.csv
+    Untracked:  data/200820_sample_sheet.csv
     Untracked:  data/PRISM_ppt_30yr_normal_4kmM2_annual_asc.asc
+    Untracked:  data/animal_table.rds
+    Untracked:  data/license.txt
+    Untracked:  data/mizzou-data-request/
     Untracked:  data/prism_climate_data/
+    Untracked:  data/us-zip-code-latitude-and-longitude.csv
+    Untracked:  data/uszips.csv
+    Untracked:  data/uszips.xlsx
     Untracked:  desktop.ini
+    Untracked:  output/200822_Lab_IDs.csv
     Untracked:  output/desktop.ini
+    Untracked:  output/k10.allvars.seed2.rds
+    Untracked:  output/k9.allvars.seed1.rds
+    Untracked:  output/k9.allvars.seed2.rds
+    Untracked:  output/k9.threevars.seed1.rds
+    Untracked:  output/k9.threevars.seed2.rds
     Untracked:  output/kmeans_plotlist.RDS
+    Untracked:  output/zipcode_zones.csv
+
+Unstaged changes:
+    Modified:   analysis/index.Rmd
+    Modified:   code/map_functions.R
 
 </code></pre>
 <p>
@@ -579,6 +598,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/27eb0df83e1e8dc75cde6cc1441f2ae622127c08/analysis/map_making.Rmd" target="_blank">27eb0df</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-08-31
+</td>
+<td>
+Simmental data dump locations
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/troyrowan/local_adaptation_sequence/231d3ea244909ce3dc397841bc0bc8765163610d/docs/map_making.html" target="_blank">231d3ea</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-07-28
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1041,11 +1094,11 @@ threevar_stacked_raster %&gt;%
 <p>Here, since this is a completely stochastic process, colors don’t have any meaning between K’s or between all data vs. three variables.</p>
 <p>I’m particulary intersted in how K=10 breaks out the “Fescue Belt” in both the ALL and Three variable cases.</p>
 <pre class="r"><code># plotlist =
-#   seq(2,10) %&gt;% 
+#   seq(2,10) %&gt;%
 #   purrr::map(
 #   ~plot_grid(
 #     unsuperClass(stacked_raster,
-#                nSamples=1000,
+#                nSamples=2000,
 #                nClasses = .x,
 #                norm=TRUE,
 #                nStarts=5,
@@ -1068,7 +1121,7 @@ threevar_stacked_raster %&gt;%
 #       ggtitle(paste(&quot;Three Variables, k =&quot;, .x))
 #     )
 #   )
-#   
+# 
 # saveRDS(plotlist, &quot;../output/kmeans_plotlist.RDS&quot;)
 
 
@@ -1125,9 +1178,144 @@ plotlist = readRDS(here::here(&quot;output&quot;, &quot;kmeans_plotlist.RDS&quot
 <p><img src="figure/map_making.Rmd/unnamed-chunk-18-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 </div>
-<div id="methods-climate-data-and-ecoregion-definitions" class="section level1">
-<h1>Methods: Climate data and ecoregion definitions</h1>
-<p>We used 30-year normal (1981-2010) environmental data from the PRISM Climate Group (CITATION) to define discrete ecoregions.</p>
+<div id="k-9-ecoregion-changes" class="section level2">
+<h2>K = 9 ecoregion changes</h2>
+<p>I’d noticed eariler that there were major changes that occurred in the K = 9 map when using a different seed. In some cases, when using the these look similar to the original 3-variable ecoregions, and occasionally they break out the Fescue Belt into an extra region.</p>
+<p>NOTE: The colors here aren’t corresponding from map to map because “zone number” is stochastically determined from run to run</p>
+<p>Here, generate a k-means clustering map with K = 9 four times. I use each combination of all environmental variables and the three main variables and two different random seeds.</p>
+<p>Using all variables actually makes more sense to me. Correlated variables don’t necessarily drive the assignments one way or another.</p>
+<p>Observations: * More accurate “Fescue Belt” in ALL-Seed 1, that said, still likely too far West, not far enough North, disappears with Seed 2 * Rainforest ecoregion disappears with ALL-Seed 1 map (which is probably okay) * All-variable maps division of Dakotas tracks Missouri River (and a real chang in production environment) * ALL-Seed 1 is much less “granular” in elevation divisions. Should result in less weird “regional islands” due to (usually) elevation being created. * Not sure about the “rain line” in Texas, it certainly gets shifted to the West a bit * California is a bit strange in all of these maps still, but I think the differences that it picks up are real.</p>
+<p><em>My suggestion moving forward</em> Use all-variable map (seed #1 version). I think that it makese divisions closer to how I’d divide the US based on what I know about these production environments. I’m interested in potentially partitioning out the Fescue Belt and Southeast further.</p>
+<pre class="r"><code>set.seed(325333)
+k9_all =
+  unsuperClass(stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %&gt;%
+    .$map %&gt;%
+    as.data.frame(xy=TRUE) %&gt;%
+    mutate(layer = as.factor(layer)) %&gt;% 
+    filter(!is.na(layer)) %&gt;% 
+  mutate(region = case_when(layer == 1 ~ &quot;HighPlains&quot;,
+                            layer == 2 ~ &quot;Desert&quot;,
+                            layer == 3 ~ &quot;Southeast&quot;,
+                            layer == 4 ~ &quot;CornBelt&quot;,
+                            layer == 5 ~ &quot;FescueBelt&quot;,
+                            layer == 6 ~ &quot;ForestedMountains&quot;,
+                            layer == 7 ~ &quot;UpperMidwest&quot;,
+                            layer == 8 ~ &quot;AridPrairie&quot;,
+                            layer == 9 ~ &quot;ExtremeDesert&quot;))
+saveRDS(k9_all, &quot;output/k9.allvars.seed1.rds&quot;)
+
+k9_three =
+  unsuperClass(threevar_stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %&gt;%
+    .$map %&gt;%
+    as.data.frame(xy=TRUE) %&gt;%
+    mutate(layer = as.factor(layer)) %&gt;% 
+    filter(!is.na(layer)) %&gt;% 
+  mutate(region = case_when(layer == 7 ~ &quot;HighPlains&quot;,
+                            layer == 5 ~ &quot;Desert&quot;,
+                            layer == 2 ~ &quot;Southeast&quot;,
+                            layer == 8 ~ &quot;Rainforest&quot;,
+                            layer == 1 ~ &quot;FescueBelt&quot;,
+                            layer == 9 ~ &quot;ForestedMountains&quot;,
+                            layer == 6 ~ &quot;UpperMidwest&quot;,
+                            layer == 4 ~ &quot;AridPrairie&quot;,
+                            layer == 3 ~ &quot;Foothills&quot;))
+saveRDS(k9_three, &quot;output/k9.threevars.seed1.rds&quot;)
+
+
+set.seed(8675305)
+k9_all_newseed =
+  unsuperClass(stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %&gt;%
+    .$map %&gt;%
+    as.data.frame(xy=TRUE) %&gt;%
+    mutate(layer = as.factor(layer)) %&gt;% 
+    filter(!is.na(layer))%&gt;% 
+  mutate(region = case_when(layer == 1 ~ &quot;HighPlains&quot;,
+                            layer == 5 ~ &quot;Desert&quot;,
+                            layer == 9 ~ &quot;Southeast&quot;,
+                            layer == 4 ~ &quot;Rainforest&quot;,
+                            layer == 7 ~ &quot;FescueBelt&quot;,
+                            layer == 2 ~ &quot;ForestedMountains&quot;,
+                            layer == 3 ~ &quot;UpperMidwest&quot;,
+                            layer == 8 ~ &quot;AridPrairie&quot;,
+                            layer == 3 ~ &quot;ExtremeDesert&quot;))
+saveRDS(k9_all_newseed, &quot;output/k9.allvars.seed2.rds&quot;)  
+
+k9_three_newseed =
+  unsuperClass(threevar_stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %&gt;%
+    .$map %&gt;%
+    as.data.frame(xy=TRUE) %&gt;%
+    mutate(layer = as.factor(layer)) %&gt;% 
+    filter(!is.na(layer))
+saveRDS(k9_three_newseed, &quot;output/k9.threevars.seed2.rds&quot;)
+set.seed(325333)
+k10 =
+  unsuperClass(threevar_stacked_raster,
+               nSamples=2000,
+               nClasses = 10,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %&gt;%
+    .$map %&gt;%
+    as.data.frame(xy=TRUE) %&gt;%
+    mutate(layer = as.factor(layer)) %&gt;% 
+    filter(!is.na(layer))%&gt;% 
+    mutate(region = case_when(layer == 1 ~ &quot;HighPlains&quot;,
+                              layer == 2 ~ &quot;Desert&quot;,
+                              layer == 3 ~ &quot;Southeast&quot;,
+                              layer == 4 ~ &quot;CornBelt&quot;,
+                              layer == 5 ~ &quot;FescueBelt&quot;,
+                              layer == 6 ~ &quot;ForestedMountains&quot;,
+                              layer == 6 ~ &quot;UpperMidwest&quot;,
+                              layer == 8 ~ &quot;Rainforest&quot;,
+                              layer == 9 ~ &quot;ExtremeDesert&quot;,
+                              layer == 10 ~ &quot;Foothills&quot;))
+
+saveRDS(k10, &quot;output/k10.allvars.seed2.rds&quot;)
+
+colorkey = c(&quot;HighPlains&quot;=&quot;springgreen3&quot;, &quot;UpperMidwest&quot;=&quot;slateblue2&quot;, &quot;Desert&quot;=&quot;tomato2&quot;, &quot;AridPrairie&quot;=&quot;goldenrod1&quot;, &quot;FescueBelt&quot;=&quot;gray17&quot;, &quot;Rainforest&quot; = &quot;brown&quot;, &quot;CornBelt&quot;=&quot;brown&quot;, &quot;Southeast&quot;=&quot;darkslategray4&quot;, &quot;ForestedMountains&quot;=&quot;deeppink3&quot;, &quot;Foothills&quot; = &quot;gray50&quot;, &quot;ExtremeDesert&quot; = &quot;gray50&quot;)
+colour = c(&quot;10&quot; = &quot;white&quot;, &quot;3&quot;=&quot;springgreen3&quot;, &quot;9&quot;=&quot;slateblue2&quot;, &quot;1&quot;=&quot;tomato2&quot;, &quot;5&quot;=&quot;goldenrod1&quot;, &quot;6&quot;=&quot;gray50&quot;, &quot;8&quot;=&quot;gray17&quot;, &quot;4&quot;=&quot;brown&quot;, &quot;2&quot;=&quot;darkslategray4&quot;, &quot;7&quot;=&quot;deeppink3&quot;)
+    
+
+
+plot_grid(
+  k9_all %&gt;% 
+    kmeans_map(region = region, color = colorkey)+
+      ggtitle(paste(&quot;    All Variables, k = 9, Seed #1&quot;)),
+  k9_all_newseed %&gt;% 
+    kmeans_map(region = region, color = colorkey)+
+      ggtitle(paste(&quot;    All Variables, k = 9, Seed #2&quot;)),  
+  k9_three %&gt;% 
+    kmeans_map(region = region, color = colorkey)+
+      ggtitle(paste(&quot;    Three Variables, k = 9, Seed #1&quot;)),
+  k10 %&gt;% 
+    kmeans_map(region = region, color = colorkey)+
+      ggtitle(paste(&quot;    All Variables, k = 10, Seed #1&quot;)),
+  nrow = 2
+  )</code></pre>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-19-1.png" width="1248" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>k10 %&gt;% 
+  kmeans_map(region = layer, colors = colorkey)</code></pre>
+<p><img src="figure/map_making.Rmd/unnamed-chunk-19-2.png" width="1248" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1153,12 +1341,12 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] ggcorrplot_0.1.3 corrr_0.4.2      factoextra_1.0.7 cowplot_1.0.0   
- [5] ggthemes_4.2.0   maps_3.3.0       RStoolbox_0.2.6  fpc_2.2-7       
- [9] raster_3.3-7     rgdal_1.5-12     sp_1.4-2         forcats_0.5.0   
-[13] stringr_1.4.0    dplyr_0.8.5      purrr_0.3.4      readr_1.3.1     
-[17] tidyr_1.0.3      tibble_3.0.1     ggplot2_3.3.0    tidyverse_1.3.0 
-[21] knitr_1.28       workflowr_1.6.2 
+ [1] forcats_0.5.0    stringr_1.4.0    dplyr_0.8.5      readr_1.3.1     
+ [5] tidyr_1.0.3      tibble_3.0.1     tidyverse_1.3.0  here_0.1        
+ [9] ggcorrplot_0.1.3 corrr_0.4.2      factoextra_1.0.7 ggplot2_3.3.0   
+[13] purrr_0.3.4      cowplot_1.0.0    ggthemes_4.2.0   maps_3.3.0      
+[17] RStoolbox_0.2.6  fpc_2.2-7        raster_3.3-7     rgdal_1.5-12    
+[21] sp_1.4-2         knitr_1.28       workflowr_1.6.2 
 
 loaded via a namespace (and not attached):
   [1] colorspace_1.4-1     ggsignif_0.6.0       rio_0.5.16          
@@ -1177,7 +1365,7 @@ loaded via a namespace (and not attached):
  [40] gtable_0.3.0         glue_1.4.0           reshape2_1.4.4      
  [43] Rcpp_1.0.4.6         carData_3.0-4        cellranger_1.1.0    
  [46] vctrs_0.2.4          nlme_3.1-140         iterators_1.0.12    
- [49] timeDate_3043.102    xfun_0.13            gower_0.2.2         
+ [49] timeDate_3043.102    gower_0.2.2          xfun_0.13           
  [52] openxlsx_4.1.5       rvest_0.3.5          lifecycle_0.2.0     
  [55] rstatix_0.6.0        XML_3.99-0.3         DEoptimR_1.0-8      
  [58] MASS_7.3-51.4        scales_1.1.0         ipred_0.9-9         
@@ -1186,18 +1374,17 @@ loaded via a namespace (and not attached):
  [67] rpart_4.1-15         stringi_1.4.6        highr_0.8           
  [70] foreach_1.5.0        zip_2.0.4            lava_1.6.7          
  [73] rlang_0.4.6          pkgconfig_2.0.3      prabclus_2.3-2      
- [76] evaluate_0.14        lattice_0.20-38      labeling_0.3        
- [79] recipes_0.1.13       tidyselect_1.0.0     here_0.1            
- [82] plyr_1.8.6           magrittr_1.5         R6_2.4.1            
- [85] generics_0.0.2       DBI_1.1.0            foreign_0.8-71      
- [88] pillar_1.4.4         haven_2.2.0          whisker_0.4         
- [91] withr_2.2.0          abind_1.4-5          survival_2.44-1.1   
- [94] nnet_7.3-12          car_3.0-8            modelr_0.1.7        
- [97] crayon_1.3.4         rmarkdown_2.1        grid_3.6.1          
-[100] readxl_1.3.1         data.table_1.12.8    git2r_0.27.1        
-[103] ModelMetrics_1.2.2.2 reprex_0.3.0         digest_0.6.25       
-[106] diptest_0.75-7       httpuv_1.5.2         stats4_3.6.1        
-[109] munsell_0.5.0       </code></pre>
+ [76] evaluate_0.14        lattice_0.20-38      recipes_0.1.13      
+ [79] labeling_0.3         tidyselect_1.0.0     plyr_1.8.6          
+ [82] magrittr_1.5         R6_2.4.1             generics_0.0.2      
+ [85] DBI_1.1.0            foreign_0.8-71       pillar_1.4.4        
+ [88] haven_2.2.0          whisker_0.4          withr_2.2.0         
+ [91] abind_1.4-5          survival_2.44-1.1    nnet_7.3-12         
+ [94] car_3.0-8            modelr_0.1.7         crayon_1.3.4        
+ [97] rmarkdown_2.1        grid_3.6.1           readxl_1.3.1        
+[100] data.table_1.12.8    git2r_0.27.1         ModelMetrics_1.2.2.2
+[103] reprex_0.3.0         digest_0.6.25        diptest_0.75-7      
+[106] httpuv_1.5.2         stats4_3.6.1         munsell_0.5.0       </code></pre>
 </div>
 </div>
 
