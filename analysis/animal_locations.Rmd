@@ -33,7 +33,7 @@ setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
 ```
 
 
-### Reading in phenotypes, pedigree, etc. 
+## Reading in phenotypes, pedigree, etc. 
 
 ```{r}
 
@@ -97,7 +97,7 @@ SIM %>%
 
 
 
-### Completeness of data
+## Completeness of data
 
 98,335 individuals (unique ASA reg numbers) match up to entries in the database
 
