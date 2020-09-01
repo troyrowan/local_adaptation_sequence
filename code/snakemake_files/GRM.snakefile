@@ -1,4 +1,7 @@
-
+rule grm_target:
+	input:
+		expand{"output/{run_name}/grm/{run_name}.850K.grm.bin",
+		run_name = config["run_name"]}
 #This GRM creation will just be for autosomes as there are some issues with how you'd want to go about handing the X Chromosome https://cnsgenomics.com/software/gcta/#MakingaGRM
 rule concat_vcf:
 	input:
