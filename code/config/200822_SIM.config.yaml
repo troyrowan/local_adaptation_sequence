@@ -1,0 +1,7 @@
+run_name: "200822_SIM"
+
+grm_threads: 16
+
+plink_threads: 4
+
+plink_mem: 2000
