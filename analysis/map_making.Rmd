@@ -98,6 +98,14 @@ threevar_stacked_raster =
     elev_raster
   )
 
+fourvar_stacked_raster = 
+  stack(
+    temp_raster,
+    precip_raster,
+    elev_raster,
+    min_vap_raster
+  )
+
 ```
 
 ## Environmental varible correlations
@@ -163,13 +171,6 @@ env_pca =
     prcomp(scale = TRUE)
 ```
 
-### Scree Plot
-Vast majority of environmental variance is explained by first two PCs
-
-```{r}
-fviz_eig(env_pca)
-```
-
 ### PCA Plot (PC 1 & PC 2)
 This shows only loadings of variables (thought that 481,630 was too many points)
 ```{r}
@@ -180,6 +181,15 @@ fviz_pca_var(env_pca,
              )+
   ggtitle("Environmental Variable PCA (PC1 & PC2")
 ```
+
+### Scree Plot
+Vast majority of environmental variance is explained by first two PCs
+
+```{r}
+fviz_eig(env_pca)
+```
+
+
 
 
 ## Identifying best K for full- and three-variable datasets
@@ -203,6 +213,14 @@ threevar_stacked_raster %>%
   sample_n(20000) %>% 
   fviz_nbclust(FUNcluster = kmeans)+
   ggtitle("Three Environmental Variables ")
+  #pamk(krange = 3:20, criterion="multiasw", usepam=FALSE, scaling=TRUE)  
+
+fourvar_stacked_raster %>% 
+  as.data.frame() %>% 
+  na.omit() %>% 
+  sample_n(20000) %>% 
+  fviz_nbclust(FUNcluster = kmeans)+
+  ggtitle("Three Environmental Variables ") %>% 
   #pamk(krange = 3:20, criterion="multiasw", usepam=FALSE, scaling=TRUE)
 ```
 
@@ -359,7 +377,7 @@ k9_all =
                             layer == 7 ~ "UpperMidwest",
                             layer == 8 ~ "AridPrairie",
                             layer == 9 ~ "ExtremeDesert"))
-saveRDS(k9_all, "output/k9.allvars.seed1.rds")
+#saveRDS(k9_all, "output/k9.allvars.seed1.rds")
 
 k9_three =
   unsuperClass(threevar_stacked_raster,
@@ -381,7 +399,7 @@ k9_three =
                             layer == 6 ~ "UpperMidwest",
                             layer == 4 ~ "AridPrairie",
                             layer == 3 ~ "Foothills"))
-saveRDS(k9_three, "output/k9.threevars.seed1.rds")
+#saveRDS(k9_three, "output/k9.threevars.seed1.rds")
 
 
 set.seed(8675305)
@@ -405,7 +423,7 @@ k9_all_newseed =
                             layer == 3 ~ "UpperMidwest",
                             layer == 8 ~ "AridPrairie",
                             layer == 3 ~ "ExtremeDesert"))
-saveRDS(k9_all_newseed, "output/k9.allvars.seed2.rds")  
+#saveRDS(k9_all_newseed, "output/k9.allvars.seed2.rds")  
 
 k9_three_newseed =
   unsuperClass(threevar_stacked_raster,
@@ -419,6 +437,32 @@ k9_three_newseed =
     mutate(layer = as.factor(layer)) %>% 
     filter(!is.na(layer))
 saveRDS(k9_three_newseed, "output/k9.threevars.seed2.rds")
+
+
+set.seed(325333)
+k9_four =
+  unsuperClass(fourvar_stacked_raster,
+               nSamples=2000,
+               nClasses = 9,
+               norm=TRUE,
+               nStarts=5,
+               clusterMap=FALSE) %>%
+    .$map %>%
+    as.data.frame(xy=TRUE) %>%
+    mutate(layer = as.factor(layer)) %>% 
+    filter(!is.na(layer)) %>%
+    mutate(region = case_when(layer == 1 ~ "HighPlains", 
+                              layer == 2 ~ "Foothills", 
+                              layer == 3 ~ "Southeast", 
+                              layer == 4 ~ "FescueBelt",
+                              layer == 5 ~ "Rainforest",
+                              layer == 6 ~ "ForestedMountains",
+                              layer == 7 ~ "UpperMidwest",
+                              layer == 8 ~ "AridPrairie",
+                              layer == 9 ~ "Desert"))
+
+
+
 set.seed(325333)
 k10 =
   unsuperClass(threevar_stacked_raster,
@@ -442,7 +486,7 @@ k10 =
                               layer == 9 ~ "ExtremeDesert",
                               layer == 10 ~ "Foothills"))
 
-saveRDS(k10, "output/k10.allvars.seed2.rds")
+#saveRDS(k10, "output/k10.allvars.seed2.rds")
 
 colorkey = c("HighPlains"="springgreen3", "UpperMidwest"="slateblue2", "Desert"="tomato2", "AridPrairie"="goldenrod1", "FescueBelt"="gray17", "Rainforest" = "brown", "CornBelt"="brown", "Southeast"="darkslategray4", "ForestedMountains"="deeppink3", "Foothills" = "gray50", "ExtremeDesert" = "gray50")
 colour = c("10" = "white", "3"="springgreen3", "9"="slateblue2", "1"="tomato2", "5"="goldenrod1", "6"="gray50", "8"="gray17", "4"="brown", "2"="darkslategray4", "7"="deeppink3")
@@ -451,17 +495,47 @@ colour = c("10" = "white", "3"="springgreen3", "9"="slateblue2", "1"="tomato2", 
 
 plot_grid(
   k9_all %>% 
-    kmeans_map(region = region, color = colorkey)+
+    kmeans_map(id = region, color = colorkey)+
       ggtitle(paste("    All Variables, k = 9, Seed #1")),
   k9_all_newseed %>% 
-    kmeans_map(region = region, color = colorkey)+
+    kmeans_map(id = region, color = colorkey)+
       ggtitle(paste("    All Variables, k = 9, Seed #2")),  
   k9_three %>% 
-    kmeans_map(region = region, color = colorkey)+
+    kmeans_map(id = region, color = colorkey)+
       ggtitle(paste("    Three Variables, k = 9, Seed #1")),
   k10 %>% 
-    kmeans_map(region = region, color = colorkey)+
+    kmeans_map(id = region, color = colorkey)+
       ggtitle(paste("    All Variables, k = 10, Seed #1")),
   nrow = 2
   )
 ```
+
+## Comparing K=9 with different input variables {.tabset}
+
+### Three Variables
+Temperature (mean), Precipitation, Elevation
+```{r, fig.height=4, fig.width=7, warning=FALSE}
+k9_three %>%
+  kmeans_map(id = region, color = colorkey)+
+      ggtitle(paste("    Three Variables, k = 9, Seed #1"))
+
+```
+
+
+### Four Variables 
+Temperature (mean), Precipitation, Elevation, Minimum Vapor Pressure
+```{r, fig.height=4, fig.width=7, warning=FALSE}
+k9_four %>% 
+  kmeans_map(id = region, color = colorkey)+
+      ggtitle(paste("    Four Variables, k = 9, Seed #1"))
+```
+
+
+### All Variables
+Temperature (min, max, mean), Precipitation, DewPoint, Elevation, Vapor Pressure (min, max)
+```{r, fig.height=4, fig.width=7, warning=FALSE}
+k9_all %>%
+  kmeans_map(id = region, color = colorkey)+
+      ggtitle(paste("    All Variables, k = 9, Seed #1"))
+```
+
