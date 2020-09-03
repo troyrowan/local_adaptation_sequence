@@ -4,6 +4,11 @@
 .Ruserdata
 .Rapp.history
 .DS_Store
+*.rds
+*.RDS
+*.ini
+*.asc
+
 analysis/figure
 analysis/*png
 analysis/*html
