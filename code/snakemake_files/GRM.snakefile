@@ -1,3 +1,10 @@
+import os
+# Make log directories if they don't exist
+for x in expand("output/snakemake/log/{run_name}/slurm_out/{rule}", run_name = config['run_name'], rule = config['rules']):
+	os.makedirs(x, exist_ok = True)
+for x in expand("output/snakemake/log/{run_name}/psrecord/{rule}", run_name = config['run_name'], rule = config['rules']):
+	os.makedirs(x, exist_ok = True)
+
 rule grm_target:
 	input:
 		expand("output/{run_name}/grm/{run_name}.850K.grm.bin",
@@ -14,39 +21,42 @@ rule convert_plink:
 		mem=config["plink_mem"]
 	output:
 		plink = temp(expand("output/{{run_name}}/plink_convert/{{run_name}}.chr{{chr}}.850K.{suffix}",
-		suffix = [".bed", ".bim", ".fam"])),
+		suffix = ["bed", "bim", "fam"])),
 	shell: #
 		"""
 		module load plink
-		psrecord "plink --vcf {input.vcf} --threads {params.threads} --memory {params.mem} --cow --real-ref-alleles --make-bed --out {params.oprefix} " --log {params.psrecord} --include-children --interval 30
+		psrecord "plink --vcf {input.vcf} --threads {params.threads} --memory {params.mem} --cow --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 		"""
+#issues with this rule making the mergelist. Did it manually to get things to run...
 
 rule concat_plink:
 	input:
 		plink = expand("output/{{run_name}}/plink_convert/{{run_name}}.chr{chr}.850K.{suffix}",
-		suffix = [".bed", ".bim", ".fam"],
+		suffix = ["bed", "bim", "fam"],
 		chr = list(range(1,30))) #Only autosomes here for GRM creation
 	params:
 		psrecord = "output/snakemake/log/{run_name}/psrecord/concat_plink/concat_plink.log",
 		oprefix = "output/{run_name}/imputed_genotypes/{run_name}.850K",
 		chromdir = "output/{run_name}/plink_convert/*bed",
+		dir = "output/{run_name}/imputed_genotypes",
 		threads=config["plink_threads"],
-		mem=config["plink_mem"]
+		mem=config["plink_mem"],
+		#list = "output/{run_name}/plink_convert/{run_name}.850K.mergelist.txt"
 	output:
-		list = "output/{run_name}/imputed_genotypes/{run_name}.850K.mergelist.txt",
+		list = "output/{run_name}/plink_convert/{run_name}.850K.mergelist.txt",
 		plink = expand("output/{{run_name}}/imputed_genotypes/{{run_name}}.850K.{suffix}",
-		suffix = [".bed", ".bim", ".fam"])
+		suffix = ["bed", "bim", "fam"])
 	shell:
 		"""
 		module load plink
 		ls {params.chromdir} | tr "\\t" "\\n" | sed 's/.bed//g' > {output.list}
-		psrecord "plink --bmerge {output.list} --threads {params.threads} --memory {params.mem} --cow --real-ref-alleles --make-bed --out {params.oprefix} " --log {params.psrecord} --include-children --interval 30
+		psrecord "plink --merge-list {output.list} --threads {params.threads} --memory {params.mem} --cow --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 		"""
 #This rule allows us to massively speed up GRM creation
 rule build_grm_chunks:
 	input:
 		plink = expand("output/{{run_name}}/imputed_genotypes/{{run_name}}.850K.{suffix}",
-		suffix = [".bed", ".bim", ".fam"])
+		suffix = ["bed", "bim", "fam"])
 	params:
 		psrecord = "output/snakemake/log/{run_name}/psrecord/build_grm_chunks/build_grm_chunks.part{part}.log",
 		iprefix = "output/{run_name}/imputed_genotypes/{run_name}.850K",
