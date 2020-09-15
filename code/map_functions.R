@@ -1,10 +1,11 @@
 #This function makes state plots for k-means clustering maps.
 #input should be a single dataframe with three columns, long, lat, layer
 kmeans_map =
-  function(map_df, colors = NULL, region = layer){
+  function(map_df, colors = NULL, id){
+    nid = enquo(id)
     mapplot =
       ggplot(map_df, aes(x, y))+
-        geom_raster(aes(fill = region))+
+        geom_raster(aes(fill = !!nid))+
         #scale_fill_manual("", values=redo_color, labels = region_names)+
         geom_polygon(data = map_data("state"), aes(x = long, y = lat, group = group), color = "black", fill = NA)+
         theme_map()+
