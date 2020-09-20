@@ -4,7 +4,9 @@ parts: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", 
 
 run_name: "200910_RAN"
 
-phenotypes: "output/200910_RAN/phenotypes/200910_RAN.environment.txt"
+phenotype_dict: {"meantemp_noLSF":"1", "precip_noLSF":"2", "elev_noLSF":"3", "minvap_noLSF":"4", "maxvap_noLSF":"5", "mintemp_noLSF":"6", "maxtemp_noLSF":"7", "dewpoint_noLSF":"8", "latitude_noLSF":"9", "longitude_noLSF":"10"}
+
+phenotypes: "output/200910_RAN/phenotypes/200910_RAN.noLSF.environment.txt"
 
 grm_threads: 16
 

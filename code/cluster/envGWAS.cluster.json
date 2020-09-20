@@ -14,28 +14,22 @@
         "mem" : 20G,
         "t": "5:00:00"
     },
-    "concat_plink":
+    "snp_effects_envgwas":
     {
-        "c" : 4,
-        "mem" : 20G,
-        "t": "5:00:00"
-    },
-    "build_grm_chunks":
-    {
-        "c" : 16,
+        "c" : 10,
         "mem" : 50G,
+        "t": "10:00:00"
+    },
+    "greml_envgwas":
+    {
+        "c" : 30,
+        "mem" : 200G,
         "t": "48:00:00"
     },
-    "single_chrom_grm":
+    "gwas_envgwas":
     {
-        "c" : 16,
-        "mem" : 50G,
+        "c" : 10,
+        "mem" : 100G,
         "t": "48:00:00"
-    },
-    "concat_grm_chunks":
-    {
-        "c" : 16,
-        "mem" : 50G,
-        "t": "5:00:00"
     }
 }
