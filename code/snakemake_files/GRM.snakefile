@@ -7,9 +7,8 @@ for x in expand("output/{run_name}/log/psrecord/{rule}", run_name = config['run_
 
 rule grm_target:
 	input:
-		expand("output/{run_name}/grm/{run_name}.chr{chr}.850K.grm.bin",
-		run_name = config["run_name"],
-		chr = list(range(1,31)))
+		expand("output/{run_name}/grm/{run_name}.850K.grm.N.bin",
+		run_name = config["run_name"])
 #This GRM creation will just be for autosomes as there are some issues with how you'd want to go about handing the X Chromosome https://cnsgenomics.com/software/gcta/#MakingaGRM
 rule convert_plink:
 	input:
@@ -60,7 +59,7 @@ rule build_grm_chunks:
 		plink = expand("output/{{run_name}}/imputed_genotypes/{{run_name}}.850K.{suffix}",
 		suffix = ["bed", "bim", "fam"])
 	params:
-		psrecord = "output/snakemake/log/{run_name}/psrecord/build_grm_chunks/build_grm_chunks.part{part}.log",
+		psrecord = "output/{run_name}/log/psrecord/build_grm_chunks/build_grm_chunks.part{part}.log",
 		iprefix = "output/{run_name}/imputed_genotypes/{run_name}.850K",
 		oprefix = "output/{run_name}/grm/{run_name}.850K",
 		part = "{part}",
@@ -82,7 +81,7 @@ rule concat_grm_chunks:
 		nbin = expand("output/{{run_name}}/grm/{{run_name}}.850K.part_50_{part}.grm.N.bin",
 		part = config["parts"])
 	params:
-		psrecord = "output/snakemake/log/{run_name}/psrecord/concat_grm_chunks/concat_grm_chunks.log"
+		psrecord = "output/{run_name}/log/psrecord/concat_grm_chunks/concat_grm_chunks.log"
 	output:
 		id = "output/{run_name}/grm/{run_name}.850K.grm.id",
 		bin = "output/{run_name}/grm/{run_name}.850K.grm.bin",
@@ -100,7 +99,7 @@ rule single_chrom_grm:
 		iprefix = "output/{run_name}/imputed_genotypes/{run_name}.chr{chr}.850K",
 		oprefix = "output/{run_name}/grm/{run_name}.chr{chr}.850K",
 		threads = config["grm_threads"],
-		psrecord = "output/snakemake/log/{run_name}/psrecord/single_chrom_grm/single_chrom_grm.chr{chr}.log"
+		psrecord = "output/{run_name}/log/psrecord/single_chrom_grm/single_chrom_grm.chr{chr}.log"
 	output:
 		id = "output/{run_name}/grm/{run_name}.chr{chr}.850K.grm.id",
 		bin = "output/{run_name}/grm/{run_name}.chr{chr}.850K.grm.bin",
@@ -117,7 +116,7 @@ rule gemma_grm:
 		iprefix = "output/{run_name}/imputed_genotypes/{run_name}.850K",
 		odir = "output/{run_name}/grm/",
 		oprefix = "{run_name}.gemma.850K",
-		psrecord = "output/snakemake/log/{run_name}/psrecord/gemma_grm/gemma_grm.log"
+		psrecord = "output/{run_name}/log/psrecord/gemma_grm/gemma_grm.log"
 	output:
 		gemma = "output/{run_name}/grm/{run_name}.gemma.850K.sXX.txt"
 	shell:
