@@ -1,9 +1,9 @@
 import os
-# Make log directories if they don't exist
-# for x in expand("output/{run_name}/log/slurm_out/{rule}", run_name = config['run_name'], rule = config['rules']):
-# 	os.makedirs(x, exist_ok = True)
-# for x in expand("output/{run_name}/log/psrecord/{rule}", run_name = config['run_name'], rule = config['rules']):
-# 	os.makedirs(x, exist_ok = True)
+#Make log directories if they don't exist
+for x in expand("output/{run_name}/log/slurm_out/{rule}", run_name = config['run_name'], rule = config['rules']):
+	os.makedirs(x, exist_ok = True)
+for x in expand("output/{run_name}/log/psrecord/{rule}", run_name = config['run_name'], rule = config['rules']):
+	os.makedirs(x, exist_ok = True)
 
 #include: "GRM.snakefile"
 
@@ -40,6 +40,7 @@ rule greml:
 		blups = "output/{run_name}/greml/{run_name}.{phenotype}.850K.indi.blp",
 		log = "output/{run_name}/greml/{run_name}.{phenotype}.850K.log",
 	shell:
+		# "code/gcta_1.93.2beta/gcta64 --reml --pheno {input.phenotypes} --mpheno {params.phenotype} --grm {params.grmprefix} --autosome-num 29 --reml-pred-rand --thread-num {params.threads} --out {params.oprefix}"
 		"""
 		psrecord "code/gcta_1.93.2beta/gcta64 --reml --pheno {input.phenotypes} --mpheno {params.phenotype} --grm {params.grmprefix} --autosome-num 29 --reml-pred-rand --thread-num {params.threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 		"""
@@ -59,6 +60,7 @@ rule snp_effects:
 	output:
 		blups = "output/{run_name}/greml/{run_name}.{phenotype}.850K.snp.blp"
 	shell:
+		# "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --autosome-num 29 --blup-snp {input.blups} --thread-num {params.threads} --out {params.oprefix}"
 		"""
 		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --autosome-num 29 --blup-snp {input.blups} --thread-num {params.threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 		"""
@@ -81,6 +83,7 @@ rule gwas:
 		out = "output/{run_name}/gwas/{run_name}.{phenotype}.850K.mlma",
 		log = "output/{run_name}/gwas/{run_name}.{phenotype}.850K.log"
 	shell:
+		# "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --mlma --pheno {input.phenotypes} --mpheno {params.phenotype} --grm {params.grmprefix} --maf {params.maf} --autosome-num 29 --thread-num {params.threads} --out {params.oprefix}"
 		"""
 		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --mlma --pheno {input.phenotypes} --mpheno {params.phenotype} --grm {params.grmprefix} --maf {params.maf} --autosome-num 29 --thread-num {params.threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 		"""
