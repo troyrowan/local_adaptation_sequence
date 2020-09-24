@@ -63,13 +63,14 @@ rule build_grm_chunks:
 		iprefix = "output/{run_name}/imputed_genotypes/{run_name}.850K",
 		oprefix = "output/{run_name}/grm/{run_name}.850K",
 		part = "{part}",
+		maf = config["maf"],
 		threads=config["grm_threads"]
 	output:
 			chunks = expand("output/{{run_name}}/grm/{{run_name}}.850K.part_50_{{part}}.{suffix}",
 			suffix = ["grm.id", "grm.bin", "grm.N.bin"])
 	shell:
 		"""
-		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --autosome-num 29 --make-grm-part 50 {params.part} --thread-num {params.threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
+		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --autosome-num 29 --maf {params.maf} --make-grm-part 50 {params.part} --thread-num {params.threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 		"""
 
 rule concat_grm_chunks:
@@ -80,15 +81,13 @@ rule concat_grm_chunks:
 		part = config["parts"]),
 		nbin = expand("output/{{run_name}}/grm/{{run_name}}.850K.part_50_{part}.grm.N.bin",
 		part = config["parts"])
-	params:
-		psrecord = "output/{run_name}/log/psrecord/concat_grm_chunks/concat_grm_chunks.log"
 	output:
 		id = "output/{run_name}/grm/{run_name}.850K.grm.id",
 		bin = "output/{run_name}/grm/{run_name}.850K.grm.bin",
 		nbin = "output/{run_name}/grm/{run_name}.850K.grm.N.bin"
 	shell:
 		"""
-		psrecord "cat {input.id} > {output.id}; cat {input.bin} > {output.bin}; cat {input.nbin} > {output.nbin}" --log {params.psrecord} --include-children --interval 30
+		cat {input.id} > {output.id}; cat {input.bin} > {output.bin}; cat {input.nbin} > {output.nbin}
 		"""
 
 rule single_chrom_grm:
@@ -99,6 +98,7 @@ rule single_chrom_grm:
 		iprefix = "output/{run_name}/imputed_genotypes/{run_name}.chr{chr}.850K",
 		oprefix = "output/{run_name}/grm/{run_name}.chr{chr}.850K",
 		threads = config["grm_threads"],
+		maf = config["maf"],
 		psrecord = "output/{run_name}/log/psrecord/single_chrom_grm/single_chrom_grm.chr{chr}.log"
 	output:
 		id = "output/{run_name}/grm/{run_name}.chr{chr}.850K.grm.id",
@@ -106,7 +106,7 @@ rule single_chrom_grm:
 		nbin = "output/{run_name}/grm/{run_name}.chr{chr}.850K.grm.N.bin"
 	shell:
 		"""
-		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --autosome-num 29 --thread-num {params.threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
+		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --autosome-num 29 --maf {params.maf} --thread-num {params.threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 		"""
 rule gemma_grm:
 	input:
