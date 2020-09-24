@@ -6,9 +6,13 @@ run_name: "200910_RAN"
 
 phenotype_dict: {"meantemp_noLSF":"1", "precip_noLSF":"2", "elev_noLSF":"3", "minvap_noLSF":"4", "maxvap_noLSF":"5", "mintemp_noLSF":"6", "maxtemp_noLSF":"7", "dewpoint_noLSF":"8", "latitude_noLSF":"9", "longitude_noLSF":"10"}
 
-phenotypes: "output/200910_RAN/phenotypes/200910_RAN.noLSF.environment.txt"
+phenotype_file: "output/200910_RAN/phenotypes/200910_RAN.noLSF.environment.txt"
 
-grm_threads: 16
+phenotypes: ["meantemp_noLSF", "precip_noLSF", "elev_noLSF", "minvap_noLSF", "maxvap_noLSF", "mintemp_noLSF", "maxtemp_noLSF", "dewpoint_noLSF", "latitude_noLSF", "longitude_noLSF"]
+
+maf: 0.01
+
+grm_threads: 8
 
 greml_threads: 30
 

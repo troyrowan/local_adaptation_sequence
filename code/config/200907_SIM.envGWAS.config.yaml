@@ -1,0 +1,25 @@
+rules: ["greml_envgwas", "snp_effects_envgwas", "gwas_envgwas", "convert_plink", "greml_gpsm", "snp_effects_gpsm", "gwas_gpsm", "loco_gwas_gpsm", "build_grm_chunks", "concat_grm_chunks", "single_chrom_grm", "gemma_grm"]
+
+parts: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50"]
+
+run_name: "200907_SIM"
+
+phenotype_dict: {"meantemp":"1", "precip":"2", "elev":"3", "minvap":"4", "maxvap":"5", "mintemp":"6", "maxtemp":"7", "dewpoint":"8", "latitude":"9", "longitude":"10", "HighPlains":"11", "UpperMidwest":"12", "AridPrairie":"13", "CornBelt":"14", "Foothills":"15", "ForestedMountains":"16", "FescueBelt":"17", "Southeast":"18", "Desert":"19"}
+
+phenotypes: ["meantemp", "HighPlains", "UpperMidwest", "AridPrairie", "CornBelt", "Foothills", "ForestedMountains", "FescueBelt", "Southeast", "Desert"]
+
+#phenotypes: ["meantemp", "precip", "elev", "minvap", "maxvap", "mintemp", "maxtemp", "dewpoint", "latitude", "longitude", "HighPlains", "UpperMidwest", "AridPrairie", "CornBelt", "Foothills", "ForestedMountains", "FescueBelt", "Southeast", "Desert"]
+
+phenotype_file: "output/200907_SIM/phenotypes/200907_SIM.environment.txt"
+
+maf: 0.01
+
+grm_threads: 16
+
+greml_threads: 30
+
+gwas_threads: 10
+
+plink_threads: 4
+
+plink_mem: 2000
