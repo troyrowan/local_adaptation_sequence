@@ -22,9 +22,9 @@
     },
     "build_grm_chunks":
     {
-        "c" : 16,
+        "c" : 8,
         "mem" : 50G,
-        "t": "48:00:00"
+        "t": "2:00:00"
     },
     "single_chrom_grm":
     {
@@ -34,7 +34,7 @@
     },
     "concat_grm_chunks":
     {
-        "c" : 16,
+        "c" : 1,
         "mem" : 50G,
         "t": "5:00:00"
     }

@@ -3,9 +3,10 @@
     {
         "p" : "General,Lewis,BioCompute,htc4,hpc5",
         "account" : "animalsci",
-        "mem" : 2G,
+        "mem" : 50G,
         "c": 1,
-        "t": "0:05:00",
+        "t": "5:00:00",
+        "qos": "normal",
         "o": "output/{wildcards.run_name}/log/slurm_out/{rule}/{wildcards}.%j.out"
     },
     "convert_plink":
@@ -14,22 +15,23 @@
         "mem" : 20G,
         "t": "5:00:00"
     },
-    "snp_effects_envgwas":
+    "snp_effects":
     {
         "c" : 10,
         "mem" : 50G,
         "t": "10:00:00"
     },
-    "greml_envgwas":
-    {
-        "c" : 30,
-        "mem" : 200G,
-        "t": "48:00:00"
-    },
-    "gwas_envgwas":
+    "greml":
     {
         "c" : 10,
-        "mem" : 100G,
+        "mem" : 400G,
         "t": "48:00:00"
+    },
+    "gwas":
+    {
+        "c" : 20,
+        "mem" : 400G,
+        "t": "7-00:00:00",
+        "qos": "biolong"
     }
 }
