@@ -15,3 +15,5 @@ Welcome to the Local Adaptation Sequence-Level Analysis Project Site
 [Map Making](map_making.html): This describes how we used long-term climate data to break the United States into distinct ecoregions.
 
 [Simmental Locations](animal_locations.html): Here we see the geographic distribution of our genotyped Simmental population
+
+[GPSM Phenotypes] (phenotype_exploration): This is an exploration of various generation proxy phenotypes and possible transformations to make them more normal for use in LMMs
