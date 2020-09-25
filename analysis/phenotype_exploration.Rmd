@@ -8,6 +8,7 @@ output:
 editor_options:
   chunk_output_type: inline
 ---
+
 ```{r, include = FALSE}
 set.seed(325333)
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
@@ -30,7 +31,7 @@ library(tidyverse)
 library(EnvStats)
 library(optiSel)
 library(car)
-setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
+#setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
 ```
 
 
