@@ -2,14 +2,299 @@
 title: "phenotype_exploration"
 author: "Troy Rowan"
 date: "2020-09-16"
-output: workflowr::wflow_html
+output: 
+  html_document:
+    code_folding: show
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
+```{r, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(cowplot)
+library(purrr)
+library(factoextra)
+source(here::here("code", "map_functions.R"))
+#library(ggcorrplot)
+library(factoextra)
+library(here)
+library(lubridate)
+library(pedigree)
+library(ggforce)
+#library(MASS)
+library(tidyverse)
+library(EnvStats)
+library(optiSel)
+library(car)
+setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
+```
 
-## Introduction
+
+# Simmental
+
 
 ```{r}
 
+simmental =
+  read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv") %>%
+      mutate(sqrt_age = age^0.5,
+             cbrt_age = age^0.333,
+             log_age = log(age),
+             bc_age = bcPower(age, lambda = 0.0345))
+           
 ```
+
+### Age Summary Stats
+```{r}
+simmental %>% 
+  select(age) %>% 
+  summarize(mean_age = mean(age, na.rm = TRUE),
+            median_age = median(age, na.rm = TRUE),
+            sd_age = sd(age, na.rm = TRUE),
+            min_age = min(age, na.rm = TRUE),
+            max_age = max(age, na.rm = TRUE))
+```
+
+## Transformations to Age: {.tabset}
+
+### Untransformed
+```{r}
+simmental %>% 
+  select(age) %>%
+  ggplot()+
+  geom_histogram(aes(x = age), mutate(simmental, z = FALSE), bins = 100, fill = "dodgerblue")+
+  geom_histogram(aes(x = age), mutate(simmental, z = TRUE), bins = 250, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Ages\n(Untransformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(10,45), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+### Square Root
+```{r}
+simmental%>% 
+  ggplot()+
+  geom_histogram(aes(x = sqrt_age), mutate(simmental, z = FALSE), bins = 100, fill = "dodgerblue")+
+  geom_histogram(aes(x = sqrt_age), mutate(simmental, z = TRUE), bins = 250, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Ages\n(Square Root Transformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(3,7), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+### Cube Root
+```{r}
+simmental%>% 
+  ggplot()+
+  geom_histogram(aes(x = cbrt_age), mutate(simmental, z = FALSE), bins = 100, fill = "dodgerblue")+
+  geom_histogram(aes(x = cbrt_age), mutate(simmental, z = TRUE), bins = 250, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Ages\n(Cube Root Transformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(2,3.6), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+### Log 
+```{r}
+simmental%>% 
+  ggplot()+
+  geom_histogram(aes(x = log_age), mutate(simmental, z = FALSE), bins = 100, fill = "dodgerblue")+
+  geom_histogram(aes(x = log_age), mutate(simmental, z = TRUE), bins = 250, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Ages\n(log Transformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(2,3.6), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+### Box-Cox
+```{r}
+simmental%>% 
+  ggplot()+
+  geom_histogram(aes(x = bc_age), mutate(simmental, z = FALSE), bins = 100, fill = "dodgerblue")+
+  geom_histogram(aes(x = bc_age), mutate(simmental, z = TRUE), bins = 250, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Ages\n(Box-Cox Transformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(2,3.6), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+## Generation Counts
+
+### Summary Stats for Generation Number
+Unable to actually calculate this at this point as we haven't received the updated pedigree from Red Angus
+```{r}
+simmental %>%
+  select(equiGen, fullGen, maxGen) %>%
+  summarize_all(list(mean, median, sd, min, max))%>% 
+  gather(key = "key", value = "value") %>%
+  separate(key, c("variable", "stat"), sep = "_") %>%
+  spread(stat, value) %>% 
+  rename(generation_count = variable, mean = fn1, median = fn2, sd = fn3, min = fn4, max = fn5)
+
+```
+
+## Distributions of Generation {.tabset}
+
+### equiGen
+Note the high number of "zero" generations here. Wondering if we shouldn't count those as NA if we choose to go this route?
+```{r}
+simmental%>% 
+  ggplot()+
+  geom_histogram(aes(x = equiGen), bins = 100, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Equivalent Generations", x = "Age (as of 9-15-2020)", y = "Count")
+
+```
+
+### equiGen squared
+```{r}
+simmental%>% 
+  ggplot()+
+  geom_histogram(aes(x = equiGen^2), bins = 100, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Equivalent Generations Squared", x = "Age (as of 9-15-2020)", y = "Count")
+```
+
+### fullGen
+```{r}
+simmental%>% 
+  ggplot()+
+  geom_histogram(aes(x = fullGen),  bins = 10, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Full Generations", x = "Age (as of 9-15-2020)", y = "Count")
+```
+
+### maxGen
+```{r}
+simmental%>% 
+  ggplot()+
+  geom_histogram(aes(x = maxGen),  bins = 25, fill = "dodgerblue")+
+  theme_cowplot()+
+  labs(title = "Simmental Max Generations", x = "Age (as of 9-15-2020)", y = "Count")
+```
+
+# Red Angus
+
+```{r}
+redangus = read_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
+```
+
+
+## Exploring Generation Proxy Phenotypes 
+
+### Calculating Generation Number
+```{r, eval = FALSE}
+countGen(
+  data.frame(
+    id = 1:5,
+    dam = c(0,0,1,1,4),
+    sire = c(0,0,2,2,3)
+  )
+)
+
+ran_ped = 
+  read_csv("data/200910_RAN/All_Animals_SireDam.csv") %>% 
+  select(id = anm_key, sire = sire_key, dam = dam_key) %>% 
+  replace_na(list(sire = 0, dam = 0))
+
+ran_ped = 
+  orderPed(ran_ped)
+
+```
+
+
+
+### Age Summary Stats
+```{r}
+redangus %>% 
+  select(age) %>% 
+  summarize(mean_age = mean(age, na.rm = TRUE),
+            median_age = median(age, na.rm = TRUE),
+            sd_age = sd(age, na.rm = TRUE),
+            min_age = min(age, na.rm = TRUE),
+            max_age = max(age, na.rm = TRUE))
+```
+
+## Transformations to Age: {.tabset}
+
+### Untransformed
+```{r}
+ages = 
+  redangus %>% 
+    select(age) %>%
+    mutate(sqrt_age = age^0.5,
+           cbrt_age = age^0.333,
+           log_age = log(age),
+           bc_age = bcPower(age, lambda = -0,237)
+           )
+
+
+  
+redangus %>% 
+  select(age) %>%
+  ggplot()+
+  geom_histogram(aes(x = age), mutate(redangus, z = FALSE), bins = 100, fill = "indianred")+
+  geom_histogram(aes(x = age), mutate(redangus, z = TRUE), bins = 250, fill = "indianred")+
+  theme_cowplot()+
+  labs(title = "Red Angus Ages\n(Untransformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(10,45), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+### Square Root
+```{r}
+ages%>% 
+  ggplot()+
+  geom_histogram(aes(x = sqrt_age), mutate(ages, z = FALSE), bins = 100, fill = "indianred")+
+  geom_histogram(aes(x = sqrt_age), mutate(ages, z = TRUE), bins = 250, fill = "indianred")+
+  theme_cowplot()+
+  labs(title = "Red Angus Ages\n(Square Root Transformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(3,7), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+### Cube Root
+```{r}
+ages%>% 
+  ggplot()+
+  geom_histogram(aes(x = cbrt_age), mutate(ages, z = FALSE), bins = 100, fill = "indianred")+
+  geom_histogram(aes(x = cbrt_age), mutate(ages, z = TRUE), bins = 250, fill = "indianred")+
+  theme_cowplot()+
+  labs(title = "Red Angus Ages\n(Cube Root Transformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(2,3.6), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+### Log 
+```{r}
+ages%>% 
+  ggplot()+
+  geom_histogram(aes(x = log_age), mutate(ages, z = FALSE), bins = 100, fill = "indianred")+
+  geom_histogram(aes(x = log_age), mutate(ages, z = TRUE), bins = 250, fill = "indianred")+
+  theme_cowplot()+
+  labs(title = "Red Angus Ages\n(log Transformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(2,3.6), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+### Box-Cox
+```{r}
+ages%>% 
+  ggplot()+
+  geom_histogram(aes(x = bc_age), mutate(ages, z = FALSE), bins = 100, fill = "indianred")+
+  geom_histogram(aes(x = bc_age), mutate(ages, z = TRUE), bins = 250, fill = "indianred")+
+  theme_cowplot()+
+  labs(title = "Red Angus Ages\n(Box-Cox Transformed)", x = "Age (as of 9-15-2020)", y = "Count")+
+  facet_zoom(xlim = c(2,3.6), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
+```
+
+
+## Summary Stats for Generation Number
+Unable to actually calculate this at this point as we haven't received the updated pedigree from Red Angus
+```{r}
+# redangus %>% 
+#   select(age) %>% 
+#   summarize(mean_age = mean(age, na.rm = TRUE),
+#             median_age = median(age, na.rm = TRUE),
+#             sd_age = sd(age, na.rm = TRUE),
+#             min_age = min(age, na.rm = TRUE),
+#             max_age = max(age, na.rm = TRUE))
+```
+
+
 
