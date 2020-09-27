@@ -407,7 +407,7 @@ div.tocify {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -416,7 +416,7 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -425,10 +425,10 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-09-25
+<strong>Last updated:</strong> 2020-09-27
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>local_adaptation_sequence/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -440,7 +440,7 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <hr>
 </div>
 <div id="checks" class="tab-pane fade">
-<div class="panel-group" id="workflowr-checks">
+<div id="workflowr-checks" class="panel-group">
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
@@ -504,52 +504,28 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongabsolute"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>File paths:</strong> absolute </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
 </p>
 </div>
-<div id="strongFilepathsstrongabsolute" class="panel-collapse collapse">
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
 <div class="panel-body">
-<p>
-Using absolute paths to the files within your workflowr project makes it difficult for you and others to run your code on a different machine. Change the absolute path(s) below to the suggested relative path(s) to make your code more reproducible.
-</p>
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th style="text-align:left;">
-absolute
-</th>
-<th style="text-align:left;">
-relative
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence
-</td>
-<td style="text-align:left;">
-.
-</td>
-</tr>
-</tbody>
-</table>
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree752c0c138c0630485aa98d129fb5fc3d543d37e8targetblank752c0c1a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/752c0c138c0630485aa98d129fb5fc3d543d37e8" target="_blank">752c0c1</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreec9053dd344c98c4655f07e8831198fe78dbf22cbtargetblankc9053dda"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/c9053dd344c98c4655f07e8831198fe78dbf22cb" target="_blank">c9053dd</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree752c0c138c0630485aa98d129fb5fc3d543d37e8targetblank752c0c1a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreec9053dd344c98c4655f07e8831198fe78dbf22cbtargetblankc9053dda" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/752c0c138c0630485aa98d129fb5fc3d543d37e8" target="_blank">752c0c1</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/c9053dd344c98c4655f07e8831198fe78dbf22cb" target="_blank">c9053dd</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -572,7 +548,12 @@ Ignored files:
     Ignored:    output/200907_Lab_IDs.csv
     Ignored:    output/200907_SIM/
     Ignored:    output/200909_RAN_Lab_IDs.csv
-    Ignored:    output/200910_RAN/
+    Ignored:    output/200910_RAN/200910_RAN.phenotypes.csv
+    Ignored:    output/200910_RAN/200910_RAN.phenotypes.txt
+    Ignored:    output/200910_RAN/gpsm/
+    Ignored:    output/200910_RAN/gwas/
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.info.csv
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.noLSF.allenv.txt
     Ignored:    output/200910_RAN_Lab_IDs.csv
     Ignored:    output/desktop.ini
     Ignored:    output/k10.allvars.seed2.rds
@@ -584,6 +565,7 @@ Ignored files:
     Ignored:    output/zipcode_zones.csv
 
 Untracked files:
+    Untracked:  analysis/200910_RAN.envGWAS_results.Rmd
     Untracked:  analysis/GPSM.Rmd
     Untracked:  code/countgens_RAN.R
     Untracked:  ftpconfigs/
@@ -596,9 +578,9 @@ Unstaged changes:
     Modified:   analysis/sex_GWAS.Rmd
     Modified:   code/annotation_functions.R
     Modified:   code/config/200907_SIM.GPSM.config.yaml
+    Modified:   code/config/200907_SIM.envGWAS.config.yaml
     Modified:   code/config/200910_RAN.config.yaml
     Modified:   code/config/200910_RAN_noLSF.config.yaml
-    Modified:   code/snakemake_files/GCTA.snakefile
     Deleted:    data/README.md
 
 </code></pre>
@@ -638,6 +620,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/c9053dd344c98c4655f07e8831198fe78dbf22cb/analysis/phenotype_exploration.Rmd" target="_blank">c9053dd</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-09-27
+</td>
+<td>
+Trying to get images to display
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/troyrowan/local_adaptation_sequence/194bd226ca0600a2b29769fcbec3c3a4682f7b4f/docs/phenotype_exploration.html" target="_blank">194bd22</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-09-25
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1025,22 +1041,22 @@ loaded via a namespace (and not attached):
  [46] ECOSolveR_0.5.3         nadiv_2.16.2.0          MASS_7.3-53            
  [49] scales_1.1.1            hms_0.5.3               promises_1.1.1         
  [52] parallel_4.0.2          curl_4.3                yaml_2.2.1             
- [55] stringi_1.5.3           highr_0.8               foreach_1.5.0          
- [58] zip_2.1.1               manipulateWidget_0.10.1 rlang_0.4.7            
- [61] pkgconfig_2.0.3         rgl_0.100.54            evaluate_0.14          
- [64] lattice_0.20-41         labeling_0.3            htmlwidgets_1.5.1      
- [67] tidyselect_1.1.0        plyr_1.8.6              magrittr_1.5           
- [70] R6_2.4.1                generics_0.0.2          DBI_1.1.0              
- [73] foreign_0.8-80          pillar_1.4.6            haven_2.3.1            
- [76] whisker_0.4             withr_2.3.0             scatterplot3d_0.3-41   
- [79] abind_1.4-5             cccp_0.2-4              pspline_1.0-18         
- [82] modelr_0.1.8            crayon_1.3.4            utf8_1.1.4             
- [85] alabama_2015.3-1        rmarkdown_2.3           grid_4.0.2             
- [88] readxl_1.3.1            minpack.lm_1.2-1        data.table_1.13.0      
- [91] blob_1.2.1              git2r_0.27.1            reprex_0.3.0           
- [94] digest_0.6.25           webshot_0.5.2           xtable_1.8-4           
- [97] httpuv_1.5.4            numDeriv_2016.8-1.1     munsell_0.5.0          
-[100] magic_1.5-9             quadprog_1.5-8         </code></pre>
+ [55] stringi_1.5.3           foreach_1.5.0           zip_2.1.1              
+ [58] manipulateWidget_0.10.1 rlang_0.4.7             pkgconfig_2.0.3        
+ [61] rgl_0.100.54            evaluate_0.14           lattice_0.20-41        
+ [64] labeling_0.3            htmlwidgets_1.5.1       tidyselect_1.1.0       
+ [67] plyr_1.8.6              magrittr_1.5            R6_2.4.1               
+ [70] generics_0.0.2          DBI_1.1.0               foreign_0.8-80         
+ [73] pillar_1.4.6            haven_2.3.1             whisker_0.4            
+ [76] withr_2.3.0             scatterplot3d_0.3-41    abind_1.4-5            
+ [79] cccp_0.2-4              pspline_1.0-18          modelr_0.1.8           
+ [82] crayon_1.3.4            utf8_1.1.4              alabama_2015.3-1       
+ [85] rmarkdown_2.3           grid_4.0.2              readxl_1.3.1           
+ [88] minpack.lm_1.2-1        data.table_1.13.0       blob_1.2.1             
+ [91] git2r_0.27.1            reprex_0.3.0            digest_0.6.25          
+ [94] webshot_0.5.2           xtable_1.8-4            httpuv_1.5.4           
+ [97] numDeriv_2016.8-1.1     munsell_0.5.0           magic_1.5-9            
+[100] quadprog_1.5-8         </code></pre>
 </div>
 </div>
 </div>
