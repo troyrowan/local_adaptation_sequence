@@ -31,7 +31,6 @@ library(tidyverse)
 library(EnvStats)
 library(optiSel)
 library(car)
-#setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
 ```
 
 
