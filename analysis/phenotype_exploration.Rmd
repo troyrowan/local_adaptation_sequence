@@ -1,5 +1,5 @@
 ---
-title: "phenotype_exploration"
+title: "Phenotype Exploration"
 author: "Troy Rowan"
 date: "2020-09-16"
 output: 
