@@ -12,7 +12,7 @@ phenotype_file: "output/200907_SIM/phenotypes/200907_SIM.generation_proxy.txt"
 
 maf: 0.01
 
-grm_threads: 16
+grm_threads: 6
 
 greml_threads: 30
 
