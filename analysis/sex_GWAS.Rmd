@@ -2,14 +2,65 @@
 title: "sex_GWAS"
 author: "Troy Rowan"
 date: "2020-09-17"
-output: workflowr::wflow_html
+output: 
+  html_document:
+    code_folding: show
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
-## Introduction
+```{r, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(workflowr)
+library(knitr)
+library(rgdal)
+library(raster)
+library(fpc)
+library(RStoolbox)
+library(maps)
+library(ggthemes)
+library(cowplot)
+library(purrr)
+library(factoextra)
+source(here::here("code", "map_functions.R"))
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(GALLO)
+setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
+```
+
+Setting up [GALLO] (https://cran.r-project.org/web/packages/GALLO) for annotating GWAS hits
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("rtracklayer")
+
+genes = 
+  import_gff_gtf(db_file = "data/Bos_taurus.ARS-UCD1.2.101.gtf.gz", file_type = "gtf")
+```
+
+
+# Exploring Antagonistic Sexual Selection
+Basically, run a GWAS for Sex and see what we find
+Similar to the approach taken by [Kasimatis et al. 2020] (https://www.biorxiv.org/content/10.1101/2020.03.26.009670v1)
 
 ```{r}
+ran_sex_gwas =
+  read_gwas("output/200910_RAN/gpsm/gwas/200910_RAN.sex.850K.mlma")
+
+
+ran_sex_gwas %>% 
+  gene_annotation() %>% 
+  left_join(ran_sex_gwas) %>%
+  filter(maf > 0.01) %>% 
+  View()
 
 ```
 

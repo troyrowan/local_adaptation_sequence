@@ -1,0 +1,59 @@
+---
+title: "GPSM"
+author: "Troy Rowan"
+date: "2020-09-20"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(workflowr)
+library(knitr)
+library(rgdal)
+library(raster)
+library(fpc)
+library(RStoolbox)
+library(maps)
+library(ggthemes)
+library(cowplot)
+library(purrr)
+library(factoextra)
+source(here::here("code", "map_functions.R"))
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(GALLO)
+setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
+```
+
+# Red Angus GPSM Analysis
+
+
+850K Red Angus GPSM
+```{r}
+ran_gpsm = 
+  read_gwas("../output/200910_RAN/gpsm/gwas/200910_RAN.gpsm.850K.mlma")
+
+ran_gpsm %>% 
+  ggmanhattan2(prune = 0.9, value = q)
+
+ran_gpsm %>% 
+  filter(maf > 0.01) %>% 
+  ggmanhattan2(prune = 0.9, value = q)
+
+ran_gpsm %>% 
+  filter(maf > 0.01) %>% 
+  gene_annotation() %>% 
+  View()
+
+```
+

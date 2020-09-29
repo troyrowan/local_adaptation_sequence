@@ -1,0 +1,64 @@
+---
+title: "200910_RAN.envGWAS_results"
+author: "Troy Rowan"
+date: "2020-09-26"
+output: workflowr::wflow_html
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(cowplot)
+library(purrr)
+library(factoextra)
+source(here::here("code", "map_functions.R"))
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(GALLO)
+setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
+```
+
+# Red Angus Univariate envGWAS Analysis
+
+
+850K Red Angus envGWAS
+```{r}
+ran_temp_envgwas = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.meantemp_noLSF.850K.mlma")
+
+ran_lat_envgwas = 
+  read_gwas("../output/200910_RAN/gwas/200910_RAN.latitude_noLSF.850K.mlma")
+
+ran_elev_envgwas = 
+  read_gwas("../output/200910_RAN/gwas/200910_RAN.elev_noLSF.850K.mlma")
+
+ran_temp_envgwas %>% 
+  ggmanhattan2(prune = 0.01, value = p)
+
+ran_lat_envgwas %>% 
+  ggmanhattan2(prune = 0.01, value = p)
+
+ran_elev_envgwas %>% 
+  ggmanhattan2(prune = 0.1, value = p)
+
+
+
+ran_elev_envgwas %>% 
+  gene_annotation() %>% 
+  left_join(ran_elev_envgwas) %>% 
+  View()
+
+```

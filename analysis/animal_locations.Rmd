@@ -1,5 +1,5 @@
 ---
-title: "Simmental Animal Locations"
+title: "Animal Locations and Phenotype Assignment"
 author: "Troy Rowan"
 date: "2020-07-31"
 output: 
@@ -12,47 +12,39 @@ editor_options:
 ```{r, include = FALSE}
 set.seed(325333)
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir=here::here())
 library(workflowr)
 library(knitr)
-library(rgdal)
-library(raster)
-library(fpc)
-library(RStoolbox)
 library(maps)
 library(ggthemes)
 library(cowplot)
 library(purrr)
 library(factoextra)
 source(here::here("code", "map_functions.R"))
-library(corrr)
 library(ggcorrplot)
 library(factoextra)
 library(here)
 library(tidyverse)
+library(lubridate)
+library(fastDummies)
+library(pedigree)
+library(car)
 setwd("C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence")
 ```
 
-
-## Reading in phenotypes, pedigree, etc. 
-
+###Zip codes and climate assignments
 ```{r}
-
-sim_animals = 
-  read_csv("data/mizzou-data-request/perf.csv") %>% 
-  left_join(read_csv("data/mizzou-data-request/xref.csv")) %>% 
-  rename(international_id = animal) 
-
-
-sim_pedigree = 
-  read_csv("data/mizzou-data-request/6-gen-ped.csv")
-sim_xref = 
-  read_csv("data/mizzou-data-request/xref.csv")
+prism = read_csv("data/prism_dataframe.csv") %>% 
+  mutate(lat = y,
+         long = x) %>% 
+  select(-x, -y)
 
 zip_info = 
   read_csv("data/uszips.csv") %>% 
   dplyr::select(zip, x = lng, y = lat, city, state_id)%>% 
   mutate(lat = round(y, 1),
          long = round(x, 1)) %>% 
+  left_join(prism) %>% 
   select(-x, -y)
 
 k9_all_s1 = readRDS("output/k9.allvars.seed1.rds") #Breaks out Fescue Belt
@@ -61,6 +53,23 @@ k9_three_s1 = readRDS("output/k9.threevars.seed1.rds") #These are basically equi
 k9_three_s2 = readRDS("output/k9.threevars.seed2.rds")
 k10 = readRDS("output/k10.allvars.seed2.rds") #Ten variable 
 ```
+
+
+# Simmental
+
+### Reading in phenotypes, pedigree, etc. 
+```{r}
+sim_animals = 
+  read_csv("data/200907_SIM/mizzou-data-request/perf.csv") %>% 
+  left_join(read_csv("data/200907_SIM/mizzou-data-request/xref.csv")) %>% 
+  dplyr::rename(international_id = animal) 
+
+sim_pedigree = 
+  read_csv("data/200907_SIM/mizzou-data-request/6-gen-ped.csv")
+sim_xref = 
+  read_csv("data/200907_SIM/mizzou-data-request/xref.csv")
+```
+
 ### Pulling lab IDs for genotype dump
 This is from the animal table as of August 21st, 2020
 Harly turned this into an RDS file using one of her scripts and weird suite of packages (almost broke her computer)
@@ -68,10 +77,18 @@ This behaved a bit curiously as I kept dropping ~10 K animals from the Simmental
 
 There are 99,932 individuals that are adequately accoutned for in the database
 
+*NOTE*
+09/07 edit: This was done incorrectly. was querying registration number only. Should havebeen basing things off of the crossref file that Simmental provided. Many of their individuals had weird instances where we'd listed SIM International ID when simmental provided their AAN/RAN/etc. International ID. 
+
+Here I pull individuals whose International ID (provided by Simmental) matches our animal table's International ID or one of their 3 RefIDs. Additionally there are ~5K animals who I pull out where Registration (and breed code = SIM) matches but International ID doesn't. 
+
+When we do this we get a data dump of 101,900 individuals. This means that only 55 individuals in the Simmental phenotype file don't match 
 ```{r}
 animal_table = 
   readRDS("data/animal_table.rds")
-SIM =
+
+#This is not appropriate way to identifty animals. Should be using the crossref file
+OSIM =
   rbind(
     animal_table %>% 
       filter(Reg %in% sim_animals$asa_nbr), 
@@ -82,6 +99,27 @@ SIM =
     animal_table %>% 
       filter(!is.na(Ref_ID3) & Ref_ID3 %in% sim_animals$asa_nbr))
 
+
+#This pulls Simmental animals that have international ids in the xref file from Simmental and in our lab database
+animal_table %>% 
+      filter(!is.na(international_id) & international_id %in% sim_xref$animal)
+
+SIM = 
+  rbind(
+      animal_table %>% 
+            filter(!is.na(international_id) & international_id %in% sim_xref$animal),
+      animal_table %>% 
+            filter(!is.na(Ref_ID) & Ref_ID %in% sim_xref$animal),
+      animal_table %>% 
+            filter(!is.na(Ref_ID2) & Ref_ID2 %in% sim_xref$animal),
+      animal_table %>% 
+            filter(!is.na(Ref_ID3) & Ref_ID3 %in% sim_xref$animal),
+      animal_table %>% 
+            filter(Reg %in% sim_xref$asa_nbr & BC == "SIM")) %>% 
+    distinct()
+
+
+filter(sim_animals, !international_id %in% c(SIM$Ref_ID, SIM$Ref_ID2, SIM$Ref_ID3, SIM$international_id) & !asa_nbr %in% SIM$Reg)
 #This showed me animals that have multiple entries in the "sim_animal" file 
 #sim_animals %>% group_by(asa_nbr) %>% count(sort = TRUE)
 #filter(sim_animals, !asa_nbr %in% c(SIM$Reg, SIM$Ref_ID, SIM$Ref_ID2, SIM$Ref_ID3))
@@ -89,24 +127,19 @@ SIM =
 SIM %>% 
   select(Lab_ID) %>% 
   distinct() %>%
-  write_csv("output/200822_Lab_IDs.csv")
-
-
-
+  write_csv("output/200907_Lab_IDs.csv", col_names = FALSE)
 ```
 
 
-
-## Completeness of data
+### Completeness of data
 
 98,335 individuals (unique ASA reg numbers) match up to entries in the database
 
 Important to note that many of these are repeats caused by mature weight phenotypes being different for a single animal (up to 7 repeated records).
 
 This does, however show the number of BW, WW, and YW that we have access to 
+
 ```{r}
-
-
 sim_animals %>% 
   select(BW = bw, WW = ww, YW = yw, MW = mw) %>% 
  summarise_all(funs(sum(!is.na(.)))) %>% 
@@ -148,8 +181,7 @@ k9_zips =
             layer == 1 ~ "HighPlains"
           )
          ) %>% 
-  rename(zone = layer)
-
+  dplyr::rename(zone = layer) 
 
 
 sim_animals %>% 
@@ -186,7 +218,7 @@ k9_zip_s2 =
             layer == 1 ~ "High Plains"
           )
          ) %>% 
-  rename(zone = layer)
+  dplyr::rename(zone = layer)
 
 
 sim_animals %>% 
@@ -223,7 +255,7 @@ k9_zips_threevar =
             layer == 7 ~ "High Plains"
           )
          ) %>% 
-  rename(zone = layer)
+  dplyr::rename(zone = layer)
 
 
 
@@ -251,5 +283,467 @@ sim_animals %>%
   mapplotting(max = 20)
 ```
 
+## Assigning Phenotypes
+
+Our dumped Simmental data had 98,683 individuals 
+
+After filtering we end up with 98,640 animals
+There is one weird corner case where two animals have the same international ID 
+
+#### Environmental/Region phenotypes assignment
+
+This code chunk reads in imputed Simmental data and generates 
+```{r, eval = FALSE}
+sim_fam = 
+  read_delim("data/200907_SIM/200907_SIM.fam",
+            delim = " ",
+             col_names = c("fam_id", "international_id", "sire", "dam", "sex", "phenotype"))
+#This removes the later clone's ASA  number from 
+
+sim_fam %>%
+  left_join(filter(sim_animals, asa_nbr != 2326708)) %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip")) %>% 
+  select(international_id, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long, region) %>% 
+   mutate(case = 1,
+         region = case_when(is.na(region) ~ "Missing",
+                            TRUE ~ region)) %>% 
+  select(international_id, region, case, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long,) %>% distinct() %>% 
+  pivot_wider(names_from = region, values_from = case, values_fill = list(case=0)) %>% 
+  mutate_at(
+    .vars = vars(HighPlains, UpperMidwest, AridPrairie, CornBelt, Foothills, ForestedMountains, FescueBelt, Southeast, Desert),
+    .funs = funs(case_when(Missing == 1 ~ NA_real_,
+                           TRUE ~ .))) %>% 
+  mutate(dummyfam = international_id) %>% 
+  select(dummyfam, international_id, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long, HighPlains, UpperMidwest, AridPrairie, CornBelt, Foothills, ForestedMountains, FescueBelt, Southeast, Desert) %>%
+  write_tsv("output/200907_SIM/phenotypes/200907_SIM.environment.txt",
+            col_names = FALSE)
+
+sim_fam %>%
+  left_join(filter(sim_animals, asa_nbr != 2326708)) %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip")) %>% 
+  mutate(case = 1,
+         region = case_when(is.na(region) ~ "Missing",
+                            TRUE ~ region)) %>% 
+  select(international_id, region, case) %>% distinct() %>% 
+  pivot_wider(names_from = region, values_from = case, values_fill = list(case=0)) %>% 
+  mutate_at(
+    .vars = vars(HighPlains, UpperMidwest, AridPrairie, CornBelt, Foothills, ForestedMountains, FescueBelt, Southeast, Desert),
+    .funs = funs(case_when(Missing == 1 ~ NA_real_,
+                           TRUE ~ .))) %>% 
+  mutate(count = HighPlains + UpperMidwest + AridPrairie + CornBelt + Foothills + ForestedMountains + FescueBelt + Southeast + Desert) %>% 
+  mutate(dummyid = international_id,
+         region = case_when(count > 1 ~ NA_character_,
+                            TRUE ~ region)) %>% 
+  write_tsv("../output/200907_SIM/phenotypes/200907_SIM.regions.txt",
+            col_names = FALSE)
+
+sim_fam %>%
+  left_join(filter(sim_animals, asa_nbr != 2326708)) %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip")) %>% 
+  group_by(international_id) %>%
+  mutate(region = case_when(n() > 1 ~ NA_character_,
+                            TRUE ~ region),
+         dummyid = international_id) %>% 
+  ungroup() %>% 
+  select(dummyid, international_id, region) %>% 
+  distinct() %>% 
+  write_csv("output/200907_SIM/phenotypes/200907_SIM.regions.txt",
+            col_names = FALSE)
+  
+```
+
+#### Generation Proxy Phenotype Generation
+This code is generating phenotpye files for Simmental dataset's generation proxies.
+```{r, eval = FALSE} 
+
+#Counts generation number of simmentals (by various metrics)
+sim_gens = 
+  read_csv("data/200907_SIM/mizzou-data-request/6-gen-ped.csv")%>% 
+    select(id = animal, sire, dam) %>% 
+    select(Indiv = id, Sire = sire, Dam = dam) %>% 
+    summary.Pedig()
+
+sim_fam %>%
+  left_join(filter(sim_animals, asa_nbr != 2326708)) %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip"))  %>% 
+  filter(!is.na(breeder_zip)) %>% 
+  distinct() %>% 
+  left_join(read_csv("data/200907_SIM/mizzou-birthdates.csv") %>% 
+              select(international_id = int_id, birth_date = anm_dob)) %>% 
+  mutate(birth_year = year(birth_date),
+         age = time_length(interval(start = birth_date, end = Sys.Date()), "year")) %>% 
+  left_join(sim_gens, by = c("international_id" = "Indiv")) %>% 
+  write_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
 
 
+simmental = 
+  read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
+
+
+#Generates optimal BoxCox Lambda value
+#boxcox(simmental$age, optimize = TRUE)
+
+sim_fam %>% 
+  left_join(filter(simmental, 
+                   asa_nbr != 2326708)) %>% 
+  mutate(dummyfam = international_id) %>% 
+  select(dummyfam, international_id, age, birth_year, equiGen, fullGen, maxGen, Inbreeding) %>% 
+  distinct() %>%
+    mutate(sqrt_age = age^0.5,
+           cbrt_age = age^0.333,
+           log_age = log(age),
+           bc_age = bcPower(age, lambda = 0.0345))%>% 
+  group_by(international_id) %>% 
+  slice(1:1) %>% 
+  ungroup() %>% 
+  write_tsv("output/200907_SIM/phenotypes/200907_SIM.generation_proxy.txt", col_names = FALSE)
+```
+
+
+# Red Angus
+
+### Reading in phenotypes, pedigree, etc. 
+```{r}
+ran_animals = 
+  read_csv("data/200910_RAN/redangus/raaa.animal.20200827.csv") %>% 
+    left_join(read_csv("data/200910_RAN/redangus/genomic_id.crossreference.csv")) %>% 
+    left_join(read_csv("data/200910_RAN/redangus/breeder_owner_information.csv"))
+    
+#Both of these dataframes contain additional information, but not anything that I'll be using in this analysis
+#read_csv("data/200910_RAN/redangus/raaa.heifer.20200827.csv")  # RAN heifer pregnancy data 4,412 animals in this dataset
+#read_csv("data/200910_RAN/redangus/raaa.matwt.20200827.csv")  # Information about calves
+```
+
+### Pulling lab IDs for genotype dump
+Pulling Red Angus animals based on lab IDs here. Assuming that we have information on 47,448 individuals (from Red Angus), and that includes animals that we already had genotypes on (I double checked this).
+
+Here I'm pulling lab IDs for these animals based either on their international_id, or the alternative_genomic_id provided in the crossreference file (there were 1,304 individuals with multiple of these, many of which were just incorrect sexes). 
+
+Identifies 47,038 animals based on international ID alone
+Using the alternate international ID gives 47,448 total
+
+While I found I could squeeze a few more IDs out with our internal RefIDs, I decided to not do that on the grounds of it being very difficult to rejoin these things. 
+
+```{r}
+animal_table = 
+  readRDS("data/animal_table.rds")
+
+#This pulls Red Angus animals that have international ids in the xref file from RAAA and in our lab database
+RAN = 
+  animal_table %>%
+    filter(!is.na(international_id) & international_id %in% c(ran_animals$international_id, ran_animals$alternative_genomic_id))
+animal_table %>%
+    filter(!is.na(international_id) & international_id %in% c(ran_animals$international_id))
+
+RAN %>% 
+  select(Lab_ID) %>% 
+  distinct() %>%
+  write_csv("output/200910_RAN/200910_RAN_Lab_IDs.csv", col_names = FALSE)
+
+```
+
+
+### Completeness of data
+
+47,448 individuals that match to entries in the database
+
+This reports the number of BW, WW, YW phenotypes reported
+```{r}
+ran_animals %>% 
+  select(BW = birth_wt, WW = wean_wt, YW = year_wt) %>% 
+ summarise_all(funs(sum(!is.na(.)))) %>% 
+  kable()
+```
+
+
+## Simmental Location Counts {.tabset}
+
+### K=9 All Variables (Seed #1)
+
+```{r} 
+k9_zips = 
+  left_join(zip_info, k9_all_s1 %>% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c("lat", "long")) %>% 
+    select(-x, -y) %>% 
+    filter(!is.na(layer)) %>% 
+    distinct() %>% 
+  mutate(region = 
+           case_when(
+            layer == 5 ~ "FescueBelt",
+            layer == 3 ~ "Southeast",
+            layer == 6 ~ "ForestedMountains",
+            layer == 9 ~ "Desert",
+            layer == 8 ~ "AridPrairie",
+            layer == 4 ~ "CornBelt",
+            layer == 7 ~ "UpperMidwest",
+            layer == 2 ~ "Foothills",
+            layer == 1 ~ "HighPlains"
+          )
+         ) %>% 
+  dplyr::rename(zone = layer)
+
+
+
+ran_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k9_zips$zip) %>% 
+  select(regisno, breeder_zip, international_id) %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip")) %>% 
+  group_by(region) %>% 
+  count() %>% 
+  kable()
+
+```
+
+### K=9 All Variables (Seed #2)
+Here, Rainforest becomes a region, but isn't counted here when we do K=9 with all variables and this seed
+```{r} 
+k9_zip_s2 = 
+  left_join(zip_info, k9_all_s2 %>% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c("lat", "long")) %>% 
+    select(-x, -y) %>% 
+    filter(!is.na(layer)) %>% 
+    distinct() %>% 
+  mutate(region = 
+           case_when(
+            layer == 7 ~ "FescueBelt",
+            layer == 9 ~ "Southeast",
+            layer == 2 ~ "ForestedMountains",
+            layer == 6 ~ "Desert",
+            layer == 8 ~ "AridPrairie",
+            layer == 4 ~ "Rainforest",
+            layer == 3 ~ "UpperMidwest",
+            layer == 5 ~ "Foothills",
+            layer == 1 ~ "HighPlains"
+          )
+         ) %>% 
+  dplyr::rename(zone = layer)
+
+
+ran_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k9_zip_s2$zip) %>% 
+  select(regisno, breeder_zip, international_id) %>%  
+  left_join(k9_zip_s2, by = c("breeder_zip" = "zip")) %>% 
+  group_by(region) %>% 
+  count() %>% kable()
+```
+
+### K=9 Three Variables
+Seed doesn't appear to cause any issues with major region changes so far as I can see.
+
+```{r} 
+k9_zips_threevar = 
+  left_join(zip_info, k9_three_s1 %>% 
+    mutate(lat = round(y,1),
+           long = round(x, 1)),
+    by = c("lat", "long")) %>% 
+    select(-x, -y) %>% 
+    filter(!is.na(layer)) %>% 
+    distinct() %>% 
+  mutate(region = 
+           case_when(
+            layer == 1 ~ "FescueBelt",
+            layer == 2 ~ "Southeast",
+            layer == 9 ~ "ForestedMountains",
+            layer == 4 ~ "Desert",
+            layer == 5 ~ "AridPrairie",
+            layer == 8 ~ "Rainforest",
+            layer == 6 ~ "UpperMidwest",
+            layer == 3 ~ "Foothills",
+            layer == 7 ~ "HighPlains"
+          )
+         ) %>% 
+  dplyr::rename(zone = layer)
+
+
+
+ran_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k9_zips_threevar$zip) %>% 
+  select(regisno, breeder_zip, international_id) %>%  
+  left_join(k9_zips_threevar, by = c("breeder_zip" = "zip")) %>%
+  group_by(region) %>% 
+  count() %>% kable()
+```
+
+
+
+
+## Red Angus Location Maps
+
+### K = 9 Map
+One thing that I wonder about here is using the information from the big Iowa group of RAN that actually belong in Montana...
+```{r, fig.height=4, fig.width=8} 
+ran_animals %>% 
+  #mutate(zip = as.numeric(breeder_zip)) %>% 
+  filter(breeder_zip %in% k9_zips$zip) %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip")) %>%
+  #rename(zone = layer) %>% 
+  mapplotting(max = 20)
+
+# ran_animals %>% 
+#   #mutate(zip = as.numeric(breeder_zip)) %>% 
+#   filter(breeder_zip %in% k9_zip_s2$zip) %>% 
+#   left_join(k9_zip_s2, by = c("breeder_zip" = "zip")) %>% view()
+#   #rename(zone = layer) %>% 
+#   mapplotting(max = 20)
+# 
+# ran_animals %>% 
+#   #mutate(zip = as.numeric(breeder_zip)) %>% 
+#   filter(breeder_zip %in% k9_zips_threevar$zip) %>% 
+#   left_join(k9_zips_threevar, by = c("breeder_zip" = "zip")) %>% 
+#   #rename(zone = layer) %>% 
+#   mapplotting(max = 20)
+
+
+```
+
+
+
+## Assigning Phenotypes
+
+* Starting number of entries 46,529 animals in fam file after filtering, etc.
+* Some animals have multiple owner zip codes, removed that and now only 8 duplicated individuals
+    + These all have multiple breeder zip codes. 
+    + Issue is a Denver zip code 80534 and 80241
+    + The 80534 zip code looks to be correct. Will do a mutate here to fix that and allow joining to work correctly
+* As we've dealt with before, the Ludvigson Stock Farms have most of their cattle in Montana and a handful of individuals in Iowa (where their address is)
+    + Instead of trying to rectify this I've decided to make two datasets (for now), and concentrate on analyzing the dataset without those animals (`noLSF`)
+    + As of 9-15-20 I'm still waiting on getting Ryan Boldt to get us some information on where particular animals were born
+```{r}
+#Calculating generation number for Red Angus
+library(optiSel)
+library(ggroups)
+ran_gen = 
+  read_csv("data/200910_RAN/All_Animals_SireDam.csv") %>% 
+  select(Indiv = anm_key, Sire = sire_key, Dam = dam_key) 
+newrangen =
+  ran_gen %>% 
+    mutate_all(~if_else(is.na(.), 0, .)) %>% 
+    pruneped(., pheno = ran_animals$regisno, mode = "strict")
+ran_gens = 
+  newrangen %>% 
+  pedigree::countGen()
+
+head(ran_gen)
+```
+
+```{r}
+#This has literally all of the information on these animals (aside from what's contained in mtwt and heifer dataframes)
+
+redangus = 
+  read_delim("data/200910_RAN/200910_RAN.fam",
+            delim = " ",
+             col_names = c("fam_id", "international_id", "sire", "dam", "sex", "phenotype")) %>% 
+  select(international_id) %>% 
+  left_join(ran_animals %>% mutate(breeder_zip = case_when(anm_brdr == "087143" ~ "80534",
+                                                           TRUE ~ breeder_zip )), "international_id") %>% 
+  select(-owner_zip) %>% 
+  distinct() %>% 
+  left_join(k9_zips, by = c("breeder_zip" = "zip")) %>% 
+  mutate(DOB = as_date(birth_date),
+         birth_year = year(birth_date),
+         age = time_length(interval(start = birth_date, end = Sys.Date()), "year"))
+
+redangus %>% 
+  write_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
+
+
+#outputs age phenotype file
+redangus %>% 
+  select(international_id, age) %>% 
+  distinct() %>% 
+  mutate(dummyfam = international_id) %>% 
+  select(dummyfam, international_id, age) %>% 
+  write_tsv("output/200910_RAN/phenotypes/200910_RAN.age.txt",
+            col_names = FALSE)
+
+redangus %>% 
+  select(international_id, sex) %>%
+  mutate(sex = case_when(sex == "C" ~ 0,
+                         sex %in% c("B", "S") ~ 1,
+                         TRUE ~ NA_real_))%>%
+  distinct() %>% 
+  mutate(dummyfam = international_id) %>% 
+  select(dummyfam, international_id, sex) %>% 
+  write_tsv("output/200910_RAN/phenotypes/200910_RAN.sex.txt",
+            col_names = FALSE)
+
+#outputs environmental variable phenotype files:
+#Temperature, Precipitation, Elevation, Minimum Vapor Pressure, Maximum Vapor Pressure, Min Temperature, Max Temperature, Dewpoint, Latitude, Longitude
+redangus %>% 
+  select(international_id, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long) %>% 
+  distinct() %>% 
+  mutate(dummyfam = international_id) %>% 
+  select(dummyfam, international_id, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long) %>% 
+  write_tsv("output/200910_RAN/phenotypes/200910_RAN.environment.txt",
+            col_names = FALSE)
+
+#outputs environmental variable phenotype files with LSF animals as missing:
+#Temperature, Precipitation, Elevation, Minimum Vapor Pressure, Maximum Vapor Pressure, Min Temperature, Max Temperature, Dewpoint, Latitude, Longitude
+ran_envvars = 
+  redangus %>% 
+    mutate_at(
+      .vars = vars(meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long),
+      .funs = funs(case_when(
+        breeder_zip == "51018" ~ NA_real_,
+        TRUE ~ .))) %>%
+    select(international_id, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long) %>% 
+    distinct() %>% 
+    mutate(dummyfam = international_id) %>% 
+    select(dummyfam, international_id, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long)
+
+#This is the complete environmental phenotype file with both continuous variables and discrete environments
+redangus %>% 
+  mutate(region = case_when(breeder_zip == "51018" ~ NA_character_,
+                            TRUE ~ region)) %>% 
+  mutate_at(
+    .vars = vars(meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long),
+    .funs = funs(case_when(
+      breeder_zip == "51018" ~ NA_real_,
+      TRUE ~ .))) %>% 
+  mutate(case = 1,
+         region = case_when(is.na(region) ~ "Missing",
+                            TRUE ~ region)) %>% 
+  select(international_id, region, case) %>%
+  pivot_wider(names_from = region, values_from = case, values_fill = list(case=0)) %>% 
+  mutate_at(
+    .vars = vars(HighPlains, UpperMidwest, AridPrairie, CornBelt, Foothills, ForestedMountains, FescueBelt, Southeast, Desert),
+    .funs = funs(case_when(Missing == 1 ~ NA_real_,
+                           TRUE ~ .))) %>% 
+  mutate(dummyfam = international_id) %>% 
+  select(dummyfam, international_id, HighPlains, UpperMidwest, AridPrairie, CornBelt, Foothills, ForestedMountains, FescueBelt, Southeast, Desert) %>% 
+  left_join(ran_envvars) %>% 
+  select(dummyfam, international_id, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long, HighPlains, UpperMidwest, AridPrairie, CornBelt, Foothills, ForestedMountains, FescueBelt, Southeast, Desert) %>% 
+  write_tsv("output/200910_RAN/phenotypes/200910_RAN.noLSF.allenv.txt")
+
+redangus%>% 
+  mutate(region = case_when(breeder_zip == "51018" ~ NA_character_,
+                            TRUE ~ region)) %>%
+  group_by(international_id) %>%
+  mutate(region = case_when(n() > 1 ~ NA_character_,
+                            TRUE ~ region),
+         dummyid = international_id) %>% 
+  ungroup() %>% 
+  select(dummyid, international_id, region) %>% 
+  distinct() %>% 
+  write_csv("output/200910_RAN/phenotypes/200910_RAN.regions.txt",
+            col_names = FALSE)
+  
+```
+
+From the GCTA Manual: 
+
+```--mpheno 2
+If the phenotype file contains more than one trait, by default, GCTA takes the first trait for analysis (the third column of the file) unless this option is specified. For example, --mpheno 2 tells GCTA to take the second trait for analysis (the fourth column of the file). ```
+
+So for this phenotype file we'll need to associate each of these variables with their corresponding column in the file.
+
+This will go in the envGWAS snakefile: 
+
+phenotype_dict = {"meantemp":1, "precip":2, "elev":3, "minvap":4, "maxvap":5, "mintemp":6, "maxtemp":7, "dewpoint":8, "latitude":9, "longitude":10 }
