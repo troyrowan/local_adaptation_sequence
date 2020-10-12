@@ -13,6 +13,7 @@
 
 <title>Home</title>
 
+<script src="site_libs/header-attrs-2.3/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -36,6 +37,8 @@ div.section {
   padding-top: 12px;
 }
 </style>
+
+
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -421,7 +424,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-09-25
+<strong>Last updated:</strong> 2020-10-12
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -452,16 +455,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreeea3729774f1ded118c6950b1a46bc43d9f4b13f1targetblankea37297a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/ea3729774f1ded118c6950b1a46bc43d9f4b13f1" target="_blank">ea37297</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree46c1a8e7061c6d018b9401adeb43ad8aa7e69fbdtargetblank46c1a8ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/46c1a8e7061c6d018b9401adeb43ad8aa7e69fbd" target="_blank">46c1a8e</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreeea3729774f1ded118c6950b1a46bc43d9f4b13f1targetblankea37297a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetree46c1a8e7061c6d018b9401adeb43ad8aa7e69fbdtargetblank46c1a8ea" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/ea3729774f1ded118c6950b1a46bc43d9f4b13f1" target="_blank">ea37297</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/46c1a8e7061c6d018b9401adeb43ad8aa7e69fbd" target="_blank">46c1a8e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -470,22 +473,38 @@ Note that you need to be careful to ensure that all relevant files for the analy
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    analysis/genes.txt
+    Ignored:    code/commands.txt
+    Ignored:    data/1KBulls_ids.txt
     Ignored:    data/200907_SIM/
     Ignored:    data/200910_RAN/
     Ignored:    data/Bos_taurus.ARS-UCD1.2.101.gtf.gz
     Ignored:    data/Bos_taurus.ARS-UCD1.2.QTL.gff.gz
     Ignored:    data/Johnston_ATAC-seq/
     Ignored:    data/animal_table.rds
+    Ignored:    data/bovine_demo.sample_metadata.csv
     Ignored:    data/prism_climate_data/
     Ignored:    data/prism_dataframe.csv
     Ignored:    data/uszips.csv
     Ignored:    desktop.ini
     Ignored:    output/200822_Lab_IDs.csv
     Ignored:    output/200907_Lab_IDs.csv
-    Ignored:    output/200907_SIM/
     Ignored:    output/200909_RAN_Lab_IDs.csv
-    Ignored:    output/200910_RAN/
+    Ignored:    output/200910_RAN/200910_RAN.phenotypes.csv
+    Ignored:    output/200910_RAN/200910_RAN.phenotypes.txt
+    Ignored:    output/200910_RAN/200910_RAN_Lab_IDs.csv
+    Ignored:    output/200910_RAN/gpsm/
+    Ignored:    output/200910_RAN/gwas/
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.generation_proxy.txt
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.info.csv
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.noLSF.allenv.txt
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.phenotyped_ids.txt
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.regions.txt
+    Ignored:    output/200910_RAN/subsets/
     Ignored:    output/200910_RAN_Lab_IDs.csv
+    Ignored:    output/coresnps.50K.refaltaltref.txt
+    Ignored:    output/coresnps.50K.txt
+    Ignored:    output/coresnps.850K.refaltaltref.txt
     Ignored:    output/desktop.ini
     Ignored:    output/k10.allvars.seed2.rds
     Ignored:    output/k9.allvars.seed1.rds
@@ -496,22 +515,42 @@ Ignored files:
     Ignored:    output/zipcode_zones.csv
 
 Untracked files:
-    Untracked:  analysis/GPSM.Rmd
+    Untracked:  analysis/Region_FST.Rmd
+    Untracked:  analysis/selection_scans.Rmd
+    Untracked:  code/GCTA_functions.R
+    Untracked:  code/cluster/selscan.cluster.json
+    Untracked:  code/cluster/sfs_selection.cluster.json
+    Untracked:  code/config/200910_RAN.GPSM.config.yaml
     Untracked:  code/countgens_RAN.R
+    Untracked:  code/snakemake_files/BOLT.snakefile
+    Untracked:  code/snakemake_files/sfs_selection.snakefile
     Untracked:  ftpconfigs/
     Untracked:  functions.R
+    Untracked:  output/200907_SIM.850K.bim
+    Untracked:  output/200907_SIM/
+    Untracked:  output/200910_RAN/fst/
+    Untracked:  output/200910_RAN/greml/
+    Untracked:  output/200910_RAN/selscan/
+    Untracked:  test.Rmd
+    Untracked:  test.html
 
 Unstaged changes:
-    Modified:   .ftpconfig
     Modified:   .gitignore
+    Modified:   analysis/200910_RAN.envGWAS_results.Rmd
     Modified:   analysis/animal_locations.Rmd
-    Modified:   analysis/sex_GWAS.Rmd
+    Modified:   analysis/phenotype_exploration.Rmd
     Modified:   code/annotation_functions.R
+    Modified:   code/cluster/GCTA.cluster.json
     Modified:   code/config/200907_SIM.GPSM.config.yaml
+    Modified:   code/config/200907_SIM.envGWAS.config.yaml
     Modified:   code/config/200910_RAN.config.yaml
     Modified:   code/config/200910_RAN_noLSF.config.yaml
     Modified:   code/snakemake_files/GCTA.snakefile
+    Modified:   code/snakemake_files/selscan.snakefile
     Deleted:    data/README.md
+    Modified:   output/200910_RAN/phenotypes/200910_RAN.age.txt
+    Modified:   output/200910_RAN/phenotypes/200910_RAN.environment.txt
+    Modified:   output/200910_RAN/phenotypes/200910_RAN.sex.txt
 
 </code></pre>
 <p>
@@ -550,6 +589,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/46c1a8e7061c6d018b9401adeb43ad8aa7e69fbd/analysis/index.Rmd" target="_blank">46c1a8e</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-10-12
+</td>
+<td>
+updated home page
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/troyrowan/local_adaptation_sequence/002c12a97224094e66313062a496649584c3c692/docs/index.html" target="_blank">002c12a</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-09-25
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -851,6 +924,7 @@ Start workflowr project.
 <p><a href="map_making.html">Map Making</a>: This describes how we used long-term climate data to break the United States into distinct ecoregions.</p>
 <p><a href="animal_locations.html">Simmental Locations</a>: Here we see the geographic distribution of our genotyped Simmental population</p>
 <p><a href="phenotype_exploration.html">GPSM Phenotypes</a>: This is an exploration of various generation proxy phenotypes and possible transformations to make them more normal for use in LMMs</p>
+<p><a href="GPSM.html">Red Angus GPSM Results</a>: Results from GREML and LMM analysis of various transformed generation proxies in Red Angus dataset.</p>
 
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
@@ -864,6 +938,8 @@ footer is added to webpages before the MathJax javascript. -->
     "HTML-CSS": { availableFonts: ["TeX"] }
   });
 </script>
+
+
 
 
 </div>
