@@ -17,3 +17,5 @@ Welcome to the Local Adaptation Sequence-Level Analysis Project Site
 [Simmental Locations](animal_locations.html): Here we see the geographic distribution of our genotyped Simmental population
 
 [GPSM Phenotypes](phenotype_exploration.html): This is an exploration of various generation proxy phenotypes and possible transformations to make them more normal for use in LMMs
+
+[Red Angus GPSM Results](GPSM.html): Results from GREML and LMM analysis of various transformed generation proxies in Red Angus dataset.
