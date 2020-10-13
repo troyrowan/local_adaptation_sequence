@@ -11,17 +11,16 @@ editor_options:
     wrap: 72
 ---
 
-```{r setup, include = FALSE}
+```{r, setup, include = FALSE}
 set.seed(325333)
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-knitr::opts_knit$set(root.dir=here::here())
+knitr::opts_knit$set(root.dir = here::here())
 library(workflowr)
 library(knitr)
 library(maps)
 library(ggthemes)
 library(purrr)
 library(factoextra)
-source(here::here("code", "map_functions.R"))
 library(corrr)
 library(ggcorrplot)
 library(factoextra)
@@ -32,11 +31,14 @@ library(pedigree)
 library(qvalue)
 library(GALLO)
 library(cowplot)
+library(gprofiler2)
+library(DT)
 #source("../code/annotation_functions.R")
-source("code/GCTA_functions.R")
 ```
 
 ```{r}
+source("code/GCTA_functions.R")
+source("code/annotation_functions.R")
 simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
 redangus = read_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
 ```
@@ -67,66 +69,65 @@ rbind(data.frame(SNP = paste(core_snps_850K$CHR, core_snps_850K$BP, core_snps_85
 
 ## REML variance component estimates {.tabset}
 
-### Raw Age 
-Raw Age (n= 46,454): 
+### Raw Age
 
-| Source  	| Variance 	| SE    	|
-|---------	|----------	|-------	|
-| V(G)    	| 5.244    	| 0.128 	|
-| V(e)    	| 4.789    	| 0.040 	|
-| V(p)    	| 10.03    	| 0.118 	|
-| V(G)/Vp 	| 0.523    	| 0.007 	|
+Raw Age (n= 46,454):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 5.244    | 0.128 |
+| V(e)    | 4.789    | 0.040 |
+| V(p)    | 10.03    | 0.118 |
+| V(G)/Vp | 0.523    | 0.007 |
 
 ### Square Root
 
 Square Root Transformed Age (n= 46,454):
 
-| Source  	| Variance 	| SE    	|
-|---------	|----------	|-------	|
-| V(G)    	| 0.242    	| 0.005   |
-| V(e)    	| 0.151    	| 0.001 	|
-| V(p)    	| 0.393    	| 0.005 	|
-| V(G)/Vp 	| 0.616    	| 0.006 	|
-
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.242    | 0.005 |
+| V(e)    | 0.151    | 0.001 |
+| V(p)    | 0.393    | 0.005 |
+| V(G)/Vp | 0.616    | 0.006 |
 
 ### Cube Root
 
-Cube Root Transformed Age (n= 46,454): 
+Cube Root Transformed Age (n= 46,454):
 
-| Source  	| Variance 	| SE    	|
-|---------	|----------	|-------	|
-| V(G)    	| 0.065    	| 0.001   |
-| V(e)    	| 0.037    	| 0.000 	|
-| V(p)    	| 0.101    	| 0.001 	|
-| V(G)/Vp 	| 0.637    	| 0.006 	|
-
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.065    | 0.001 |
+| V(e)    | 0.037    | 0.000 |
+| V(p)    | 0.101    | 0.001 |
+| V(G)/Vp | 0.637    | 0.006 |
 
 ### Box-Cox
 
 Box-Cox Transformed Age (n= 46,454):
 
-| Source  	| Variance 	| SE    	|
-|---------	|----------	|-------	|
-| V(G)    	| 0.115    	| 0.002   |
-| V(e)    	| 0.060    	| 0.001 	|
-| V(p)    	| 0.175    	| 0.002 	|
-| V(G)/Vp 	| 0.657    	| 0.006 	|
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.115    | 0.002 |
+| V(e)    | 0.060    | 0.001 |
+| V(p)    | 0.175    | 0.002 |
+| V(G)/Vp | 0.657    | 0.006 |
 
+### Log
 
-### Log 
+Log Transformed Age (n= 46,454):
 
-Log Transformed Age (n= 46,454): 
-
-| Source  	| Variance 	| SE    	|
-|---------	|----------	|-------	|
-| V(G)    	| 0.222    	| 0.005   |
-| V(e)    	| 0.115    	| 0.001 	|
-| V(p)    	| 0.337    	| 0.005 	|
-| V(G)/Vp 	| 0.657    	| 0.006 	|
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.222    | 0.005 |
+| V(e)    | 0.115    | 0.001 |
+| V(p)    | 0.337    | 0.005 |
+| V(G)/Vp | 0.657    | 0.006 |
 
 ## Individual Residuals and Breeding Values {.tabset}
 
-These are REML estimates of individual's breeding values and residuals from GCTA GREML analysis
+These are REML estimates of individual's breeding values and residuals
+from GCTA GREML analysis
 
 ### Age
 
@@ -246,13 +247,13 @@ plot_grid(read_blp("output/200910_RAN/greml/200910_RAN.log_age.850K.indi.blp") %
 The number of significant SNPs in each analysis at various significance
 level cutoffs for both p and q values
 
-|        	| p<1e-5 	| p<1e7.55e-7 	| q<0.1 	| q<0.05 	|
-|--------	|--------	|-------------	|-------	|--------	|
-| Raw    	| 315    	| 214         	| 509   	| 398    	|
-| Sqrt   	| 453    	| 333         	| 729   	| 559    	|
-| Cbrt   	| 471    	| 357         	| 817   	| 596    	|
-| BoxCox 	| 540    	| 390         	| 907   	| 754    	|
-| Log    	| 513    	| 377         	| 822   	| 715    	|
+|        | p\<1e-5 | p\<1e7.55e-7 | q\<0.1 | q\<0.05 |
+|--------|---------|--------------|--------|---------|
+| Raw    | 315     | 214          | 509    | 398     |
+| Sqrt   | 453     | 333          | 729    | 559     |
+| Cbrt   | 471     | 357          | 817    | 596     |
+| BoxCox | 540     | 390          | 907    | 754     |
+| Log    | 513     | 377          | 822    | 715     |
 
 ```{r eval=TRUE, echo=FALSE}
 ran_gpsm_age = 
@@ -299,7 +300,9 @@ raw_age_sigsnps =
 Square root transformed age as phenotype (Significance threshold -
 Bonferroni)
 
-Green points indicate novel SNPs in this transformed analysis (at Bonferroni significance levels) that weren't identified in the GPSM analysis of raw age.
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
 
 ```{r}
 plot_grid(
@@ -324,7 +327,9 @@ plot_grid(
 Cube Root Transformed Age Manahattan Plots (Significance threshold -
 Bonferroni)
 
-Green points indicate novel SNPs in this transformed analysis (at Bonferroni significance levels) that weren't identified in the GPSM analysis of raw age.
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
 
 ```{r}
 plot_grid(
@@ -349,7 +354,9 @@ plot_grid(
 Box-Cox Transformed Age Manahattan Plots (Significance threshold -
 Bonferroni)
 
-Green points indicate novel SNPs in this transformed analysis (at Bonferroni significance levels) that weren't identified in the GPSM analysis of raw age.
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
 
 ```{r}
 plot_grid(
@@ -374,7 +381,9 @@ plot_grid(
 Log Transformed Age Manahattan Plots (Significance threshold -
 Bonferroni)
 
-Green points indicate novel SNPs in this transformed analysis (at Bonferroni significance levels) that weren't identified in the GPSM analysis of raw age.
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
 
 ```{r}
 plot_grid(
@@ -392,4 +401,72 @@ plot_grid(
                  .$SNP)+
     ylim(c(0,15)),
   nrow = 2)
+```
+
+## Conditional Joint Analysis (COJO)
+
+[COJO documentation](https://cnsgenomics.com/software/gcta/#COJO)
+
+[COJO citation](https://www.nature.com/articles/ng.2213)
+
+So when we run this on the log-transformed age we identify an additional
+680 associated SNPs (that aren't significant at p \< 1e-5 in the initial
+GPSM analysis)
+
+Should we be conditioning on only lead variants with `--cojo-cond`
+instead of doing `--cojo-slct`?
+
+### Candidate genes associated with COJO hits:
+
+Using GALLO annotation to identify nearby genes (within 50 kb) to significant (p < 1e-5) COJO hits
+
+```{r}
+
+ran_gpsm_logage_cojo = 
+  read_tsv("output/200910_RAN/cojo/200910_RAN.log_age.850K.jma.cojo.gz") %>% 
+    select(CHR = Chr, BP = bp, p = pJ) %>% 
+    gene_annotation() %>% 
+    left_join(read_tsv("output/200910_RAN/cojo/200910_RAN.log_age.850K.jma.cojo.gz"), 
+              by = c("CHR" = "Chr", "BP" = "bp")) %>% 
+  select(-chr, -start_pos, -end_pos, -width, -strand, -upstream, -downstream, -refA, -b, -se, -freq_geno, -n)
+
+datatable(ran_gpsm_logage_cojo)
+```
+
+
+### Gene Ontology Analysis
+
+Gene ontology enrichment analysis using `gprofiler2::gost()` of gene names from GALLO annotation of log-transformed GPSM COJO hits
+
+Significance threshold set at FDR < 0.10
+```{r}
+GO_results = gost(query = ran_gpsm_logage_cojo$gene_name, 
+                  organism = "btaurus",
+                  user_threshold = 0.1,
+                  correction_method = "fdr")
+
+
+gostplot(GO_results, capped = TRUE, interactive = TRUE)
+```
+
+### QTL-enrichment analysis
+```{r}
+read_tsv("output/200910_RAN/cojo/200910_RAN.log_age.850K.jma.cojo.gz") %>% 
+  select(CHR = Chr, BP = bp, p = pJ) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+
+
+### Per-Chromosome QTL-enrichment analysis
+```{r}
+read_tsv("output/200910_RAN/cojo/200910_RAN.log_age.850K.jma.cojo.gz") %>% 
+  select(CHR = Chr, BP = bp, p = pJ) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval)
 ```
