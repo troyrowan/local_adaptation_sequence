@@ -428,7 +428,7 @@ ran_gpsm_logage_cojo =
     gene_annotation() %>% 
     left_join(read_tsv("output/200910_RAN/cojo/200910_RAN.log_age.850K.jma.cojo.gz"), 
               by = c("CHR" = "Chr", "BP" = "bp")) %>% 
-  select(-chr, -start_pos, -end_pos, -width, -strand, -upstream, -downstream, -refA, -b, -se, -freq_geno, -n)
+  select(-chr, -start_pos, -end_pos, -SNP, -gene_biotype, -width, -strand, -upstream, -downstream, -refA, -b, -se, -freq_geno, -n)
 
 datatable(ran_gpsm_logage_cojo)
 ```
@@ -468,5 +468,6 @@ read_tsv("output/200910_RAN/cojo/200910_RAN.log_age.850K.jma.cojo.gz") %>%
   qtl_annotation() %>% 
   filter(QTL_type != "Milk") %>% 
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
-  arrange(adj.pval)
+  arrange(adj.pval) %>% 
+  datatable()
 ```
