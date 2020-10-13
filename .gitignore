@@ -7,10 +7,20 @@
 *.rds
 *.RDS
 *.ini
+*.accdb
 *.asc
+*.csv
+*.txt
+*.xlsx
+*.pdf
+*.tif
+*.fam
+*.mlma
+*.log
+*.gz
 
-analysis/figure
-analysis/*png
+data/Johnston_ATAC-seq/*
+code/config/*/*
 analysis/*html
 analysis/*_cache
 analysis/site_libs
