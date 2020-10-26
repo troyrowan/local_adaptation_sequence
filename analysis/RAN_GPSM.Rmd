@@ -1,0 +1,921 @@
+---
+title: "GPSM"
+author: "Troy Rowan"
+date: "2020-09-20"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+  markdown: 
+    wrap: 72
+---
+
+```{r, setup, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = here::here())
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(purrr)
+library(factoextra)
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(qvalue)
+library(GALLO)
+library(cowplot)
+library(gprofiler2)
+library(DT)
+#source("../code/annotation_functions.R")
+```
+
+```{r}
+source("code/GCTA_functions.R")
+source("code/annotation_functions.R")
+simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
+redangus = read_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
+```
+# Red Angus GPSM Analysis
+
+## REML variance component estimates {.tabset}
+
+### Raw Age
+
+Raw Age (n= 46,454):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 5.244    | 0.128 |
+| V(e)    | 4.789    | 0.040 |
+| V(p)    | 10.03    | 0.118 |
+| V(G)/Vp | 0.523    | 0.007 |
+
+### Square Root
+
+Square Root Transformed Age (n= 46,454):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.242    | 0.005 |
+| V(e)    | 0.151    | 0.001 |
+| V(p)    | 0.393    | 0.005 |
+| V(G)/Vp | 0.616    | 0.006 |
+
+### Cube Root
+
+Cube Root Transformed Age (n= 46,454):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.065    | 0.001 |
+| V(e)    | 0.037    | 0.000 |
+| V(p)    | 0.101    | 0.001 |
+| V(G)/Vp | 0.637    | 0.006 |
+
+### Box-Cox
+
+Box-Cox Transformed Age (n= 46,454):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.115    | 0.002 |
+| V(e)    | 0.060    | 0.001 |
+| V(p)    | 0.175    | 0.002 |
+| V(G)/Vp | 0.657    | 0.006 |
+
+### Log
+
+Log Transformed Age (n= 46,454):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.222    | 0.005 |
+| V(e)    | 0.115    | 0.001 |
+| V(p)    | 0.337    | 0.005 |
+| V(G)/Vp | 0.657    | 0.006 |
+
+### Young Raw Age 
+
+Raw Age (Born 2012-Present) (n= 44,470):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 3.354    | 0.061 |
+| V(e)    | 0.983    | 0.001 |
+| V(p)    | 4.337    | 0.057 |
+| V(G)/Vp | 0.773    | 0.004 |
+
+### Young Log Age
+
+Log Transformed Age (Born 2012-Present) (n= 46,454):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.200    | 0.004 |
+| V(e)    | 0.079    | 0.001 |
+| V(p)    | 0.279    | 0.004 |
+| V(G)/Vp | 0.718    | 0.005 |
+
+### Old Raw Age 
+
+Raw Age (Born 2012-Present) (n= 1,984):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 16.70    | 1.277 |
+| V(e)    | 13.30    | 0.854 |
+| V(p)    | 30.00    | 1.041 |
+| V(G)/Vp | 0.557    | 0.031 |
+
+### Old Log Age
+
+Log Transformed Age (Born 2012-Present) (n= 1,984):
+
+| Source  | Variance | SE    |
+|---------|----------|-------|
+| V(G)    | 0.056    | 0.004 |
+| V(e)    | 0.045    | 0.003 |
+| V(p)    | 0.100    | 0.003 |
+| V(G)/Vp | 0.555    | 0.031 |
+
+## Individual Residuals and Breeding Values {.tabset}
+
+These are REML estimates of individual's breeding values and residuals
+from GCTA GREML analysis
+
+### Age
+
+```{r}
+plot_grid(
+  read_blp("output/200910_RAN/greml/200910_RAN.age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Raw Age GPSM\nResiduals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nBreeding Values")+
+    theme_cowplot())
+```
+
+### Square Root
+
+```{r}
+plot_grid(
+  read_blp("output/200910_RAN/greml/200910_RAN.sqrt_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Square Root Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.sqrt_age.850K.indi.blp") %>% 
+  left_join(redangus %>% 
+              select(international_id, age)) %>% 
+  ggplot(aes(sample = BV))+
+  stat_qq()+
+  stat_qq_line(color = "red")+
+  ggtitle("\nBreeding Values")+
+  theme_cowplot())
+```
+
+### Cube Root
+
+```{r}
+plot_grid(
+  read_blp("output/200910_RAN/greml/200910_RAN.cbrt_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Cube Root Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.cbrt_age.850K.indi.blp") %>% 
+  left_join(redangus %>% 
+              select(international_id, age)) %>% 
+  ggplot(aes(sample = BV))+
+  stat_qq()+
+  stat_qq_line(color = "red")+
+  ggtitle("\nGPSM Breeding Values")+
+  theme_cowplot())
+```
+
+### Box-Cox
+
+```{r}
+
+plot_grid(
+  read_blp("output/200910_RAN/greml/200910_RAN.bc_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Box-Cox Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.bc_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Residuals")+
+    theme_cowplot())
+```
+
+### Log
+
+```{r}
+
+plot_grid(read_blp("output/200910_RAN/greml/200910_RAN.log_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Log Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.log_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+### Youg Raw Age
+
+```{r}
+
+plot_grid(read_blp("output/200910_RAN/greml/200910_RAN.young_age.850K.indi.blp.gz") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("(2012-Present) Animals Only\n Raw Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.young_age.850K.indi.blp.gz") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+
+### Log
+
+```{r}
+
+plot_grid(read_blp("output/200910_RAN/greml/200910_RAN.young_log_age.850K.indi.blp.gz") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Log Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.young_log_age.850K.indi.blp.gz") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+
+### Old Raw Age
+
+```{r}
+
+plot_grid(read_blp("output/200910_RAN/greml/200910_RAN.old_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("(2011 and Earlier)\n Raw Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.old_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+```
+
+### Old log Age
+
+```{r}
+
+plot_grid(read_blp("output/200910_RAN/greml/200910_RAN.old_log_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("(2011 and Earlier)\n Raw Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.old_log_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+## n(SigSNPs)
+
+The number of significant SNPs in each analysis at various significance
+level cutoffs for both p and q values
+
+|        | p\<1e-5 | p\<1e7.55e-7 | q\<0.1 | q\<0.05 |
+|--------|---------|--------------|--------|---------|
+| Raw    | 315     | 214          | 509    | 398     |
+| Sqrt   | 453     | 333          | 729    | 559     |
+| Cbrt   | 471     | 357          | 817    | 596     |
+| BoxCox | 540     | 390          | 907    | 754     |
+| Log    | 513     | 377          | 822    | 715     |
+| YAge   | 762     | 555          | 1210   | 1042    |
+| YLog   | 743     | 533          | 1123   | 989     |
+| OAge   | 762     | 555          | 1210   | 1042    |
+| OLog   | 743     | 533          | 1123   | 989     |
+
+```{r eval=TRUE, echo=FALSE}
+sigcheck = function(df){
+  gwasdf = 
+    df %>% 
+    mutate(p_1e5 = case_when(p <= 1e-5 ~ TRUE,
+                             TRUE ~ FALSE),
+           bonferr = case_when(p <= 7.55e-7 ~ TRUE,
+                             TRUE ~ FALSE),
+           q01 = case_when(q <= 0.10 ~ TRUE,
+                             TRUE ~ FALSE),
+           q005 = case_when(q <= 0.05 ~ TRUE,
+                             TRUE ~ FALSE))%>% 
+  select(p_1e5, bonferr, q01, q005) %>% 
+  colSums() 
+  return(gwasdf)
+}
+
+ran_gpsm_age = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.age.850K.mlma.gz")
+
+ran_gpsm_sqrtage = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.sqrt_age.850K.mlma.gz")
+
+ran_gpsm_cbrtage = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.cbrt_age.850K.mlma.gz")
+
+ran_gpsm_bcage = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.bc_age.850K.mlma.gz")
+
+ran_gpsm_logage = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.log_age.850K.mlma.gz")
+
+ran_gpsm_youngage = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.young_age.850K.mlma.gz")
+
+ran_gpsm_younglogage = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.young_log_age.850K.mlma.gz")
+
+ran_gpsm_oldage = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.old_age.850K.mlma.gz")
+
+ran_gpsm_oldlogage = 
+  read_gwas("output/200910_RAN/gwas/200910_RAN.old_log_age.850K.mlma.gz")
+```
+
+## GPSM GWAS Manhattan Plots for Transformed Age {.tabset}
+
+### Raw Age
+
+(Significance threshold - Bonferroni)
+
+```{r}
+plot_grid(
+  ggmanhattan2(ran_gpsm_age,
+               prune = 0.1, 
+               sig_threshold_p = 7.546167e-07),
+  ggmanhattan2(ran_gpsm_age,
+               prune = 0.1,
+               sig_threshold_p = 7.546167e-07)+
+    ylim(c(0,15)),
+  nrow = 2)
+
+#Saving significant SNPs for highlighting in other plots:
+raw_age_sigsnps = 
+  ran_gpsm_age %>% 
+    filter(p < 7.546167e-07) %>% .$SNP
+```
+
+### Square Root
+
+Square root transformed age as phenotype (Significance threshold -
+Bonferroni)
+
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
+
+```{r}
+plot_grid(
+  ggmanhattan2(ran_gpsm_sqrtage,
+               prune = 0.1, 
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_sqrtage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP),
+  ggmanhattan2(ran_gpsm_sqrtage,
+               prune = 0.1,
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_sqrtage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP)+
+    ylim(c(0,15)),
+  nrow = 2)
+```
+
+### Cube Root
+
+Cube Root Transformed Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
+
+```{r}
+plot_grid(
+  ggmanhattan2(ran_gpsm_cbrtage,
+               prune = 0.1, 
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_cbrtage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP),
+  ggmanhattan2(ran_gpsm_cbrtage,
+               prune = 0.1,
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_cbrtage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP)+
+    ylim(c(0,15)),
+  nrow = 2)
+```
+
+### Box-Cox
+
+Box-Cox Transformed Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
+
+```{r}
+plot_grid(
+  ggmanhattan2(ran_gpsm_bcage,
+               prune = 0.1, 
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_bcage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP),
+  ggmanhattan2(ran_gpsm_bcage,
+               prune = 0.1,
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_bcage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP)+
+    ylim(c(0,15)),
+  nrow = 2)
+```
+
+### Log
+
+Log Transformed Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
+
+```{r}
+plot_grid(
+  ggmanhattan2(ran_gpsm_logage,
+               prune = 0.1, 
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_logage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP),
+  ggmanhattan2(ran_gpsm_logage,
+               prune = 0.1,
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_logage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP)+
+    ylim(c(0,15)),
+  nrow = 2)
+
+plot_grid(
+  ggmanhattan2(ran_gpsm_logage,
+               prune = 0.1, 
+               sig_threshold_p = 7.546167e-07),
+  ggmanhattan2(ran_gpsm_logage,
+               prune = 0.1,
+               sig_threshold_p = 7.546167e-07)+
+    ylim(c(0,15)),
+  nrow = 2)
+
+logage_sigsnps = 
+  filter(ran_gpsm_logage,
+         p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% .$SNP
+  
+```
+
+### Young Raw Age
+
+Young animal only (Born after Jan 1, 2012) Raw Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
+
+```{r}
+plot_grid(
+  ggmanhattan2(ran_gpsm_youngage,
+               prune = 0.01, 
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_youngage, 
+                                p < 7.546e-7 & SNP %in% c(raw_age_sigsnps, logage_sigsnps)) %>% 
+                 .$SNP),
+  ggmanhattan2(ran_gpsm_youngage,
+               prune = 0.01,
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_youngage, 
+                                p < 7.546e-7 & SNP %in% c(raw_age_sigsnps, logage_sigsnps)) %>% 
+                 .$SNP)+
+    ylim(c(0,15)),
+  nrow = 2)
+
+plot_grid(
+  ggmanhattan2(ran_gpsm_youngage,
+               prune = 0.01, 
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = logage_sigsnps),
+  ggmanhattan2(ran_gpsm_youngage,
+               prune = 0.01,
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = logage_sigsnps)+
+    ylim(c(0,15)),
+  nrow = 2)
+```
+
+### Old  Age
+
+Old animal only (Born before Jan 1, 2012) Raw Age and log-transformed Manhattan Plots (Significance threshold - 1e-5)
+
+Green points indicate novel SNPs in this suset analysis that weren't identified in the log-transformed GPSM analysis of log-transformed age.
+
+```{r}
+plot_grid(
+  ggmanhattan2(ran_gpsm_oldage,
+             prune = 0.01, 
+             sig_threshold_p = 1e-5, 
+             sigsnps = logage_sigsnps)+
+  labs(title = "Old Animals (2011 and older): Raw Age"),
+  ggmanhattan2(ran_gpsm_oldlogage,
+               prune = 0.01, 
+               sig_threshold_p = 1e-5, 
+               sigsnps = logage_sigsnps)+
+    labs(title = "Old Animals (2011 and older): Log-transformed Age"),
+nrow = 2)
+```
+
+### Young Log Age
+
+Young animal only (Born after Jan 1, 2012) Raw Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+Green points indicate novel SNPs in this transformed analysis (at
+Bonferroni significance levels) that weren't identified in the GPSM
+analysis of raw age.
+
+```{r}
+plot_grid(
+  ggmanhattan2(ran_gpsm_younlogage,
+               prune = 0.1, 
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_youngage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP, 
+               sigsnps2 = filter(ran_gpsm_youngage, 
+                                p < 7.546e-7 & !SNP %in% logage_sigsnps) %>% 
+                 .$SNP),
+  ggmanhattan2(ran_gpsm_youngage,
+               prune = 0.1,
+               sig_threshold_p = 7.546167e-07, 
+               sigsnps = filter(ran_gpsm_youngage, 
+                                p < 7.546e-7 & !SNP %in% raw_age_sigsnps) %>% 
+                 .$SNP, 
+               sigsnps2 = filter(ran_gpsm_youngage, 
+                                p < 7.546e-7 & !SNP %in% logage_sigsnps) %>% 
+                 .$SNP)+
+    ylim(c(0,15)),
+  nrow = 2)
+```
+
+
+## Conditional Joint Analysis (COJO)
+
+[COJO documentation](https://cnsgenomics.com/software/gcta/#COJO)
+
+[COJO citation](https://www.nature.com/articles/ng.2213)
+
+So when we run this on the log-transformed age we identify an additional
+680 associated SNPs (that aren't significant at p \< 1e-5 in the initial
+GPSM analysis)
+
+Should we be conditioning on only lead variants with `--cojo-cond`
+instead of doing `--cojo-slct`?
+
+### Candidate genes associated with COJO hits:
+
+Using GALLO annotation to identify nearby genes (within 50 kb) to significant (p < 1e-5) COJO hits
+
+```{r}
+
+ran_gpsm_age_cojo = 
+  read_tsv("output/200910_RAN/cojo/200910_RAN.log_age.850K.jma.cojo.gz") %>% 
+    select(CHR = Chr, BP = bp, p = pJ) %>% 
+    gene_annotation() %>% 
+    left_join(read_tsv("output/200910_RAN/cojo/200910_RAN.log_age.850K.jma.cojo.gz"), 
+              by = c("CHR" = "Chr", "BP" = "bp")) %>% 
+  select(-chr, -start_pos, -end_pos, -SNP, -gene_biotype, -width, -strand, -upstream, -downstream, -refA, -b, -se, -freq_geno, -n)
+dim(ran_gpsm_age_cojo)
+
+datatable(ran_gpsm_age_cojo)
+```
+
+
+### Gene Ontology Analysis
+
+Gene ontology enrichment analysis using `gprofiler2::gost()` of gene names from GALLO annotation of log-transformed GPSM COJO hits
+
+Significance threshold set at FDR < 0.10
+```{r}
+GO_results = gost(query = ran_gpsm_age_cojo$gene_name, 
+                  organism = "btaurus",
+                  user_threshold = 0.1,
+                  correction_method = "fdr")
+
+
+gostplot(GO_results, capped = TRUE, interactive = TRUE)
+```
+
+### QTL-enrichment analysis (within annotated QTL)
+
+These QTL are quite small (only 4 bp), things certainly change when we search for a larger area around them.
+```{r}
+read_tsv("output/200910_RAN/cojo/200910_RAN.age.850K.jma.cojo.gz") %>% 
+  select(CHR = Chr, BP = bp, p = pJ) %>% 
+  qtl_annotation(search_bp = 0) %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+### QTL-enrichment analysis (within 50kb annotated QTL)
+
+These QTL are quite small (only 4 bp) we identify much many more when we're searching in a substantial area around them.
+```{r}
+read_tsv("output/200910_RAN/cojo/200910_RAN.age.850K.jma.cojo.gz") %>% 
+  select(CHR = Chr, BP = bp, p = pJ) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+
+### Per-Chromosome QTL-enrichment analysis (within 50kb of significant SNP)
+```{r}
+read_tsv("output/200910_RAN/cojo/200910_RAN.age.850K.jma.cojo.gz") %>% 
+  select(CHR = Chr, BP = bp, p = pJ) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+
+### Annotating regions of open chromatin
+
+```{r}
+challenged = 
+  read_csv("data//Johnston_ATAC-seq/BRSV_challenged_Diffbind.csv")
+```
+
+
+## Sequence-imputed GPSM
+log-transformed age GPSM analysis of Red Angus dataset
+
+Filtered imputed SNPs with MAF > 0.01 and imputation R^2 values > 0.4
+
+During reading in I filtered p < 0.01 to make sure that R is able to handle these large files without crashing.
+
+our Bonferroni multiple-testing cutoff is 0.05/11657021 4.289e-09
+```{r}
+ran_seq_gpsm_logage = 
+  seq(1,29) %>% 
+    purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.log_age.chr",.x,".mlma.gz")) %>% 
+                 filter(p < 0.01)) %>% 
+    purrr::reduce(bind_rows)
+
+ran_seq_gpsm_age = 
+  seq(1,29) %>% 
+    purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.age.chr",.x,".mlma.gz")) %>% 
+                 filter(p < 0.01)) %>% 
+    purrr::reduce(bind_rows)
+```
+
+### Log-Transformed Age
+```{r}
+plot_grid(
+ran_seq_gpsm_logage %>% 
+  ggmanhattan2(sig_threshold_p = 4.289e-9),
+ran_seq_gpsm_logage %>% 
+  ggmanhattan2(sig_threshold_p = 4.289e-9)+
+  ylim(c(0,15)),
+nrow = 2)+
+  ggtitle("Red Angus Log-Transformed Age GPSM")
+```
+
+
+### Raw Age 
+```{r}
+plot_grid(
+ran_seq_gpsm_age %>% 
+  ggmanhattan2(sig_threshold_p = 4.289e-9),
+ran_seq_gpsm_age %>% 
+  ggmanhattan2(sig_threshold_p = 4.289e-9)+
+  ylim(c(0,15)),
+nrow = 2)+
+  ggtitle("Red Angus Log-Transformed Age GPSM")
+
+```
+## Sequence-imputed COJO
+
+### Log-Transformed Age
+```{r}
+ran_age_seq_cojo = 
+  seq(1,29) %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200910_RAN/seq_cojo/200910_RAN.age.chr", .x, ".jma.cojo"),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1) %>% 
+    select(CHR = Chr, BP = bp, p = pJ)) %>% 
+    purrr::reduce(bind_rows) 
+
+ran_old_seq_cojo = 
+  c(2,3,5,8,9,10,16,17,18,19,20,21,22,24,25,28) %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200910_RAN/seq_cojo/200910_RAN.old_age.chr", .x, ".jma.cojo"),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1) %>% 
+    select(CHR = Chr, BP = bp, p = pJ)) %>% 
+    purrr::reduce(bind_rows) 
+
+ran_young_seq_cojo = 
+  c(seq(1,26),28,29) %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200910_RAN/seq_cojo/200910_RAN.young_age.chr", .x, ".jma.cojo"),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1) %>% 
+    select(CHR = Chr, BP = bp, p = pJ)) %>% 
+    purrr::reduce(bind_rows) 
+
+    gene_annotation() %>% 
+    left_join(read_tsv("output/200910_RAN/seq_gwas/200910_RAN.log_age.seq.jma.cojo",
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r")), 
+              by = c("CHR" = "Chr", "BP" = "bp")) %>% 
+  select(-chr, -start_pos, -end_pos, -SNP, -gene_biotype, -width, -strand, -upstream, -downstream, -refA, -b, -se, -freq_geno, -n)
+
+datatable(ran_gpsm_logage_cojo)
+
+View(ran_gpsm_seq_cojo)
+```
+
+### Annotating genes from COJO hits
+
+
+#### Age
+```{r}
+ran_age_seq_cojo %>% 
+  gene_annotation() %>% 
+    left_join(ran_age_seq_cojo, 
+              by = c("CHR", "BP")) %>% 
+  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream)
+```
+
+#### Young Age
+```{r}
+ran_young_seq_cojo %>% 
+  gene_annotation() %>% 
+    left_join(ran_young_seq_cojo, 
+              by = c("CHR", "BP")) %>% 
+  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream)
+```
+### QTL Enrichments
+
+Results are for Red Angus sequence-based COJO hits with p < 1e-5. QTL are within 50 kb of identified SNP
+
+Removed milk-associated QTL, perform enrichment on whole genome QTL and by chromosome
+
+#### Whole -Genome
+```{r}
+ran_age_seq_cojo %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+
+#### Per-chromosome
+Interesting to note significant QTL classes that appear on multiple chromosomes (polygenic traits under selection)
+
+
+```{r}
+ran_age_seq_cojo %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  count(QTL, sort = TRUE) %>% 
+  datatable()
+
+ran_age_seq_cojo %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  count(QTL, sort = TRUE)%>% 
+  datatable()
+```
+### Gene Ontology Analysis
+
+Gene ontology enrichment analysis using `gprofiler2::gost()` of gene names from GALLO annotation of log-transformed GPSM COJO hits
+
+Significance threshold set at FDR < 0.10
+```{r, eval }
+ran_age_seq_cojo_GO =
+  ran_age_seq_cojo %>% 
+  gene_annotation(search_bp = 10000) %>% 
+    left_join(ran_age_seq_cojo, 
+              by = c("CHR", "BP")) %>% 
+  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
+  .$gene_name %>% unique() %>% 
+  gost(query = ., 
+      organism = "btaurus",
+      user_threshold = 0.05,
+      correction_method = "fdr")
+
+
+gostplot(GO_results, capped = TRUE, interactive = TRUE)
+```

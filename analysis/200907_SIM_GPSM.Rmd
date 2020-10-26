@@ -1,0 +1,688 @@
+---
+title: "Simmental GPSM Analysis "
+author: "Troy Rowan"
+date: "2020-09-20"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+  markdown: 
+    wrap: 72
+---
+
+```{r, setup, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = here::here())
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(purrr)
+library(factoextra)
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(qvalue)
+library(GALLO)
+library(cowplot)
+library(gprofiler2)
+library(DT)
+#source("../code/annotation_functions.R")
+```
+
+```{r}
+source("code/GCTA_functions.R")
+source("code/annotation_functions.R")
+simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
+```
+
+
+# Simmental GPSM Analysis
+
+## REML variance component estimates {.tabset}
+
+# Purebred Simmental GPSM Analysis
+
+## REML variance component estimates {.tabset}
+
+| Phenotype            	| n     	| h^2   	| SE    	|
+|----------------------	|-------	|-------	|-------	|
+| Full Age             	| 78787 	| 0.619 	| 0.005   |
+| Full Log Age         	| 78787 	| 0.600 	| 0.005   |
+| Young Age            	| 73811 	| 0.540   | 0.005   |
+| Old Age              	| 4976  	| 0.436 	| 0.021 	|
+| SimAngus (AN) Age    	| 11429 	| 0.665 	| 0.011 	|
+| SimAngus (SIM) Age   	| 46136 	| 0.642 	| 0.006 	|
+| Majority SIM Age     	| 31225 	| 0.558 	| 0.008 	|
+| Majority SIM Log Age 	| 31225 	| 0.561 	| 0.008 	|
+| Purebred Age         	| 13379 	| 0.555 	| 0.011 	|
+| Purebred Log Age     	| 13379 	| 0.560 	| 0.011 	|
+| Purebred Young Age   	| 11148 	| 0.497 	| 0.013 	|
+| Purebred Old Age     	| 2231  	| 0.462 	| 0.030 	|
+
+## Individual Residuals and Breeding Values {.tabset}
+
+These are REML estimates of individual's breeding values and residuals
+from GCTA GREML analysis
+
+### Full Age
+
+All animals with SIM > 0.05
+
+n = 78,787
+
+```{r}
+plot_grid(
+  read_blp("output/200907_SIM/greml/200907_SIM.full_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Raw Age GPSM\nResiduals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.full_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nBreeding Values")+
+    theme_cowplot())
+
+```
+
+### Full Log Age
+
+All animals with SIM > 0.05 
+
+Log-transformed age as dependent variable 
+
+n = 78,787
+
+```{r}
+plot_grid(
+  read_blp("output/200907_SIM/greml/200907_SIM.full_log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Log Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.full_log_age.850K.indi.blp") %>% 
+  left_join(simmental %>% 
+              select(international_id, age)) %>% 
+  ggplot(aes(sample = BV))+
+  stat_qq()+
+  stat_qq_line(color = "red")+
+  ggtitle("\nBreeding Values")+
+  theme_cowplot())
+```
+
+### Young Age
+
+Animals Born since 2008 with SIM > 0.05
+
+n = 73,811
+
+```{r}
+plot_grid(
+  read_blp("output/200907_SIM/greml/200907_SIM.full_young_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Young Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.full_young_age.850K.indi.blp") %>% 
+  left_join(simmental %>% 
+              select(international_id, age)) %>% 
+  ggplot(aes(sample = BV))+
+  stat_qq()+
+  stat_qq_line(color = "red")+
+  ggtitle("\nGPSM Breeding Values")+
+  theme_cowplot())
+```
+
+### Old Age
+
+Animals Born prior to 2008 with SIM > 0.05
+
+n = 4,976
+
+```{r}
+
+plot_grid(
+  read_blp("output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Old Animals\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Residuals")+
+    theme_cowplot())
+```
+
+### SimAngus (Angus) Age
+
+Animals with SIM < 0.30 and ANG > 0.50
+
+```{r}
+
+plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.simangus3050.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("SimAngus (>50% AN)\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.simangus3050.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+### SimAngus Age
+
+Animals with SIM > 0.20 and SIM < 0.70
+
+n = 11,429
+
+```{r}
+
+plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.simangus2070.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("SimAngus\nRaw Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.simangus2070.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+
+### Majority Simmental Age
+
+Animals with SIM > 0.70
+
+n = 31,225
+
+```{r}
+
+plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.sim70_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Majority Simmental Animals\nRaw Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.sim70_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+
+### Majority Simmental Log Age
+
+Animals with SIM > 0.70
+
+n = 31,225
+
+```{r}
+
+plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.sim70_log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Majority Simmental Animals\nLog Transformed Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.sim70_log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+### Purebred Age
+
+Animals with SIM = 1.0
+
+n = 13,379
+
+```{r}
+
+plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.pb_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Purebred Simmental\nRaw Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.pb_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+### Purebred Log Age
+
+Animals with SIM = 1.0
+
+n = 13,379
+
+```{r}
+
+plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.pb_log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Purebred Simmental\nLog Transformed Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.pb_log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+### Purebred Young Age
+
+Animals with SIM = 1.0 born since 2008
+
+n = 11,148
+
+```{r}
+
+plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.pb_young_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Purebred Simmental (Post-2007)\nRaw Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.pb_young_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+### Purebred Old Age
+
+Animals with SIM = 1, born before 2008
+
+n = 2,231
+
+```{r}
+
+plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("Purebred Simmental (Pre 2008)\nRaw Age\nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+## n(SigSNPs)
+GWAS results for the 685,120 SNPs with MAF > 0.01 in our imputed dataset. 
+```{r eval=TRUE, echo=FALSE}
+# full_age = 
+#   read_gwas("output/200907_SIM/gwas/200907_SIM.")
+# 
+# full_log_age = 
+#   read_gwas("output/200907_SIM/gwas/200907_SIM.")
+# 
+# young_age = 
+#   read_gwas("output/200907_SIM/gwas/200907_SIM.")
+
+old_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.full_old_age.850K.mlma.gz")
+
+simangus_an_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.simangus3050.850K.mlma.gz")
+
+simangus_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.simangus2070.850K.mlma.gz")
+
+maj_sim_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.sim70_age.850K.mlma.gz")
+
+maj_sim_log_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.sim70_log_age.850K.mlma.gz")
+
+pb_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.pb_age.850K.mlma.gz")
+
+pb_log_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.pb_log_age.850K.mlma.gz")
+
+pb_young_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.pb_young_age.850K.mlma.gz")
+
+pb_old_age = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.pb_old_age.850K.mlma.gz")
+
+
+sigcheck = function(df){
+
+  gwasdf = 
+    df %>% 
+    mutate(Nominal = case_when(p <= 1e-5 ~ TRUE,
+                             TRUE ~ FALSE),
+           Bonferroni = case_when(p <= 7.55e-07 ~ TRUE,
+                             TRUE ~ FALSE),
+           q0.1 = case_when(q <= 0.10 ~ TRUE,
+                             TRUE ~ FALSE),
+           q0.05 = case_when(q <= 0.05 ~ TRUE,
+                             TRUE ~ FALSE))%>% 
+  select(Nominal, Bonferroni, q0.1, q0.05) %>% 
+  colSums()
+  return(gwasdf)
+}
+
+rbind(sigcheck(old_age),
+      sigcheck(simangus_an_age),
+      sigcheck(simangus_age),
+      sigcheck(maj_sim_age),
+      sigcheck(maj_sim_log_age),
+      sigcheck(pb_age),
+      sigcheck(pb_young_age),
+      sigcheck(pb_old_age)) %>% as.data.frame() %>% 
+mutate(analysis = c("old_age", "simangus_an_age", "simangus_age", "maj_sim_age", "maj_sim_log_age", "pb_age", "pb_young_age", "pb_old_age")) %>% 
+select(analysis, everything()) %>% 
+datatable(caption = "Number of significant SNPs at various significance levels with different dependent variables")
+  
+  
+```
+## GPSM GWAS Manhattan Plots for Transformed Age {.tabset}
+
+### Full Age
+
+All animals with SIM > 0.05
+
+n = 78,787
+
+```{r, eval=FALSE}
+ggmanhattan2(full_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(full_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### Full Log Age
+
+All animals with SIM > 0.05 
+
+Log-transformed age as dependent variable 
+
+n = 78,787
+
+```{r, eval=FALSE}
+ggmanhattan2(full_log_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(full_log_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### Young Age
+
+Animals Born since 2008 with SIM > 0.05
+
+n = 73,811
+
+```{r, eval=FALSE}
+ggmanhattan2(young_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(young_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### Old Age
+
+Animals Born prior to 2008 with SIM > 0.05
+
+n = 4,976
+
+```{r}
+ggmanhattan2(old_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(old_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### SimAngus (Angus) Age
+
+Animals with SIM < 0.30 and ANG > 0.50
+
+```{r}
+ggmanhattan2(simangus_an_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(simangus_an_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### SimAngus Age
+
+Animals with SIM > 0.20 and SIM < 0.70
+
+n = 11,429
+
+```{r}
+ggmanhattan2(simangus_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(simangus_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+
+### Majority Simmental Age
+
+Animals with SIM > 0.70
+
+n = 31,225
+
+```{r}
+ggmanhattan2(maj_sim_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(maj_sim_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+
+### Majority Simmental Log Age
+
+Animals with SIM > 0.70
+
+n = 31,225
+
+```{r}
+ggmanhattan2(maj_sim_log_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(maj_sim_log_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### Purebred Age
+
+Animals with SIM = 1.0
+
+n = 13,379
+
+```{r}
+ggmanhattan2(pb_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(pb_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### Purebred Log Age
+
+Animals with SIM = 1.0
+
+n = 13,379
+
+```{r}
+ggmanhattan2(pb_log_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(pb_log_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### Purebred Young Age
+
+Animals with SIM = 1.0 born since 2008
+
+n = 11,148
+
+```{r}
+
+ggmanhattan2(pb_young_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(pb_young_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+```
+
+### Purebred Old Age
+
+Animals with SIM = 1, born before 2008
+
+n = 2,231
+
+```{r}
+
+ggmanhattan2(pb_old_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)
+
+ggmanhattan2(pb_old_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)
+  
+```
+
+
