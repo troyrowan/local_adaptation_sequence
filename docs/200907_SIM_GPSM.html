@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Troy Rowan" />
+
+<meta name="date" content="2020-09-20" />
+
+<title>Simmental GPSM Analysis</title>
+
+<script src="site_libs/header-attrs-2.3/header-attrs.js"></script>
+<script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.15/datatables.js"></script>
+<link href="site_libs/dt-core-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.10.20/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.10.20/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/crosstalk-1.1.0.1/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.1.0.1/js/crosstalk.min.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Local Adaptation in U.S. Beef Cattle</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/troyrowan/local_adaptation_sequence">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Simmental GPSM Analysis</h1>
+<h4 class="author">Troy Rowan</h4>
+<h4 class="date">2020-09-20</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-10-27
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>local_adaptation_sequence/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20200709code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20200709)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20200709code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20200709)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreeeac841966c21009dde1a00c9a2f6b1f4cc346b8ftargetblankeac8419a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/eac841966c21009dde1a00c9a2f6b1f4cc346b8f" target="_blank">eac8419</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreeeac841966c21009dde1a00c9a2f6b1f4cc346b8ftargetblankeac8419a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/eac841966c21009dde1a00c9a2f6b1f4cc346b8f" target="_blank">eac8419</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/genes.txt
+    Ignored:    code/commands.txt
+    Ignored:    data/1KBulls_ids.txt
+    Ignored:    data/200907_SIM/
+    Ignored:    data/200910_RAN/
+    Ignored:    data/Bos_taurus.ARS-UCD1.2.101.gtf.gz
+    Ignored:    data/Bos_taurus.ARS-UCD1.2.QTL.gff.gz
+    Ignored:    data/Johnston_ATAC-seq/
+    Ignored:    data/animal_table.rds
+    Ignored:    data/bosTau9ToBosTau8.over.chain.gz
+    Ignored:    data/bovine_demo.sample_metadata.csv
+    Ignored:    data/positions.txt
+    Ignored:    data/prism_climate_data/
+    Ignored:    data/prism_dataframe.csv
+    Ignored:    data/uszips.csv
+    Ignored:    desktop.ini
+    Ignored:    output/200822_Lab_IDs.csv
+    Ignored:    output/200907_Lab_IDs.csv
+    Ignored:    output/200909_RAN_Lab_IDs.csv
+    Ignored:    output/200910_RAN/200910_RAN.phenotypes.csv
+    Ignored:    output/200910_RAN/200910_RAN.phenotypes.txt
+    Ignored:    output/200910_RAN/200910_RAN_Lab_IDs.csv
+    Ignored:    output/200910_RAN/cojo/
+    Ignored:    output/200910_RAN/gpsm/
+    Ignored:    output/200910_RAN/greml/
+    Ignored:    output/200910_RAN/gwas/
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.generation_proxy.txt
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.info.csv
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.noLSF.allenv.txt
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.phenotyped_ids.txt
+    Ignored:    output/200910_RAN/phenotypes/200910_RAN.regions.txt
+    Ignored:    output/200910_RAN/selscan/
+    Ignored:    output/200910_RAN/sfs_selection/
+    Ignored:    output/200910_RAN/subsets/
+    Ignored:    output/200910_RAN_Lab_IDs.csv
+    Ignored:    output/201020_ANGUS/
+    Ignored:    output/201020_PBSIM/
+    Ignored:    output/coresnps.50K.refaltaltref.txt
+    Ignored:    output/coresnps.50K.txt
+    Ignored:    output/coresnps.850K.refaltaltref.txt
+    Ignored:    output/desktop.ini
+    Ignored:    output/k10.allvars.seed2.rds
+    Ignored:    output/k9.allvars.seed1.rds
+    Ignored:    output/k9.allvars.seed2.rds
+    Ignored:    output/k9.threevars.seed1.rds
+    Ignored:    output/k9.threevars.seed2.rds
+    Ignored:    output/kmeans_plotlist.RDS
+    Ignored:    output/zipcode_zones.csv
+
+Untracked files:
+    Untracked:  RSDPlot_200910_RAN.chr1.txt.R
+    Untracked:  analysis/PBSIM_GPSM.Rmd
+    Untracked:  analysis/Region_FST.Rmd
+    Untracked:  analysis/SIM_GPSM.Rmd
+    Untracked:  analysis/selection_scans.Rmd
+    Untracked:  code/GCTA_functions.R
+    Untracked:  code/cluster/BIG_GCTA.json
+    Untracked:  code/cluster/selscan.cluster.json
+    Untracked:  code/cluster/seq_gwas.cluster.json
+    Untracked:  code/cluster/sfs_selection.cluster.json
+    Untracked:  code/config/200910_RAN.GPSM.config.yaml
+    Untracked:  code/config/201020_ANGUS.GPSM.config.yaml
+    Untracked:  code/config/201020_PBSIM.GPSM.config.yaml
+    Untracked:  code/countgens_RAN.R
+    Untracked:  code/snakemake_files/BOLT.snakefile
+    Untracked:  data/bosTau9ToBosTau8.over.chain
+    Untracked:  ftpconfigs/
+    Untracked:  functions.R
+    Untracked:  output/200907_SIM.850K.bim
+    Untracked:  output/200907_SIM/
+    Untracked:  output/200910_RAN/fst/
+    Untracked:  output/200910_RAN/seq_cojo/
+    Untracked:  output/200910_RAN/seq_gwas/
+    Untracked:  test.Rmd
+    Untracked:  test.html
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/200910_RAN.envGWAS_results.Rmd
+    Deleted:    analysis/GPSM.Rmd
+    Modified:   analysis/animal_locations.Rmd
+    Modified:   analysis/phenotype_exploration.Rmd
+    Modified:   code/annotation_functions.R
+    Modified:   code/cluster/GCTA.cluster.json
+    Modified:   code/config/200907_SIM.GPSM.config.yaml
+    Modified:   code/config/200907_SIM.envGWAS.config.yaml
+    Modified:   code/config/200910_RAN.config.yaml
+    Modified:   code/config/200910_RAN_noLSF.config.yaml
+    Modified:   code/snakemake_files/GCTA.snakefile
+    Modified:   code/snakemake_files/selscan.snakefile
+    Modified:   code/snakemake_files/seq_gwas.snakefile
+    Modified:   code/snakemake_files/sfs_selection.snakefile
+    Deleted:    data/README.md
+    Modified:   output/200910_RAN/phenotypes/200910_RAN.age.txt
+    Modified:   output/200910_RAN/phenotypes/200910_RAN.environment.txt
+    Modified:   output/200910_RAN/phenotypes/200910_RAN.sex.txt
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/200907_SIM_GPSM.Rmd</code>) and HTML (<code>docs/200907_SIM_GPSM.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/eac841966c21009dde1a00c9a2f6b1f4cc346b8f/analysis/200907_SIM_GPSM.Rmd" target="_blank">eac8419</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-10-27
+</td>
+<td>
+811K Simmental runs completed
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/9bf9aea9ce387fb365bb3b12cd37666a78ded45a/analysis/200907_SIM_GPSM.Rmd" target="_blank">9bf9aea</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2020-10-26
+</td>
+<td>
+Updates to Simmental and RAN analysis
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>source(&quot;code/GCTA_functions.R&quot;)
+source(&quot;code/annotation_functions.R&quot;)
+simmental = read_csv(&quot;output/200907_SIM/phenotypes/200907_SIM.info.csv&quot;)</code></pre>
+<div id="simmental-gpsm-analysis" class="section level1">
+<h1>Simmental GPSM Analysis</h1>
+<div id="reml-variance-component-estimates" class="section level2 tabset">
+<h2 class="tabset">REML variance component estimates</h2>
+</div>
+</div>
+<div id="purebred-simmental-gpsm-analysis" class="section level1">
+<h1>Purebred Simmental GPSM Analysis</h1>
+<div id="reml-variance-component-estimates-1" class="section level2 tabset">
+<h2 class="tabset">REML variance component estimates</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Phenotype</th>
+<th>n</th>
+<th>h^2</th>
+<th>SE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Full Age</td>
+<td>78787</td>
+<td>0.619</td>
+<td>0.005</td>
+</tr>
+<tr class="even">
+<td>Full Log Age</td>
+<td>78787</td>
+<td>0.600</td>
+<td>0.005</td>
+</tr>
+<tr class="odd">
+<td>Young Age</td>
+<td>73811</td>
+<td>0.540</td>
+<td>0.005</td>
+</tr>
+<tr class="even">
+<td>Old Age</td>
+<td>4976</td>
+<td>0.436</td>
+<td>0.021</td>
+</tr>
+<tr class="odd">
+<td>SimAngus (AN) Age</td>
+<td>11429</td>
+<td>0.665</td>
+<td>0.011</td>
+</tr>
+<tr class="even">
+<td>SimAngus (SIM) Age</td>
+<td>46136</td>
+<td>0.642</td>
+<td>0.006</td>
+</tr>
+<tr class="odd">
+<td>Majority SIM Age</td>
+<td>31225</td>
+<td>0.558</td>
+<td>0.008</td>
+</tr>
+<tr class="even">
+<td>Majority SIM Log Age</td>
+<td>31225</td>
+<td>0.561</td>
+<td>0.008</td>
+</tr>
+<tr class="odd">
+<td>Purebred Age</td>
+<td>13379</td>
+<td>0.555</td>
+<td>0.011</td>
+</tr>
+<tr class="even">
+<td>Purebred Log Age</td>
+<td>13379</td>
+<td>0.560</td>
+<td>0.011</td>
+</tr>
+<tr class="odd">
+<td>Purebred Young Age</td>
+<td>11148</td>
+<td>0.497</td>
+<td>0.013</td>
+</tr>
+<tr class="even">
+<td>Purebred Old Age</td>
+<td>2231</td>
+<td>0.462</td>
+<td>0.030</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="individual-residuals-and-breeding-values" class="section level2 tabset">
+<h2 class="tabset">Individual Residuals and Breeding Values</h2>
+<p>These are REML estimates of individual’s breeding values and residuals from GCTA GREML analysis</p>
+<div id="full-age" class="section level3">
+<h3>Full Age</h3>
+<p>All animals with SIM &gt; 0.05</p>
+<p>n = 78,787</p>
+<pre class="r"><code>plot_grid(
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.full_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Raw Age GPSM\nResiduals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.full_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nBreeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="full-log-age" class="section level3">
+<h3>Full Log Age</h3>
+<p>All animals with SIM &gt; 0.05</p>
+<p>Log-transformed age as dependent variable</p>
+<p>n = 78,787</p>
+<pre class="r"><code>plot_grid(
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.full_log_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Log Transformed Age \nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.full_log_age.850K.indi.blp&quot;) %&gt;% 
+  left_join(simmental %&gt;% 
+              select(international_id, age)) %&gt;% 
+  ggplot(aes(sample = BV))+
+  stat_qq()+
+  stat_qq_line(color = &quot;red&quot;)+
+  ggtitle(&quot;\nBreeding Values&quot;)+
+  theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="young-age" class="section level3">
+<h3>Young Age</h3>
+<p>Animals Born since 2008 with SIM &gt; 0.05</p>
+<p>n = 73,811</p>
+<pre class="r"><code>plot_grid(
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.full_young_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Young Age \nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.full_young_age.850K.indi.blp&quot;) %&gt;% 
+  left_join(simmental %&gt;% 
+              select(international_id, age)) %&gt;% 
+  ggplot(aes(sample = BV))+
+  stat_qq()+
+  stat_qq_line(color = &quot;red&quot;)+
+  ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+  theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="old-age" class="section level3">
+<h3>Old Age</h3>
+<p>Animals Born prior to 2008 with SIM &gt; 0.05</p>
+<p>n = 4,976</p>
+<pre class="r"><code>plot_grid(
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Old Animals\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Residuals&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="simangus-angus-age" class="section level3">
+<h3>SimAngus (Angus) Age</h3>
+<p>Animals with SIM &lt; 0.30 and ANG &gt; 0.50</p>
+<pre class="r"><code>plot_grid(read_blp(&quot;output/200907_SIM/greml/200907_SIM.simangus3050.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;SimAngus (&gt;50% AN)\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.simangus3050.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="simangus-age" class="section level3">
+<h3>SimAngus Age</h3>
+<p>Animals with SIM &gt; 0.20 and SIM &lt; 0.70</p>
+<p>n = 11,429</p>
+<pre class="r"><code>plot_grid(read_blp(&quot;output/200907_SIM/greml/200907_SIM.simangus2070.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;SimAngus\nRaw Age\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.simangus2070.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="majority-simmental-age" class="section level3">
+<h3>Majority Simmental Age</h3>
+<p>Animals with SIM &gt; 0.70</p>
+<p>n = 31,225</p>
+<pre class="r"><code>plot_grid(read_blp(&quot;output/200907_SIM/greml/200907_SIM.sim70_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Majority Simmental Animals\nRaw Age\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.sim70_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="majority-simmental-log-age" class="section level3">
+<h3>Majority Simmental Log Age</h3>
+<p>Animals with SIM &gt; 0.70</p>
+<p>n = 31,225</p>
+<pre class="r"><code>plot_grid(read_blp(&quot;output/200907_SIM/greml/200907_SIM.sim70_log_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Majority Simmental Animals\nLog Transformed Age\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.sim70_log_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="purebred-age" class="section level3">
+<h3>Purebred Age</h3>
+<p>Animals with SIM = 1.0</p>
+<p>n = 13,379</p>
+<pre class="r"><code>plot_grid(read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Purebred Simmental\nRaw Age\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="purebred-log-age" class="section level3">
+<h3>Purebred Log Age</h3>
+<p>Animals with SIM = 1.0</p>
+<p>n = 13,379</p>
+<pre class="r"><code>plot_grid(read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_log_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Purebred Simmental\nLog Transformed Age\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_log_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="purebred-young-age" class="section level3">
+<h3>Purebred Young Age</h3>
+<p>Animals with SIM = 1.0 born since 2008</p>
+<p>n = 11,148</p>
+<pre class="r"><code>plot_grid(read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_young_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Purebred Simmental (Post-2007)\nRaw Age\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_young_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="purebred-old-age" class="section level3">
+<h3>Purebred Old Age</h3>
+<p>Animals with SIM = 1, born before 2008</p>
+<p>n = 2,231</p>
+<pre class="r"><code>plot_grid(read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;Purebred Simmental (Pre 2008)\nRaw Age\nGPSM Residuals&quot;)+
+    theme_cowplot(),
+  read_blp(&quot;output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp&quot;) %&gt;% 
+    left_join(simmental %&gt;% 
+                select(international_id, age)) %&gt;% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = &quot;red&quot;)+
+    ggtitle(&quot;\nGPSM Breeding Values&quot;)+
+    theme_cowplot())</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="nsigsnps" class="section level2">
+<h2>n(SigSNPs)</h2>
+<p>GWAS results for the 685,120 SNPs with MAF &gt; 0.01 in our imputed dataset.</p>
+<div id="htmlwidget-f18a7769c5bca2a3a579" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-f18a7769c5bca2a3a579">{"x":{"filter":"none","caption":"<caption>Number of significant SNPs at various significance levels with different dependent variables<\/caption>","data":[["1","2","3","4","5","6","7","8","9","10","11"],["full_age","full_log_age","young_age","old_age","simangus_an_age","simangus_age","maj_sim_age","maj_sim_log_age","pb_age","pb_young_age","pb_old_age"],[120,109,94,119,14,46,100,51,92,11,60],[70,77,68,72,3,31,61,24,50,4,34],[137,130,100,171,3,39,107,44,111,4,59],[117,105,89,115,0,38,88,32,85,3,48]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>analysis<\/th>\n      <th>Nominal<\/th>\n      <th>Bonferroni<\/th>\n      <th>q0.1<\/th>\n      <th>q0.05<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[2,3,4,5]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="gpsm-gwas-manhattan-plots-for-transformed-age" class="section level2 tabset">
+<h2 class="tabset">GPSM GWAS Manhattan Plots for Transformed Age</h2>
+<div id="full-age-1" class="section level3">
+<h3>Full Age</h3>
+<p>All animals with SIM &gt; 0.05</p>
+<p>n = 78,787</p>
+<pre class="r"><code>ggmanhattan2(full_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(full_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="full-log-age-1" class="section level3">
+<h3>Full Log Age</h3>
+<p>All animals with SIM &gt; 0.05</p>
+<p>Log-transformed age as dependent variable</p>
+<p>n = 78,787</p>
+<pre class="r"><code>ggmanhattan2(full_log_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(full_log_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-16-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="young-age-1" class="section level3">
+<h3>Young Age</h3>
+<p>Animals Born since 2008 with SIM &gt; 0.05</p>
+<p>n = 73,811</p>
+<pre class="r"><code>ggmanhattan2(young_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(young_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="old-age-1" class="section level3">
+<h3>Old Age</h3>
+<p>Animals Born prior to 2008 with SIM &gt; 0.05</p>
+<p>n = 4,976</p>
+<pre class="r"><code>ggmanhattan2(old_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(old_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="simangus-angus-age-1" class="section level3">
+<h3>SimAngus (Angus) Age</h3>
+<p>Animals with SIM &lt; 0.30 and ANG &gt; 0.50</p>
+<pre class="r"><code>ggmanhattan2(simangus_an_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(simangus_an_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-19-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="simangus-age-1" class="section level3">
+<h3>SimAngus Age</h3>
+<p>Animals with SIM &gt; 0.20 and SIM &lt; 0.70</p>
+<p>n = 11,429</p>
+<pre class="r"><code>ggmanhattan2(simangus_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(simangus_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-20-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="majority-simmental-age-1" class="section level3">
+<h3>Majority Simmental Age</h3>
+<p>Animals with SIM &gt; 0.70</p>
+<p>n = 31,225</p>
+<pre class="r"><code>ggmanhattan2(maj_sim_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(maj_sim_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-21-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="majority-simmental-log-age-1" class="section level3">
+<h3>Majority Simmental Log Age</h3>
+<p>Animals with SIM &gt; 0.70</p>
+<p>n = 31,225</p>
+<pre class="r"><code>ggmanhattan2(maj_sim_log_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(maj_sim_log_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-22-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="purebred-age-1" class="section level3">
+<h3>Purebred Age</h3>
+<p>Animals with SIM = 1.0</p>
+<p>n = 13,379</p>
+<pre class="r"><code>ggmanhattan2(pb_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(pb_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-23-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="purebred-log-age-1" class="section level3">
+<h3>Purebred Log Age</h3>
+<p>Animals with SIM = 1.0</p>
+<p>n = 13,379</p>
+<pre class="r"><code>ggmanhattan2(pb_log_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(pb_log_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-24-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="purebred-young-age-1" class="section level3">
+<h3>Purebred Young Age</h3>
+<p>Animals with SIM = 1.0 born since 2008</p>
+<p>n = 11,148</p>
+<pre class="r"><code>ggmanhattan2(pb_young_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(pb_young_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-25-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="purebred-old-age-1" class="section level3">
+<h3>Purebred Old Age</h3>
+<p>Animals with SIM = 1, born before 2008</p>
+<p>n = 2,231</p>
+<pre class="r"><code>ggmanhattan2(pb_old_age,
+               prune = 0.01, 
+               sig_threshold_p = 7.298e-08)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggmanhattan2(pb_old_age,
+             value = q,
+             prune = 0.9,
+             sig_threshold_q = 0.1)</code></pre>
+<p><img src="figure/200907_SIM_GPSM.Rmd/unnamed-chunk-26-2.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.0.2 (2020-06-22)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 10 x64 (build 19041)
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=English_United States.1252 
+[2] LC_CTYPE=English_United States.1252   
+[3] LC_MONETARY=English_United States.1252
+[4] LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] viridis_0.5.1     viridisLite_0.3.0 DT_0.15           gprofiler2_0.2.0 
+ [5] cowplot_1.1.0     GALLO_0.99.0      qvalue_2.20.0     pedigree_1.4     
+ [9] reshape_0.8.8     HaploSim_1.8.4    Matrix_1.2-18     lubridate_1.7.9  
+[13] forcats_0.5.0     stringr_1.4.0     dplyr_1.0.2       readr_1.3.1      
+[17] tidyr_1.1.2       tibble_3.0.3      tidyverse_1.3.0   here_0.1         
+[21] ggcorrplot_0.1.3  corrr_0.4.2       factoextra_1.0.7  ggplot2_3.3.2    
+[25] purrr_0.3.4       ggthemes_4.2.0    maps_3.3.0        knitr_1.30       
+[29] workflowr_1.6.2  
+
+loaded via a namespace (and not attached):
+ [1] colorspace_1.4-1            ellipsis_0.3.1             
+ [3] dynamicTreeCut_1.63-1       rprojroot_1.3-2            
+ [5] circlize_0.4.10             XVector_0.28.0             
+ [7] GenomicRanges_1.40.0        GlobalOptions_0.1.2        
+ [9] fs_1.5.0                    rstudioapi_0.11            
+[11] farver_2.0.3                ggrepel_0.8.2              
+[13] fansi_0.4.1                 xml2_1.3.2                 
+[15] codetools_0.2-16            splines_4.0.2              
+[17] doParallel_1.0.15           jsonlite_1.7.1             
+[19] Rsamtools_2.4.0             broom_0.7.0                
+[21] dbplyr_1.4.4                compiler_4.0.2             
+[23] httr_1.4.2                  backports_1.1.10           
+[25] assertthat_0.2.1            lazyeval_0.2.2             
+[27] cli_2.0.2                   later_1.1.0.1              
+[29] htmltools_0.5.0             tools_4.0.2                
+[31] gtable_0.3.0                glue_1.4.2                 
+[33] GenomeInfoDbData_1.2.3      reshape2_1.4.4             
+[35] Rcpp_1.0.5                  Biobase_2.48.0             
+[37] cellranger_1.1.0            vctrs_0.3.4                
+[39] Biostrings_2.56.0           rtracklayer_1.48.0         
+[41] crosstalk_1.1.0.1           iterators_1.0.12           
+[43] xfun_0.17                   rvest_0.3.6                
+[45] lifecycle_0.2.0             XML_3.99-0.5               
+[47] zlibbioc_1.34.0             scales_1.1.1               
+[49] hms_0.5.3                   promises_1.1.1             
+[51] SummarizedExperiment_1.18.2 parallel_4.0.2             
+[53] RColorBrewer_1.1-2          yaml_2.2.1                 
+[55] gridExtra_2.3               stringi_1.5.3              
+[57] unbalhaar_2.0               S4Vectors_0.26.1           
+[59] foreach_1.5.0               BiocGenerics_0.34.0        
+[61] BiocParallel_1.22.0         shape_1.4.5                
+[63] GenomeInfoDb_1.24.2         matrixStats_0.56.0         
+[65] rlang_0.4.7                 pkgconfig_2.0.3            
+[67] bitops_1.0-6                evaluate_0.14              
+[69] lattice_0.20-41             labeling_0.3               
+[71] GenomicAlignments_1.24.0    htmlwidgets_1.5.1          
+[73] tidyselect_1.1.0            plyr_1.8.6                 
+[75] magrittr_1.5                R6_2.4.1                   
+[77] IRanges_2.22.2              generics_0.0.2             
+[79] DelayedArray_0.14.1         DBI_1.1.0                  
+[81] pillar_1.4.6                haven_2.3.1                
+[83] whisker_0.4                 withr_2.3.0                
+[85] RCurl_1.98-1.2              modelr_0.1.8               
+[87] crayon_1.3.4                plotly_4.9.2.1             
+[89] rmarkdown_2.3               grid_4.0.2                 
+[91] readxl_1.3.1                data.table_1.13.0          
+[93] blob_1.2.1                  git2r_0.27.1               
+[95] reprex_0.3.0                digest_0.6.25              
+[97] httpuv_1.5.4                stats4_4.0.2               
+[99] munsell_0.5.0              </code></pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
