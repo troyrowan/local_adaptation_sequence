@@ -404,16 +404,18 @@ plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp"
 ```
 
 ## n(SigSNPs)
+
 GWAS results for the 685,120 SNPs with MAF > 0.01 in our imputed dataset. 
+
 ```{r eval=TRUE, echo=FALSE}
-# full_age = 
-#   read_gwas("output/200907_SIM/gwas/200907_SIM.")
-# 
-# full_log_age = 
-#   read_gwas("output/200907_SIM/gwas/200907_SIM.")
-# 
-# young_age = 
-#   read_gwas("output/200907_SIM/gwas/200907_SIM.")
+full_age =
+  read_gwas("output/200907_SIM/gwas/200907_SIM.full_age.850K.mlma.gz")
+
+full_log_age =
+  read_gwas("output/200907_SIM/gwas/200907_SIM.full_log_age.850K.mlma.gz")
+
+young_age =
+  read_gwas("output/200907_SIM/gwas/200907_SIM.full_young_age.850K.mlma.gz")
 
 old_age = 
   read_gwas("output/200907_SIM/gwas/200907_SIM.full_old_age.850K.mlma.gz")
@@ -460,7 +462,10 @@ sigcheck = function(df){
   return(gwasdf)
 }
 
-rbind(sigcheck(old_age),
+rbind(sigcheck(full_age),
+      sigcheck(full_log_age),
+      sigcheck(young_age),
+      sigcheck(old_age),
       sigcheck(simangus_an_age),
       sigcheck(simangus_age),
       sigcheck(maj_sim_age),
@@ -468,12 +473,13 @@ rbind(sigcheck(old_age),
       sigcheck(pb_age),
       sigcheck(pb_young_age),
       sigcheck(pb_old_age)) %>% as.data.frame() %>% 
-mutate(analysis = c("old_age", "simangus_an_age", "simangus_age", "maj_sim_age", "maj_sim_log_age", "pb_age", "pb_young_age", "pb_old_age")) %>% 
+mutate(analysis = c("full_age", "full_log_age", "young_age","old_age", "simangus_an_age", "simangus_age", "maj_sim_age", "maj_sim_log_age", "pb_age", "pb_young_age", "pb_old_age")) %>% 
 select(analysis, everything()) %>% 
 datatable(caption = "Number of significant SNPs at various significance levels with different dependent variables")
   
   
 ```
+
 ## GPSM GWAS Manhattan Plots for Transformed Age {.tabset}
 
 ### Full Age
@@ -482,7 +488,7 @@ All animals with SIM > 0.05
 
 n = 78,787
 
-```{r, eval=FALSE}
+```{r}
 ggmanhattan2(full_age,
                prune = 0.01, 
                sig_threshold_p = 7.298e-08)
@@ -501,7 +507,7 @@ Log-transformed age as dependent variable
 
 n = 78,787
 
-```{r, eval=FALSE}
+```{r}
 ggmanhattan2(full_log_age,
                prune = 0.01, 
                sig_threshold_p = 7.298e-08)
@@ -518,7 +524,7 @@ Animals Born since 2008 with SIM > 0.05
 
 n = 73,811
 
-```{r, eval=FALSE}
+```{r}
 ggmanhattan2(young_age,
                prune = 0.01, 
                sig_threshold_p = 7.298e-08)
