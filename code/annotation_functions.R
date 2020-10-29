@@ -5,16 +5,16 @@
 
 library(tidyverse)
 library(GALLO)
-
+setwd(here::here())
 genes =
   import_gff_gtf(db_file = "data/Bos_taurus.ARS-UCD1.2.101.gtf.gz", file_type = "gtf")
 
+qtl =
+  import_gff_gtf(db_file = "data/Bos_taurus.ARS-UCD1.2.QTL.gff.gz", file_type = "gff")
 
-
-gene_annotation = function(gwas_results, sig_filter = 1e-5, search_bp = 50000){
+gene_annotation = function(gwas_results, search_bp = 50000){
   genes =
     gwas_results %>%
-      filter(p < sig_filter) %>%
       dplyr::select(CHR, BP) %>%
       find_genes_qtls_around_markers(db_file=genes,
                                      marker_file=., method = "gene",
@@ -28,10 +28,22 @@ gene_annotation = function(gwas_results, sig_filter = 1e-5, search_bp = 50000){
   return(genes)
 }
 
+qtl_annotation = function(gwas_results, search_bp = 50000){
+  qtl =
+    gwas_results %>%
+    dplyr::select(CHR, BP) %>%
+    find_genes_qtls_around_markers(db_file=qtl,
+                                   marker_file=., method = "qtl",
+                                   marker = "snp", interval = search_bp, nThreads = NULL)
+  return(qtl)
+}
 
-read_gwas = function(gwas_path)
-  ran_sex_gwas =
-  read_tsv(gwas_path) %>%
-  mutate(chrbp = paste(Chr, bp, sep = ":"),
-         maf = case_when(Freq > 0.5 ~ 1-Freq,
-                         TRUE ~ Freq))
+read_bolt_gwas = function(gwas_path){
+  gwas_results =
+    read_tsv(gwas_path) %>%
+    mutate(chrbp = paste(CHR, BP, sep = ":"),
+           maf = case_when(A1FREQ > 0.5 ~ 1-A1FREQ,
+                           TRUE ~ A1FREQ),
+           p = P_BOLT_LMM_INF)
+  return(gwas_results)
+}
