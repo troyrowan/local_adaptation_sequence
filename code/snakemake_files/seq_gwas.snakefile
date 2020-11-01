@@ -1,8 +1,8 @@
 import os
 #Make log directories if they don't exist
-for x in expand("output/{run_name}/log/slurm_out/{rule}", run_name = config['run_name'], rule = ["convert_seq_plink", "seq_gwas", "seq_cojo"]):
+for x in expand("output/{run_name}/log/slurm_out/{rule}", run_name = config['run_name'], rule = ["convert_seq_plink", "seq_gwas", "seq_cojo", "make_ma_file"]):
 	os.makedirs(x, exist_ok = True)
-for x in expand("output/{run_name}/log/psrecord/{rule}", run_name = config['run_name'], rule = ["convert_seq_plink", "seq_gwas", "seq_cojo"]):
+for x in expand("output/{run_name}/log/psrecord/{rule}", run_name = config['run_name'], rule = ["convert_seq_plink", "seq_gwas", "seq_cojo", "make_ma_file"]):
 	os.makedirs(x, exist_ok = True)
 
 #include: "GRM.snakefile"
@@ -12,14 +12,22 @@ rule envgwas:
 		expand("output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.mlma.gz",
 		phenotype = config["phenotypes"],
 		run_name = config["run_name"],
-		chr = list(range(1,30)))
+		chr = list(range(20,30))),
+		# expand("output/{run_name}/seq_cojo/{run_name}.{phenotype}.chr{chr}.jma.cojo",
+		# phenotype = config["phenotypes"],
+		# run_name = config["run_name"],
+		# chr = list(range(4,30)))
 
 phenotype_dict = config["phenotype_dict"]
+n_dict = config["n"]
 
 def columnchooser(WC):
 	column = phenotype_dict[WC.phenotype]
 	return column
 
+def nchooser(WC):
+	n = n_dict[WC.phenotype]
+	return n
 #prior_dict = config["reml_priors"]
 
 # def priorchooser(WC):
@@ -86,7 +94,7 @@ rule seq_gwas:
 	threads: config["gwas_threads"]
 	output:
 		log = "output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.log",
-		out = "output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.mlma.gz",
+		out = "output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.mlma.gz"
 	shell:
 		# "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --mlma --pheno {input.phenotypes} --mpheno {params.phenotype} --grm {params.grmprefix} --maf {params.maf} --autosome-num 29 --thread-num {params.threads} --out {params.oprefix}"
 		"""
@@ -94,28 +102,47 @@ rule seq_gwas:
 		module load openmpi/openmpi-3.1.3-intel-16.0.2
 		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.iprefix} --mlma --pheno {input.phenotypes} --mpheno {params.phenotype} --grm {params.grmprefix} --maf {params.maf} --autosome-num 29 --thread-num {threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 60
 		pigz {params.out}
+
+		"""
+rule make_ma_file:
+	input:
+		assoc = expand("output/{{run_name}}/seq_gwas/{{run_name}}.{{phenotype}}.chr{chr}.mlma.gz",
+		chr = list(range(1,30)))
+	params:
+		files = "output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{1..29}.mlma.gz",
+		n = nchooser
+	output:
+		cojofile = "output/{run_name}/seq_cojo/{run_name}.{phenotype}.sequence.ma"
+	shell:
+		"""
+		zcat {params.files} | awk '{{print $2, $4, $5, $6, $7, $8, $9, {params.n}}}' | grep -v "SNP" > {output.cojofile}
 		"""
 
 rule seq_cojo:
 	input:
 		log = "output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.log",
-		out = "output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.mlma.gz",
+		assoc = "output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.mlma.gz",
 		plink = expand("output/{{run_name}}/imputed_genotypes/seq/{{run_name}}.chr{{chr}}.filtered.{suffix}",
-		suffix = ["bed", "bim", "fam"])
+		suffix = ["bed", "bim", "fam"]),
+		cojofile = "output/{run_name}/seq_cojo/{run_name}.{phenotype}.sequence.ma"
 	params:
-		n = config["n"],
-		cojofile = "output/{run_name}/seq_cojo/{run_name}.{phenotype}.chr{chr}.ma",
 		bfile = "output/{run_name}/imputed_genotypes/seq/{run_name}.chr{chr}.filtered",
 		cojop = config["cojop"],
 		oprefix = "output/{run_name}/seq_cojo/{run_name}.{phenotype}.chr{chr}",
 		psrecord = "output/{run_name}/log/psrecord/seq_cojo/seq_cojo.{phenotype}.chr{chr}.log",
+		cojo = "output/{run_name}/seq_cojo/{run_name}.{phenotype}.chr{chr}.jma.cojo"
 	threads: config["grm_threads"]
 	output:
-		cojo = "output/{run_name}/seq_cojo/{run_name}.{phenotype}.chr{chr}.jma"
+		cojo = "output/{run_name}/seq_cojo/{run_name}.{phenotype}.chr{chr}.jma.cojo"
 	shell:
 		"""
 		export OMPI_MCA_btl_openib_if_include='mlx5_3:1'
 		module load openmpi/openmpi-3.1.3-intel-16.0.2
-		zcat {input.assoc} | awk '{{print $2, $4, $5, $6, $7, $8, $9, {params.n}}}' > {params.cojofile}
-		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.bfile} --autosome-num 29 --maf 0.01 --cojo-file {params.cojofile} --cojo-slct --cojo-p {params.cojop} --thread-num {threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 60
+		psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.bfile} --autosome-num 29 --maf 0.01 --cojo-file {input.cojofile} --cojo-slct --cojo-p {params.cojop} --thread-num {threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 60
 		"""
+		# """
+		# export OMPI_MCA_btl_openib_if_include='mlx5_3:1'
+		# module load openmpi/openmpi-3.1.3-intel-16.0.2
+		# zcat {input.assoc} | awk '{{print $2, $4, $5, $6, $7, $8, $9, {params.n}}}' > {params.cojofile}
+		# psrecord "code/gcta_1.93.2beta/gcta64 --bfile {params.bfile} --autosome-num 29 --maf 0.01 --cojo-file {params.cojofile} --cojo-slct --cojo-p {params.cojop} --thread-num {threads} --out {params.oprefix}" --log {params.psrecord} --include-children --interval 60
+		# """
