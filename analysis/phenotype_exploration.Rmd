@@ -1,5 +1,5 @@
 ---
-title: "Phenotype Exploration"
+title: "Generation Proxy Phenotype Exploration"
 author: "Troy Rowan"
 date: "2020-09-16"
 output: 
@@ -9,9 +9,12 @@ editor_options:
   chunk_output_type: inline
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 set.seed(325333)
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE)
+knitr::opts_knit$set(root.dir="C:/Users/troyrowan/Documents/GitHub/local_adaptation_sequence/")
 library(workflowr)
 library(knitr)
 library(maps)
@@ -31,11 +34,14 @@ library(tidyverse)
 library(EnvStats)
 library(optiSel)
 library(car)
+#source("code/GCTA_functions.R")
 ```
 
 
 # Simmental
 
+
+##Full Simmental dataset phenotype file creation
 
 ```{r}
 
@@ -45,7 +51,217 @@ simmental =
              cbrt_age = age^0.333,
              log_age = log(age),
              bc_age = bcPower(age, lambda = 0.0345))
-           
+
+
+
+
+sim_fam = 
+  read_delim("data/200907_SIM/200907_SIM.fam",
+            delim = " ",
+             col_names = c("fam_id", "international_id", "sire", "dam", "sex", "phenotype"))
+
+#Counts generation number of simmentals (by various metrics)
+# sim_gens = 
+#   read_csv("data/200907_SIM/mizzou-data-request/6-gen-ped.csv")%>% 
+#     select(id = animal, sire, dam) %>% 
+#     select(Indiv = id, Sire = sire, Dam = dam) %>% 
+#     summary.Pedig()
+
+sim_fam %>%
+  left_join(filter(simmental, asa_nbr != 2326708)) %>% 
+  #left_join(k9_zips, by = c("breeder_zip" = "zip"))  %>% 
+  filter(!is.na(breeder_zip)) %>% 
+  distinct() %>% 
+  left_join(read_csv("data/200907_SIM/mizzou-birthdates.csv") %>% 
+              select(international_id = int_id, birth_date = anm_dob)) %>% 
+  mutate(birth_year = year(birth_date),
+         age = time_length(interval(start = birth_date, end = Sys.Date()), "year")) %>% 
+  left_join(sim_gens, by = c("international_id" = "Indiv")) #%>% 
+  #write_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
+
+
+simmental = 
+  read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv") %>%
+  mutate(ASA_nbr = asa_nbr,
+         dummyid = international_id) %>% 
+  left_join(read_csv("data/200907_SIM/breeds.csv") %>% 
+  pivot_wider(names_from = brd_cd, values_from = percent) %>% 
+    replace(is.na(.), 0))
+  
+
+```
+
+### Comparing %SIM over time
+
+Looks like an inflection point 
+```{r}
+simmental %>% 
+  ggplot(aes(birth_date, SM))+
+  geom_smooth()+
+  geom_point(alpha = 0.1)
+
+simmental %>% 
+  ggplot(aes(x=birth_year, y = SM*100))+
+  geom_count(alpha = 0.7)+
+  geom_smooth(color = "red")+
+  labs(x = "Birth Year", y = "% Simmental Ancestry")+
+  theme_cowplot()
+```
+
+Outputting phenotype files
+```{r}
+
+#Generates optimal BoxCox Lambda value
+#boxcox(simmental$age, optimize = TRUE)
+
+sim_fam %>% 
+  left_join(filter(simmental, 
+                   asa_nbr != 2326708)) %>% 
+  mutate(FID = international_id) %>% 
+  select(FID, IID = international_id, age, birth_year, equiGen, fullGen, maxGen, Inbreeding) %>% 
+  distinct() %>%
+    mutate(sqrt_age = age^0.5,
+           cbrt_age = age^0.333,
+           log_age = log(age),
+           bc_age = bcPower(age, lambda = 0.0345),
+           young_age = case_when(birth_year >= 2012 ~ age,
+                                 TRUE ~ NA_real_),
+           young_log_age = case_when(birth_year >= 2012 ~ log_age,
+                                 TRUE ~ NA_real_),
+           equiGen_nozero = case_when(equiGen <= 1 ~ NA_real_,
+                                 TRUE ~ equiGen),
+         old_age = case_when(birth_year < 2012 ~ age,
+                               TRUE ~ NA_real_),
+         old_log_age = case_when(birth_year < 2012 ~ log_age,
+                               TRUE ~ NA_real_))%>% 
+  group_by(IID) %>% 
+  slice(1:1) %>% 
+  ungroup() %>% 
+  write_tsv("output/200907_SIM/phenotypes/200907_SIM.generation_proxy.txt", col_names = FALSE) 
+
+
+sim_fam %>% 
+  left_join(filter(simmental, 
+                   asa_nbr != 2326708)) %>% 
+  mutate(FID = international_id) %>% 
+  select(FID, IID = international_id, age, birth_year, equiGen, fullGen, maxGen, Inbreeding, SM, AN) %>% 
+  distinct() %>%
+    mutate(full_age = case_when(SM > 0.05 ~ age,
+                                TRUE ~ NA_real_),
+           full_log_age = case_when(SM > 0.05 ~ log(age),
+                                    TRUE ~ NA_real_),
+           full_young_age = case_when(birth_year > 2008 & SM > 0.05 ~ age,
+                                TRUE ~ NA_real_),
+           full_old_age = case_when(birth_year <= 2008 & SM > 0.05 ~ age,
+                                      TRUE ~ NA_real_),
+           simangus3050_age = case_when(SM < 0.30 & AN > 0.50 ~ age,
+                                    TRUE ~ NA_real_),
+           simangus2070_age = case_when(SM > 0.20 & SM < 0.7 ~ age,
+                                    TRUE ~ NA_real_),
+           sim70_age = case_when(SM > 0.70 ~ age,
+                                TRUE ~ NA_real_),
+           sim70_log_age = case_when(SM > 0.70 ~ log(age),
+                                    TRUE ~ NA_real_),
+           pb_age = case_when(SM > 0.99 ~ age,
+                              TRUE ~ NA_real_),
+           pb_log_age = case_when(SM > 0.99 ~ log(age),
+                              TRUE ~ NA_real_),
+           pb_young_age = case_when(birth_year > 2008 & SM > 0.99 ~ age,
+                                    TRUE ~ NA_real_),
+           pb_old_age = case_when(birth_year <= 2008 & SM > 0.99 ~ log(age),
+                              TRUE ~ NA_real_),
+           pb_young_age = case_when(birth_year > 2008 & SM > 0.99 ~ log(age),
+                                    TRUE ~ NA_real_)
+           ) %>% 
+  group_by(IID) %>% 
+  slice(1:1) %>% 
+  ungroup() %>%
+  select(-SM, -AN, -age, -birth_year, -equiGen, -fullGen, -maxGen, -Inbreeding) %>% head()
+  write_tsv("output/200907_SIM/phenotypes/200907_SIM.breedprop_generation_proxy.txt", col_names = FALSE) 
+
+
+  
+```
+
+##Subsetting Purebred Simmentals
+```{r}
+sim_fam %>%
+  left_join(filter(simmental, asa_nbr != 2326708)) %>%
+  mutate(ASA_nbr = asa_nbr,
+         dummyid = international_id) %>% 
+  left_join(read_csv("data/200907_SIM/breeds.csv") %>% 
+  pivot_wider(names_from = brd_cd, values_from = percent)) %>% 
+  filter(SM == 1) %>% 
+  select(dummyid, international_id) %>% 
+  write_tsv("output/201020_PBSIM/201020_PBSIM.keepids.txt", col_names = FALSE)
+
+sim_fam %>%
+  left_join(filter(simmental, asa_nbr != 2326708)) %>%
+  mutate(ASA_nbr = asa_nbr,
+         dummyid = international_id) %>% 
+  left_join(read_csv("data/200907_SIM/breeds.csv") %>% 
+  pivot_wider(names_from = brd_cd, values_from = percent)) %>% 
+  filter(SM == 1) %>%
+    mutate(sqrt_age = age^0.5,
+           cbrt_age = age^0.333,
+           log_age = log(age),
+           bc_age = bcPower(age, lambda = 0.0345),
+           young_age = case_when(birth_year >= 2012 ~ age,
+                                 TRUE ~ NA_real_),
+           young_log_age = case_when(birth_year >= 2012 ~ log_age,
+                                 TRUE ~ NA_real_),
+           equiGen_nozero = case_when(equiGen <= 1 ~ NA_real_,
+                                 TRUE ~ equiGen),
+         old_age = case_when(birth_year < 2012 ~ age,
+                               TRUE ~ NA_real_),
+         old_log_age = case_when(birth_year < 2012 ~ log_age,
+                               TRUE ~ NA_real_)) %>% 
+  select(dummyid, international_id, age, sqrt_age, cbrt_age, log_age, young_age, old_age, equiGen_nozero)%>% 
+  write_tsv("output/201020_PBSIM/phenotypes/201020_PBSIM.generation_proxy.txt", col_names = FALSE)  
+  
+```
+
+##Subsetting Purebred Angus
+```{r}
+sim_fam %>%
+  left_join(filter(simmental, asa_nbr != 2326708)) %>%
+  mutate(ASA_nbr = asa_nbr,
+         dummyid = international_id) %>% 
+  left_join(read_csv("data/200907_SIM/breeds.csv") %>% 
+  pivot_wider(names_from = brd_cd, values_from = percent)) %>% 
+  filter(AN == 1) %>% 
+  select(dummyid, international_id) %>% 
+  write_tsv("output/201020_ANGUS/201020_ANGUS.keepids.txt", col_names = FALSE)
+
+sim_fam %>%
+  left_join(filter(simmental, asa_nbr != 2326708)) %>%
+  mutate(ASA_nbr = asa_nbr,
+         dummyid = international_id) %>% 
+  left_join(read_csv("data/200907_SIM/breeds.csv") %>% 
+  pivot_wider(names_from = brd_cd, values_from = percent)) %>% 
+  filter(AN == 1) %>%
+    mutate(sqrt_age = age^0.5,
+           cbrt_age = age^0.333,
+           log_age = log(age),
+           bc_age = bcPower(age, lambda = 0.0345),
+           young_age = case_when(birth_year >= 2012 ~ age,
+                                 TRUE ~ NA_real_),
+           young_log_age = case_when(birth_year >= 2012 ~ log_age,
+                                 TRUE ~ NA_real_),
+           equiGen_nozero = case_when(equiGen <= 1 ~ NA_real_,
+                                 TRUE ~ equiGen),
+         old_age = case_when(birth_year < 2012 ~ age,
+                               TRUE ~ NA_real_),
+         old_log_age = case_when(birth_year < 2012 ~ log_age,
+                               TRUE ~ NA_real_)) %>% 
+  select(dummyid, international_id, age, sqrt_age, cbrt_age, log_age)%>% 
+  write_tsv("output/201020_ANGUS/phenotypes/201020_ANGUS.generation_proxy.txt", col_names = FALSE)  
+
+
+read_csv("data/200907_SIM/breeds.csv") %>% 
+  pivot_wider(names_from = brd_cd, values_from = percent) %>% 
+  filter(AN == 1) %>% 
+  gg
 ```
 
 ### Age Summary Stats
@@ -117,6 +333,7 @@ simmental%>%
   facet_zoom(xlim = c(2,3.6), ylim = c(0,175), zoom.data = z, horizontal = FALSE)
 ```
 
+
 ## Generation Counts
 
 ### Summary Stats for Generation Number
@@ -129,8 +346,37 @@ simmental %>%
   separate(key, c("variable", "stat"), sep = "_") %>%
   spread(stat, value) %>% 
   rename(generation_count = variable, mean = fn1, median = fn2, sd = fn3, min = fn4, max = fn5)
-
 ```
+
+## Generation vs. Age (Simmental)
+
+### Correlations between generation proxies:
+```{r}
+simmental %>% 
+  select(age, birth_year, equiGen, fullGen, maxGen) %>% 
+  cor()
+
+simmental %>% 
+  filter(equiGen > 1) %>% 
+  select(age, birth_year, equiGen, fullGen, maxGen) %>% 
+  cor()
+```
+
+
+```{r}
+simmental %>% 
+  ggplot(aes(birth_date, equiGen))+
+  geom_point()+
+  geom_smooth()
+
+simmental %>% 
+  ggplot(aes(birth_date, maxGen))+
+  geom_point()+
+  geom_smooth()
+
+lm(maxGen~age, data = simmental) %>% summary()
+```
+
 
 ## Distributions of Generation {.tabset}
 
@@ -141,7 +387,7 @@ simmental%>%
   ggplot()+
   geom_histogram(aes(x = equiGen), bins = 100, fill = "dodgerblue")+
   theme_cowplot()+
-  labs(title = "Simmental Equivalent Generations", x = "Age (as of 9-15-2020)", y = "Count")
+  labs(title = "Simmental Equivalent Generations", x = "Equivalent Generation", y = "Count")
 
 ```
 
@@ -151,7 +397,7 @@ simmental%>%
   ggplot()+
   geom_histogram(aes(x = equiGen^2), bins = 100, fill = "dodgerblue")+
   theme_cowplot()+
-  labs(title = "Simmental Equivalent Generations Squared", x = "Age (as of 9-15-2020)", y = "Count")
+  labs(title = "Simmental Equivalent Generations Squared", x = "Equivalent Generation Squared", y = "Count")
 ```
 
 ### fullGen
@@ -160,7 +406,7 @@ simmental%>%
   ggplot()+
   geom_histogram(aes(x = fullGen),  bins = 10, fill = "dodgerblue")+
   theme_cowplot()+
-  labs(title = "Simmental Full Generations", x = "Age (as of 9-15-2020)", y = "Count")
+  labs(title = "Simmental Full Generations", x = "Full Generation", y = "Count")
 ```
 
 ### maxGen
@@ -169,14 +415,73 @@ simmental%>%
   ggplot()+
   geom_histogram(aes(x = maxGen),  bins = 25, fill = "dodgerblue")+
   theme_cowplot()+
-  labs(title = "Simmental Max Generations", x = "Age (as of 9-15-2020)", y = "Count")
+  labs(title = "Simmental Max Generations", x = "Maximum Generation", y = "Count")
 ```
 
 # Red Angus
 
+## Generating phenotype files
+
 ```{r}
-redangus = read_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
+ran_animals = 
+  read_csv("data/200910_RAN/redangus/raaa.animal.20200827.csv") %>% 
+    left_join(read_csv("data/200910_RAN/redangus/genomic_id.crossreference.csv")) %>% 
+    left_join(read_csv("data/200910_RAN/redangus/breeder_owner_information.csv"))
+
+
+
+redangus = 
+  read_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
+
+
+#outputs age phenotype file
+redangus %>% 
+  select(international_id, age, birth_year) %>% 
+  distinct() %>% 
+  mutate(sqrt_age = age^0.5,
+         cbrt_age = age^0.333,
+         log_age = log(age),
+         bc_age = bcPower(age, lambda = -0.237),
+         young_age = case_when(birth_year >= 2012 ~ age,
+                               TRUE ~ NA_real_),
+         young_log_age = case_when(birth_year >= 2012 ~ log_age,
+                               TRUE ~ NA_real_),
+         old_age = case_when(birth_year < 2012 ~ age,
+                               TRUE ~ NA_real_),
+         old_log_age = case_when(birth_year < 2012 ~ log_age,
+                               TRUE ~ NA_real_)) %>% 
+  mutate(dummyfam = international_id) %>% 
+  select(dummyfam, international_id, age, sqrt_age, cbrt_age, log_age, bc_age, young_age, young_log_age, old_age, old_log_age) %>% 
+  write_tsv("output/200910_RAN/phenotypes/200910_RAN.generation_proxy.txt",
+            col_names = FALSE)
+
+read_tsv("output/200910_RAN/phenotypes/200910_RAN.generation_proxy.txt",
+         col_names = c("dummyfam", "international_id", "age", "sqrt_age", "cbrt_age", "log_age", "bc_age")) %>% 
+  filter(!is.na(age)) %>% 
+  select(dummyfam, international_id) %>% 
+  write_tsv("output/200910_RAN/200910_RAN.phenotyped_ids.txt",
+            col_names = FALSE)
+
 ```
+
+
+## Imputation Statistics
+
+This is the number of variants that we're dealing with when we potentially filter on R^2 and/or MAF
+
+R2	NO_MAF	     MAF_0.001	 MAF_0.005   MAF_0.01
+________________________________
+0.0	 42,156,321	 17,850,177  13,912,529	 12,758,503
+0.2	 31,408,474	 15,860,556	 12,937,387  12,018,389
+0.3	 29,650,214	 15,495,110	 12,768,056  11,888,636
+0.4	 27,856,427	 15,143,422	 12,604,835  11,759,568
+0.5	 25,877,004	 14,762,508	 12,422,846  11,611,406
+
+
+the R^2 > 0.4 filter with 0.005 MAF filter would leave 12,604,835 variants
+
+
+Initially my thought is that we should use 
 
 
 ## Exploring Generation Proxy Phenotypes 
@@ -224,7 +529,7 @@ ages =
     mutate(sqrt_age = age^0.5,
            cbrt_age = age^0.333,
            log_age = log(age),
-           bc_age = bcPower(age, lambda = -0,237)
+           bc_age = bcPower(age, lambda = -0.237)
            )
 
 

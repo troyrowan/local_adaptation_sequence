@@ -400,7 +400,14 @@ plot_grid(read_blp("output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp"
     ggtitle("\nGPSM Breeding Values")+
     theme_cowplot())
 
-
+read_blp("output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    geom_qq(col = age)+
+    stat_qq_line(color = "red")+
+    ggtitle("Purebred Simmental (Pre 2008)\nRaw Age\nGPSM Residuals")+
+    theme_cowplot()
 ```
 
 ## n(SigSNPs)

@@ -386,8 +386,8 @@ simmental =
 sim_fam %>% 
   left_join(filter(simmental, 
                    asa_nbr != 2326708)) %>% 
-  mutate(dummyfam = international_id) %>% 
-  select(dummyfam, international_id, age, birth_year, equiGen, fullGen, maxGen, Inbreeding) %>% 
+  mutate(FID = international_id) %>% 
+  select(FID, IID = international_id, age, birth_year, equiGen, fullGen, maxGen, Inbreeding) %>% 
   distinct() %>%
     mutate(sqrt_age = age^0.5,
            cbrt_age = age^0.333,
@@ -631,6 +631,16 @@ ran_gens =
   pedigree::countGen()
 
 head(ran_gen)
+
+ran_gen = 
+  read_csv("/data/tnr343/local_adaptation_sequence/data/200910_RAN/All_Animals_SireDam.csv") %>% 
+  select(id = anm_key, sire = sire_key, dam = dam_key)%>% 
+    mutate_all(~if_else(is.na(.), 0, .))
+
+ran_gens = countGen(ran_gen)
+
+cbind(ran_gen, ran_gens) %>% 
+  write_csv("RedAngusGenerations.csv")
 ```
 
 ```{r}
