@@ -44,6 +44,9 @@ source("code/annotation_functions.R")
 simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
 redangus = read_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
 ```
+
+
+
 # Red Angus GPSM Analysis
 
 ## REML variance component estimates {.tabset}
@@ -747,11 +750,11 @@ ran_seq_gpsm_young_age =
                  filter(p < 0.01)) %>% 
     purrr::reduce(bind_rows)
 
-ran_seq_gpsm_old_age =
-  seq(1,29) %>%
-    purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.old_age.chr",.x,".mlma.gz")) %>%
-                 filter(p < 0.01)) %>%
-    purrr::reduce(bind_rows)
+# ran_seq_gpsm_old_age =
+#   seq(1,29) %>%
+#     purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.old_age.chr",.x,".mlma.gz")) %>%
+#                  filter(p < 0.01)) %>%
+#     purrr::reduce(bind_rows)
 
 ran_seq_gpsm_age %>% 
   filter(p < 4.289e-9) %>% 
@@ -799,13 +802,13 @@ nrow = 2)+
 plot_grid(
 ran_seq_gpsm_age %>% 
   ggmanhattan2(sig_threshold_p = 4.289e-9)+
-  geom_hline(yintercept = 5, color = "blue"),
+  geom_hline(yintercept = 7.3, color = "blue"),
 ran_seq_gpsm_age %>% 
   ggmanhattan2(sig_threshold_p = 4.289e-9)+
-  geom_hline(yintercept = 5, color = "blue")+
+  geom_hline(yintercept = 7.3, color = "blue")+
   ylim(c(0,15)),
 nrow = 2)+
-  ggtitle("Red Angus Log-Transformed Age GPSM")
+  ggtitle("Red Angus Raw Age GPSM")
 
 ```
 
@@ -815,11 +818,11 @@ plot_grid(
   ran_seq_gpsm_young_age %>% 
     ggmanhattan2(sig_threshold_p = 4.289e-9,
                sigsnps = ran_gpsm_sigsnps)+
-    geom_hline(yintercept = 5, color = "blue"),
+    geom_hline(yintercept = 7.3, color = "blue"),
   ran_seq_gpsm_young_age %>% 
     ggmanhattan2(sig_threshold_p = 4.289e-9,
                sigsnps = ran_gpsm_sigsnps)+
-    geom_hline(yintercept = 5, color = "blue")+
+    geom_hline(yintercept = 7.3, color = "blue")+
     ylim(c(0,15)),
   nrow = 2)+
   ggtitle("Red Angus Young Animals (Post-2011) GPSM")
@@ -933,7 +936,8 @@ ran_age_seq_cojo =
   ~read_tsv(paste0("output/200910_RAN/seq_cojo/",.x),
            col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
            skip = 1) %>% 
-    select(SNP, CHR = Chr, BP = bp, p = pJ)) %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
     purrr::reduce(bind_rows) 
 
 ran_old_seq_cojo = 
@@ -942,7 +946,7 @@ ran_old_seq_cojo =
   ~read_tsv(paste0("output/200910_RAN/seq_cojo/",.x),
            col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
            skip = 1) %>% 
-    select(SNP, CHR = Chr, BP = bp, p = pJ)) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ)) %>% 
     purrr::reduce(bind_rows) 
 
 ran_young_seq_cojo = 
@@ -951,10 +955,84 @@ ran_young_seq_cojo =
   ~read_tsv(paste0("output/200910_RAN/seq_cojo/",.x),
            col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
            skip = 1) %>% 
-    select(SNP, CHR = Chr, BP = bp, p = pJ)) %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
     purrr::reduce(bind_rows)
 
 ```
+
+### COJO SNP overlap
+```{r}
+intersect(ran_age_seq_cojo$SNP, ran_young_seq_cojo$SNP) %>% 
+  length()
+
+
+
+length(ran_age_seq_cojo$SNP)
+length(ran_young_seq_cojo$SNP)
+
+
+length(intersect(filter(ran_seq_gpsm_age, p < 5e-8) %>% .$SNP, filter(ran_seq_gpsm_young_age, p < 5e-8) %>% .$SNP))
+
+length(filter(ran_seq_gpsm_age, p < 5e-8) %>% .$SNP)
+length(filter(ran_seq_gpsm_young_age, p < 5e-8) %>% .$SNP)
+
+
+```
+
+### Gene overlap with nSL regions
+
+
+```{r}
+intersect(ran_age_seq_cojo_genes, unique(ran_raisd_genes$gene_name))
+
+intersect(ran_young_seq_cojo_genes, unique(ran_raisd_genes$gene_name))
+
+
+
+map2(.x = ran_young_seq_cojo$CHR, .y = ran_young_seq_cojo$BP,
+  ~filter(
+    ran_nsl_sig_windows,
+    CHR == .x,
+    WindowStart-50000 <= .y,
+    WindowStop+50000 >= .y)) %>% 
+  reduce(bind_rows) 
+
+
+map2(.x = ran_age_seq_cojo$CHR, .y = ran_age_seq_cojo$BP,
+  ~filter(
+    ran_nsl_sig_windows,
+    CHR == .x,
+    WindowStart-50000 <= .y,
+    WindowStop+50000 >= .y)) %>% 
+  reduce(bind_rows)
+
+
+map2(.x = ran_young_seq_cojo$CHR, .y = ran_young_seq_cojo$BP,
+  ~filter(
+    ran_raisd,
+    Mu > 354,
+    CHR == .x,
+    start <= .y,
+    finish >= .y) %>% 
+    mutate(COJO_SNP = paste(.x, .y, sep = ":"))) %>% 
+  reduce(bind_rows) 
+
+
+map2(.x = ran_age_seq_cojo$CHR, .y = ran_age_seq_cojo$BP,
+  ~filter(
+    ran_raisd,
+    Mu > 354,
+    CHR == .x,
+    start <= .y,
+    finish >= .y)) %>% 
+  reduce(bind_rows) 
+
+
+ran_raisd %>% 
+  summarize(mean(finish - stat), sd(finish - stat))
+```
+
 
 ### FAETH Score Annotations for COJO Hits
 1) Write out SNP names, will just use grep in `joinable_FAETH_ARS.txt` file to find these SNPs as reading in isn't exactly helpful
@@ -970,14 +1048,9 @@ Commands:
 The top 1/2 FAETH score cutoff = 1.48e-8
 The top 1/3 FAETH score cutoff = 1.60e-8
 ```{r}
-FAETH_Scores = 
-  vroom("data/FAETH.txt.gz",
-        delim = "\t") %>% 
-  filter(!is.na(FAETH))
-
 ran_age_seq_cojo_FAETH = 
   read_delim("output/200910_RAN/seq_cojo/200910_RAN.age.cojo.FAETH.txt",
-           col_names = c("Chr", "bp", "SNP", "chr", "ARS_BP", "bull.FAETH1.1", "cow.FAETH1.1", "annotation", "aseQTL", "eeQTL", "geQTL", "bull.ldscore50kb", "bull.maf", "ChIPSeq", "mQTL", "selection.sig", "young", "variant.density50kb", "sQTL", "conserved100way", "cow.ldscore50kb", "cow.maf"), 
+           col_names = c("SNP", "UMDSNP", "CHR", "BP", "bull.FAETH1.1", "cow.FAETH1.1", "annotation", "aseQTL", "eeQTL", "geQTL", "bull.ldscore50kb", "bull.maf", "ChIPSeq", "mQTL", "selection.sig", "young", "variant.density50kb", "sQTL", "conserved100way", "cow.ldscore50kb", "cow.maf"), 
            col_type = cols(SNP = col_character()),
            delim = " ") %>% 
   mutate(FAETH = (bull.FAETH1.1 + cow.FAETH1.1)/2,
@@ -988,7 +1061,7 @@ ran_age_seq_cojo_FAETH =
 
 ran_young_seq_cojo_FAETH = 
   read_delim("output/200910_RAN/seq_cojo/200910_RAN.young_age.cojo.FAETH.txt",
-           col_names = c("Chr", "bp", "SNP", "chr", "ARS_BP", "bull.FAETH1.1", "cow.FAETH1.1", "annotation", "aseQTL", "eeQTL", "geQTL", "bull.ldscore50kb", "bull.maf", "ChIPSeq", "mQTL", "selection.sig", "young", "variant.density50kb", "sQTL", "conserved100way", "cow.ldscore50kb", "cow.maf"),
+           col_names = c("SNP", "UMDSNP", "CHR", "BP", "bull.FAETH1.1", "cow.FAETH1.1", "annotation", "aseQTL", "eeQTL", "geQTL", "bull.ldscore50kb", "bull.maf", "ChIPSeq", "mQTL", "selection.sig", "young", "variant.density50kb", "sQTL", "conserved100way", "cow.ldscore50kb", "cow.maf"),
            col_type = cols(SNP = col_character()),
            delim = " ") %>% 
   mutate(FAETH = (bull.FAETH1.1 + cow.FAETH1.1)/2,
@@ -1004,19 +1077,50 @@ ran_young_seq_cojo_FAETH %>% count(top_half)
 ran_young_seq_cojo_FAETH %>% count(top_third)
 ```
 
+```{r}
+ran_age_seq_cojo_FAETH %>% 
+  left_join(ran_age_seq_cojo) %>% 
+  View()
+```
 
 
 ### Gene Annotations for COJO hits:
+
+For outputting unique gene lists
+```{r}
+ran_age_seq_cojo %>% 
+  gene_annotation(search_bp = 50000) %>% 
+    left_join(ran_age_seq_cojo, 
+              by = c("CHR", "BP")) %>% 
+  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
+  select(gene_name) %>% 
+  filter(!is.na(gene_name)) %>% 
+  unique() %>% 
+  write_tsv("output/200910_RAN/genes/200910_RAN.age.gpsm.genes.50kb.txt",
+            col_names = FALSE)
+
+ran_young_seq_cojo %>% 
+  gene_annotation(search_bp = 50000) %>% 
+    left_join(ran_young_seq_cojo, 
+              by = c("CHR", "BP")) %>% 
+  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
+  select(gene_name) %>% 
+  filter(!is.na(gene_name)) %>% 
+  unique() %>% 
+  write_tsv("output/200910_RAN/genes/200910_RAN.young_age.gpsm.genes.50kb.txt",
+            col_names = FALSE)
+```
+
 
 Annotated genes within 50 kb of COJO SNP
 
 #### Age Genes
 ```{r}
-ran_age_seq_cojo %>% 
+ran_young_seq_cojo %>% 
   gene_annotation() %>% 
-    left_join(ran_age_seq_cojo, 
+    right_join(ran_young_seq_cojo, 
               by = c("CHR", "BP")) %>% 
-  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>%
+  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% write_tsv("output/200910_RAN/genes/200910_RAN.young_age.gpsm.cojogenes.50kb.txt") 
   datatable()
 
 ran_age_seq_cojo %>% 
@@ -1078,7 +1182,7 @@ ran_young_seq_cojo_genes =
     gene_annotation() %>% 
       left_join(ran_young_seq_cojo, 
                 by = c("CHR", "BP")) %>% 
-    select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% View()
+    select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
   select(gene_name) %>% 
   distinct() %>% 
   .$gene_name
@@ -1110,6 +1214,18 @@ sweeps %>%
   geom_histogram()
 ```
 
+### Shared Genes beetween FULL and YOUNG datasets
+```{r}
+intersect(ran_age_seq_cojo_genes, ran_young_seq_cojo_genes) %>% 
+  length()
+
+length(ran_young_seq_cojo_genes)
+length(ran_age_seq_cojo_genes)
+
+filter
+```
+
+
 ### Gene Ontology Analysis
 
 Gene ontology enrichment analysis using `gprofiler2::gost()` of gene names from GALLO annotation of log-transformed GPSM COJO hits
@@ -1135,7 +1251,7 @@ gostplot(ran_age_seq_cojo_GO, capped = TRUE, interactive = TRUE)
 #### Young Age
 ```{r}
 ran_young_seq_cojo %>% 
-  gene_annotation() %>% 
+  gene_annotation() %>% View()
     left_join(ran_young_seq_cojo, 
               by = c("CHR", "BP")) %>% 
   select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
@@ -1152,7 +1268,7 @@ Removed milk-associated QTL, perform enrichment on whole genome QTL and by chrom
 ```{r}
 ran_age_seq_cojo %>%
   qtl_annotation() %>% 
-  filter(QTL_type != "Milk") %>% 
+  filter(QTL_type != "Milk") %>% View() 
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
   datatable()
@@ -1173,23 +1289,153 @@ ran_young_seq_cojo %>%
 ran_age_seq_cojo %>% 
   qtl_annotation() %>% 
   filter(QTL_type != "Milk") %>% 
-  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
   datatable()
+
+ran_age_seq_cojo %>% 
+  qtl_annotation() %>% 
+  filter(trait_ID == "Calving ease")
 ```
 
 #### Young (per-chromosme)
 ```{r}
+
+qtls = 
 ran_young_seq_cojo %>% 
   qtl_annotation() %>% 
-  filter(QTL_type != "Milk") %>% 
-  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  filter(QTL_type != "Milk") 
+
+
+qtl_enrich =
+  qtls %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2)
+  
+qtl_enrich %>% 
+  filter(adj.pval < 0.05) %>% 
+  arrange(adj.pval) %>% 
+  left_join(qtls %>% 
+              select(CHR, BP, QTL = trait_ID, QTL_ID)) %>% 
+  group_by(QTL, N_QTLs, adj.pval) %>% 
+  summarize(n(), n_distinct(QTL_ID))
+  
+  
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
   datatable()
+
+```
+
+### Annnotating with FAANG data
+
+```{r}
+ran_age_seq_cojo_functional = 
+  map2(.x = ran_age_seq_cojo$CHR, .y = ran_age_seq_cojo$BP,
+    ~filter(
+      FAANG,
+      CHR == .x,
+      START <= .y,
+      STOP >= .y)%>% 
+      mutate(COJO_SNP = paste(.x, .y, sep = ":"))) %>% 
+    reduce(bind_rows) %>% 
+  left_join(ran_age_seq_cojo,
+            by = c("COJO_SNP" = "SNP")) 
+
+
+ran_young_seq_cojo_functional = 
+  map2(.x = ran_young_seq_cojo$CHR, .y = ran_young_seq_cojo$BP,
+    ~filter(
+      FAANG,
+      CHR == .x,
+      START <= .y,
+      STOP >= .y)%>% 
+      mutate(COJO_SNP = paste(.x, .y, sep = ":"))) %>% 
+    reduce(bind_rows) %>% 
+  left_join(ran_young_seq_cojo, 
+            by = c("COJO_SNP" = "SNP"))
+
+
+
+ran_age_seq_cojo_functional %>% 
+  select(COJO_SNP,TISSUE) %>% 
+  distinct() %>% 
+  mutate(case = as.integer(1)) %>% 
+  pivot_wider(names_from = TISSUE, values_from = case, values_fill = as.integer(0)) %>% 
+  as.data.frame() %>% 
+  upset(nsets = 8, order.by = "freq")
+  
+  
+ran_young_seq_cojo_functional %>% 
+  select(COJO_SNP,TISSUE) %>% 
+  distinct() %>% 
+  mutate(case = as.integer(1)) %>% 
+  pivot_wider(names_from = TISSUE, values_from = case, values_fill = as.integer(0)) %>% 
+  as.data.frame() %>% 
+  upset(nsets = 8, order.by = "freq")
+
+ran_young_seq_cojo_functional %>% 
+  select(COJO_SNP,MARK) %>% 
+  distinct() %>% 
+  mutate(case = as.integer(1)) %>% 
+  pivot_wider(names_from = MARK, values_from = case, values_fill = as.integer(0)) %>% 
+  as.data.frame() %>% 
+  upset(nsets = 8, order.by = "freq")
+
+
+ran_young_seq_cojo_functional %>%
+  mutate(MARK = paste(TISSUE, MARK, sep = ":")) %>% 
+  select(COJO_SNP,MARK) %>% 
+  distinct() %>% 
+  mutate(case = as.integer(1)) %>% 
+  pivot_wider(names_from = MARK, values_from = case, values_fill = as.integer(0)) %>% 
+  as.data.frame() %>% 
+  upset(nsets = 20, order.by = "freq")
+
 ```
 
 
+### Testing significance of annotated marks
+```{r}
+seq_positions = read_tsv("data/200910_RAN/200910_RAN.young_age.cojosnps.bim",
+                         col_names = c("CHR", "SNP", "CM","BP", "REF", "ALT")) %>% 
+  select(CHR, BP)
+test_positions =
+  seq_positions %>% 
+  sample_n(10)
 
+faang_df =
+    map2(.x = test_positions$CHR, .y = test_positions$BP,
+    ~filter(
+      FAANG,
+      CHR == .x,
+      START <= .y,
+      STOP >= .y) %>% 
+      mutate(SNP = paste(.x, .y, sep = ":"))) %>% 
+    reduce(bind_rows)
+
+epi_tester = function(rep){
+  test_positions =
+    seq_positions %>% 
+    sample_n(417)
+  faang_df =
+    map2(.x = test_positions$CHR, .y = test_positions$BP,
+    ~filter(
+      FAANG,
+      CHR == .x,
+      START <= .y,
+      STOP >= .y) %>% 
+      mutate(SNP = paste(.x, .y, sep = ":"))) %>% 
+    reduce(bind_rows)
+  
+  return(data.frame(rep = rep, npeaks = count(faang_df), nsnps = faang_df %>% count(SNP) %>% count()))
+}
+
+faang_tests = 
+  seq(1,100) %>% 
+    purrr::map(~epi_tester(.x)) %>% 
+    reduce(bind_rows)
+
+```
 
 
 ## Conditional Joint Analysis (COJO)
@@ -1281,5 +1527,15 @@ read_tsv("output/200910_RAN/cojo/200910_RAN.age.850K.jma.cojo.gz") %>%
   datatable()
 ```
 
+### Tajima's D
+
+```{r}
+RAN_Tajima = read_tsv("output/200910_RAN/200910_RAN.1kbulls.Tajima.D")
+
+CHR23TD %>% 
+  select(CHR = CHROM, BP = BIN_START, TajimaD, SNP = N_SNPS) %>%
+  selscan_manhattans(col = TajimaD)
+
+```
 
 

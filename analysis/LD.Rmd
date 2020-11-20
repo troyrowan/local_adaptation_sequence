@@ -1,0 +1,344 @@
+---
+title: "LD"
+author: "Troy Rowan"
+date: "11/15/2020"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+  markdown: 
+    wrap: 72
+---
+
+```{r, setup, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = here::here())
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(purrr)
+library(factoextra)
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(qvalue)
+library(GALLO)
+library(cowplot)
+library(gprofiler2)
+library(DT)
+library(ggforce)
+library(vroom)
+#source("../code/annotation_functions.R")
+```
+
+Pulling significant SNPs within signifificant RAiSD windows
+
+settled on these SNPs to calculate LD stats around
+```{bash}
+2:270462:T:A
+2:323284:C:A
+2:326787:G:A
+2:5948954:C:T
+2:6575963:G:T
+2:16535054:C:G
+2:16900789:A:C
+2:20899283:G:C
+2:22926713:C:T
+2:23421555:C:T
+2:26835073:G:A
+2:31685731:A:G
+2:32449690:C:T
+2:33133642:C:T
+2:34965158:G:A
+2:35220531:T:C
+2:38914280:G:A
+2:39129676:T:C
+2:57367014:T:C
+2:58605140:T:C
+2:65246352:T:C
+2:72107520:A:G
+2:72978302:G:A
+2:89161841:G:A
+2:89172015:A:C
+2:99237989:G:A
+2:103309217:A:G
+2:104985146:C:T
+2:110973355:C:T
+2:111069172:A:G
+2:111083318:T:C
+2:116449514:T:C
+2:125887827:C:T
+2:125922611:T:G
+2:125923661:G:C
+
+```
+
+Pulling nSL Significant SNPs from Red Angus Full dataset calcultions
+```{r}
+chr2_nsl =
+  ran_nsl %>% 
+    filter(CHR == 2,
+           MeanY > 2.3)
+
+
+chr2_snps = 
+  read_tsv("output/200910_RAN/200910_RAN.age.cojosnps.bim.gz",
+           col_names= c("CHR", "SNP", "CM", "BP", "A1", "A2")) %>% 
+  filter(CHR == 2)
+
+nsl_snps =
+  purrr::map2(.x = chr2_nsl$WindowStart, .y = chr2_nsl$WindowStop,
+              ~filter(chr2_snps,
+                      BP >= .x,
+                      BP <= .y) %>% 
+                mutate(WindowStart = .x,
+                       WindowStop = .y,
+                       midpoint = (.x + .y)/2)) %>% 
+    reduce(bind_rows)
+
+nsl_snps %>%
+  left_join(chr2_nsl, by = c("WindowStart", "WindowStop")) %>% 
+  mutate(dist = abs(BP.x - midpoint)) %>% 
+  group_by(midpoint) %>% 
+  top_n(1, wt = -dist) %>% 
+  ungroup() %>% 
+  select(SNP) %>%
+  write_tsv("analysis/genes.txt")
+```
+
+
+
+```{r}
+
+plot_grid(
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.00,
+           dist < 100000) %>% 
+    ggplot(aes(x=abs(BP_A - BP_B), y = R2))+
+    stat_smooth(aes(group = SNP_A), geom = "line", method ="loess", se = FALSE, size = 1, alpha = 0.2)+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "indianred")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "Distance to focal SNP", title = "GPSM")+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)),
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.RAiSD.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.00,
+           dist < 100000) %>% 
+    ggplot(aes(x=abs(BP_A - BP_B), y = R2))+
+    stat_smooth(aes(group = SNP_A), geom = "line", method ="loess", se = FALSE, size = 1, alpha = 0.2)+
+    #geom_point(alpha = 0.01)+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "dodgerblue")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "Distance to focal SNP", title = "RAiSD")+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)),
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.nSL.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.00,
+           dist < 100000) %>% 
+    ggplot(aes(x=abs(BP_A - BP_B), y = R2))+
+    stat_smooth(aes(group = SNP_A), geom = "line", method ="loess", se = FALSE, size = 1, alpha = 0.2)+
+    #geom_point(alpha = 0.01)+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "springgreen3")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "Distance to focal SNP", title = "nSL")+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)),
+  nrow = 1)
+  
+
+bind_rows(
+    read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.05,
+           dist < 100000) %>% mutate(analysis = "GPSM"),
+    read.table("output/200910_RAN/ld/200910_RAN.chr2.RAiSD.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.05,
+           dist < 100000) %>% mutate(analysis = "RAiSD"),
+    read.table("output/200910_RAN/ld/200910_RAN.chr2.nSL.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.05,
+           dist < 100000) %>% mutate(analysis = "nSL")
+    
+    ) %>% 
+  ggplot(aes(x=abs(BP_A - BP_B), y = R2, color = analysis))+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1)+
+    ylim(c(0,1)) %>% 
+  scale_color_viridis_d()+
+  theme_cowplot()+
+  labs(x = "Distance to focal SNP")
+
+bind_rows(
+    read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.05,
+           dist < 100000) %>% mutate(analysis = "GPSM"),
+    read.table("output/200910_RAN/ld/200910_RAN.chr2.RAiSD.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.05,
+           dist < 100000) %>% mutate(analysis = "RAiSD"),
+    read.table("output/200910_RAN/ld/200910_RAN.chr2.nSL.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)) %>% 
+    filter(R2 > 0.05,
+           dist < 100000) %>% mutate(analysis = "nSL")
+    
+    ) %>% 
+  ggplot(aes(x=abs(BP_A - BP_B), y = R2, color = analysis))+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1)+
+    ylim(c(0,1)) %>% 
+  scale_color_viridis_d()+
+  theme_cowplot()+
+  labs(x = "Distance to focal SNP")
+  
+```
+
+```{r}
+plot_grid(
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)/1000) %>% 
+    filter(R2 > 0.01,
+           dist < 100) %>% 
+    ggplot(aes(x=dist, y = R2))+
+    geom_point(alpha = 0.01,color = "indianred")+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "indianred")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "", title = "GPSM", y = expression("r "^2)),
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.RAiSD.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)/1000) %>% 
+    filter(R2 > 0.01,
+           dist < 100) %>% 
+    ggplot(aes(x=dist, y = R2))+
+    geom_point(alpha = 0.01,color = "slateblue3")+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "slateblue3")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "Distance to focal SNP (kb)", y = " ", title = "RAiSD"),
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.nSL.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)/1000) %>% 
+    filter(R2 > 0.01,
+           dist < 100) %>% 
+    ggplot(aes(x=dist, y = R2))+
+    geom_point(alpha = 0.01,color = "springgreen3")+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "springgreen3")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "", y = " ", title = "nSL"),
+  nrow = 1)
+
+ggsave("output/figures/CHR2.LD.png", width = 10, height = 5, units = "in")
+```
+
+
+Average LD around significant SNPs
+```{r}
+ld = 
+bind_rows(
+      read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
+      mutate(dist = abs(BP_A - BP_B),
+             analysis = "GPSM"),
+      read.table("output/200910_RAN/ld/200910_RAN.chr2.RAiSD.ld.gz", sep="",header=T) %>%  
+      mutate(dist = abs(BP_A - BP_B),
+             analysis = "RAiSD"),
+      read.table("output/200910_RAN/ld/200910_RAN.chr2.nSL.ld.gz", sep="",header=T) %>%  
+      mutate(dist = abs(BP_A - BP_B),
+             analysis = "nSL")) 
+
+
+ld %>%
+  filter(dist < 100000) %>% 
+      group_by(analysis) %>% 
+      summarize(mean(R2), median(R2), sd(R2))
+
+
+ld %>%
+  filter(dist < 500000) %>% 
+      group_by(analysis) %>% 
+      summarize(mean(R2), median(R2), sd(R2))
+
+TukeyHSD(aov(R2 ~ analysis, data = filter(ld, dist < 100000)))
+
+```
+
+
+
+```{r}
+read.table("output/200910_RAN/ld/200910_RAN.chr2.subsetted.ld.gz", sep="",header=T) %>%  
+  mutate(dist = abs(BP_A - BP_B)) %>% 
+  filter(R2 >0.2,
+         dist < 500000) %>% 
+  ggplot(aes(x=dist, y = R2, color = SNP_A))+
+  geom_smooth(method = "loess", se = FALSE, size = 2)+
+  #geom_point(alpha = .025)+
+  ylim(c(0,1))+
+  #geom_hline(yintercept = 0.25, color = "red")+
+  #facet_wrap(~BP_A, nrow = 3)+
+  theme_cowplot()+
+  scale_color_viridis_d()+
+  labs(x = "Distance to focal SNP")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  
+read.table("output/200910_RAN/ld/200910_RAN.chr2.subsetted.ld.gz", sep="",header=T) %>%
+  mutate(analysis = case_when(SNP_A %in% c("2:22926713:C:T", "2:16900789:A:C", "2:116448844:G:A") ~ "RAiSD",
+                              SNP_A %in% c("2:113671290:C:G", "2:53151542:A:G", "2:7500278:A:G", "2:103225507:A:G") ~ "GPSM",
+                              SNP_A %in% c("2:110973355:C:T") ~ "nSL"),
+         dist = abs(BP_A - BP_B)) %>% 
+  filter(R2 >0.05,
+         dist < 500000,
+         !is.na(analysis)) %>% 
+  ggplot(aes(x=dist, y = R2, color = analysis))+
+  #geom_point(alpha = .025)+
+  geom_smooth(method = "loess", se = FALSE, size = 2)+
+  ylim(c(0,1))+
+  #geom_hline(yintercept = 0.25, color = "red")+
+  #facet_wrap(~BP_A, nrow = 2)+
+  theme_cowplot()+
+  scale_color_viridis_d()+
+  labs(x = "Distance to focal SNP")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+Which plots are most illustrative?
+
+RAiSD hits:
+2:16900789:A:C*
+2:22339424:A:G
+2:22926713:C:T*
+2:104985146:C:T
+2:116448844:G:A*
+
+nSL:
+2:38937843:A:C
+2:110973355:C:T*
+
+GPSM COJO SNPs:
+FULL
+2:113671290:C:G*
+2:7498211:T:C
+YOUNG
+2:12363109:A:G
+2:53151542:A:G*
+2:7500278:A:G *
+2:103225507:A:G*
+2:113229961:G:T
+
+
+
+
+

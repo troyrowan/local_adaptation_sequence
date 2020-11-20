@@ -33,13 +33,47 @@ library(GALLO)
 library(cowplot)
 library(gprofiler2)
 library(DT)
+library(UpSetR)
 #source("../code/annotation_functions.R")
 ```
 
 ```{r}
 source("code/GCTA_functions.R")
 source("code/annotation_functions.R")
-simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
+simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv") %>%
+  mutate(ASA_nbr = asa_nbr,
+         dummyid = international_id) %>% 
+  left_join(read_csv("data/200907_SIM/breeds.csv.gz") %>% 
+  pivot_wider(names_from = brd_cd, values_from = percent) %>% 
+    replace(is.na(.), 0))
+
+colnames(simmental)
+```
+
+# PCA
+PC1 eval = 
+3073.63
+2622.85
+777.699
+650.589
+```{r}
+read_delim("output/200907_SIM/pca/200907_SIM.850K.eigenvec", delim = " ",
+           col_names = c("FID", "international_id", paste0("PC", seq(1,20)))) %>% 
+  left_join(select(simmental, international_id, birth_year, SM), by = "international_id") %>% 
+  filter(!is.na(SM)) %>% 
+  ggplot(aes(x = PC1, y = PC2, color = SM))+
+  geom_point()+
+  scale_color_viridis_c()+
+  theme_cowplot()
+
+read_delim("output/200907_SIM/pca/200907_SIM.850K.eigenvec", delim = " ",
+           col_names = c("FID", "international_id", paste0("PC", seq(1,20)))) %>% 
+  left_join(select(simmental, international_id, birth_year, SM, AN), by = "international_id") %>% View()
+  filter(!is.na(SM)) %>% 
+  ggplot(aes(x = PC1, y = PC2, color = AN))+
+  geom_point()+
+  scale_color_viridis_c()+
+  theme_cowplot()
 ```
 
 
@@ -698,4 +732,443 @@ ggmanhattan2(pb_old_age,
   
 ```
 
+## Sequence-imputed GPSM
 
+Used variants with MAF > 0.01 and imputation R^2 values > 0.4
+
+During reading in I filtered p < 0.01 to make sure that R is able to handle these large files without crashing.
+
+our Bonferroni multiple-testing cutoff is 0.05/11657021 4.289e-09
+
+In all cases henceforth, I'm working with p-values. Calculating q-values needs the genome-wide p-values, and I'm filtering here to prevent computer from crashing. Easy enough to do this for q-values downstream though i suppose
+
+```{r}
+sim_seq_gpsm_age = 
+  seq(1,29) %>% 
+    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.full_age.chr",.x,".mlma.gz")) %>% 
+                filter(p < 0.01)) %>% 
+    purrr::reduce(bind_rows)
+
+sim_seq_gpsm_purebred_age = 
+  seq(1,29) %>% 
+    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.pb_age.chr",.x,".mlma.gz")) %>% 
+                 filter(p < 0.01)) %>% 
+    purrr::reduce(bind_rows)
+
+sim_seq_gpsm_purebred_sigsnps =
+  sim_seq_gpsm_purebred_age %>% 
+  filter(p < 4.289e-9) %>% 
+  .$SNP
+
+sim_seq_gpsm_sigsnps =
+  sim_seq_gpsm_age %>% 
+  filter(p < 4.289e-9) %>% 
+  .$SNP
+
+sim_seq_gpsm_purebred_age %>% 
+  top_n(1000, wt = -p) %>% 
+  View()
+```
+
+
+### Manhattan Plots {.tabset}
+
+#### Purebred Simmental Manhattan Plot
+
+```{r}
+sim_seq_gpsm_purebred_age %>% 
+  ggmanhattan2(sig_threshold_p = 4.289e-9,
+               sigsnps = sim_pb_seq_cojo$SNP)+
+  ggtitle("Purebred Simmental Age GPSM")+
+  geom_hline(yintercept = 7.3, color = "blue")
+```
+
+#### Full  Simmental Manhattan Plot
+```{r}
+sim_seq_gpsm_age %>% 
+  ggmanhattan2(sig_threshold_p = 4.289e-9,
+               sigsnps = sim_seq_cojo$SNP)+
+  ggtitle("Full Simmental GPSM")+
+  geom_hline(yintercept = 7.3, color = "blue")
+```
+
+#### Single Chromosome (Still RAN, copied code)
+
+```{r}
+single_chrom = read_gwas("output/200910_RAN/seq_gwas/200910_RAN.age.chr6.mlma.gz") %>% 
+  mutate(COJO = case_when(SNP %in% ran_age_seq_cojo$SNP ~ TRUE,
+                          TRUE ~ FALSE),
+         BP = BP/1000000)
+
+
+plot_grid(
+    single_chrom %>% 
+      # filter(BP > 8e7,
+      #        BP <10e7) %>% 
+    ggmanhattan2(prune = 0.1,
+                 sigsnps = single_chrom %>% 
+                   filter(COJO == TRUE) %>% 
+                   .$SNP,
+                 sig_threshold_p = 5e-8)+
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10))+
+  labs(x = "Megabases"),
+  ran_nsl %>% 
+    filter(CHR == 6) %>% 
+    selscan_manhattans(col = abs(norm_nsl))+
+    geom_vline(xintercept = single_chrom %>% 
+                   filter(COJO == TRUE) %>% 
+                   .$BP, 
+               color = "springgreen3",
+               alpha = 0.5)+
+    labs(y = "Normalized nSL", x = "Megabases")+
+    geom_hline(yintercept = 3, color = "red")+
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)),
+  ran_raisd %>% 
+    mutate(BP = BP/1000000) %>% 
+    filter(CHR == 6,
+           Mu > 50) %>% 
+    selscan_manhattans(col = Mu)+
+    geom_vline(xintercept = single_chrom %>% 
+                   filter(COJO == TRUE) %>% 
+                   .$BP, 
+               color = "springgreen3",
+               alpha = 0.5)+
+    labs(y = "RAiSD Mu", x = "Megabases")+
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)),
+  nrow = 3)
+
+ran_nsl =
+  read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.out.100bins.norm.gz",
+             col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig")) %>% 
+    mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
+           SNP = paste(CHR, BP, sep = ":"),
+         sig = case_when(abs(norm_nsl) > 3 ~ TRUE,
+                         TRUE ~ FALSE),
+         BP = BP/1000000)
+
+
+single_chrom_manhattan(single_chrom, prune = 1)
+  
+single_chrom_manhattan(prune = 1)
+
+
+ran_nsl_window = 
+  read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.windows.txt") %>% 
+  mutate(nsl_win = abs(Wstat),
+         SNP = paste(CHR, BP, sep = ":")) 
+  
+```
+
+
+## Sequence-imputed COJO
+
+
+[COJO documentation](https://cnsgenomics.com/software/gcta/#COJO)
+
+[COJO citation](https://www.nature.com/articles/ng.2213)
+
+Used `--cojo-slct` procedure with a significance cutoff of 5e-8
+
+Reading in single-chromosome COJO files.
+```{r}
+sim_pb_seq_cojo = 
+  list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.pb_age.chr") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200907_SIM/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1)  %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
+    purrr::reduce(bind_rows) 
+
+sim_pb_seq_cojo %>% 
+  select(SNP) %>% 
+  write_tsv("output/200907_SIM/seq_cojo/200907_SIM.purebred.cojosnps.txt",
+            col_names = FALSE)
+
+
+sim_pb_seq_cojo_genes =
+  sim_pb_seq_cojo %>% 
+    gene_annotation() %>% 
+      left_join(sim_pb_seq_cojo, 
+                by = c("CHR", "BP")) %>% 
+    select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
+  left_join(sim_pb_seq_cojo)
+
+
+sim_seq_cojo = 
+  list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.full_age") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200907_SIM/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1)  %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
+    purrr::reduce(bind_rows) 
+
+sim_seq_cojo %>% 
+  select(SNP) %>% 
+  write_tsv("output/200907_SIM/seq_cojo/200907_SIM.full.cojosnps.txt",
+            col_names = FALSE)
+
+
+sim_seq_cojo_genes =
+  sim_seq_cojo %>% 
+    gene_annotation() %>% 
+      left_join(sim_seq_cojo, 
+                by = c("CHR", "BP")) %>% 
+    select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream)
+filter(sim_seq_cojo,
+       SNP %in% sim_pb_seq_cojo$SNP)
+
+
+sim_pb_seq_cojo %>% 
+  gene_annotation() %>% 
+    right_join(sim_pb_seq_cojo, 
+              by = c("CHR", "BP")) %>% 
+  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% write_tsv("output/200907_SIM/genes/200907_SIM.pb_age.gpsm.cojogenes.50kb.txt") 
+```
+
+### Gene overlap with other sweep regions
+
+So that's 2 of 34 genes in PB Simmental GPSM are also identified by Sweep Regions. 
+```{r}
+
+
+map2(.x = sim_seq_cojo$CHR, .y = sim_seq_cojo$BP,
+  ~filter(
+    sim_raisd,
+    Mu > 193.5,
+    CHR == .x,
+    stat <= .y,
+    finish >= .y) %>% 
+    mutate(COJO_SNP = paste(.x, .y, sep = ":"))) %>% 
+  reduce(bind_rows) 
+
+
+map2(.x = sim_pb_seq_cojo$CHR, .y = sim_pb_seq_cojo$BP,
+  ~filter(
+    sim_raisd,
+    Mu > 193.5,
+    CHR == .x,
+    stat <= .y,
+    finish >= .y)) %>% 
+  reduce(bind_rows) 
+
+map2(.x = sim_seq_cojo$CHR, .y = sim_seq_cojo$BP,
+  ~filter(
+    sim_nsl,
+    MeanY > 2.381382,
+    CHR == .x,
+    WindowStart <= .y,
+    WindowStop >= .y)) %>% 
+  reduce(bind_rows) 
+
+map2(.x = sim_pb_seq_cojo$CHR, .y = sim_pb_seq_cojo$BP,
+  ~filter(
+    sim_nsl,
+    MeanY > 2.381382,
+    CHR == .x,
+    WindowStart <= .y,
+    WindowStop >= .y)) %>% 
+  reduce(bind_rows) 
+
+```
+
+
+
+### Gene Annotations for COJO hits:
+
+Annotated genes within 50 kb of COJO SNP
+
+#### Purebred
+```{r}
+sim_pb_seq_cojo_genes %>%
+  datatable()
+
+sim_pb_seq_cojo_genes %>% 
+  mutate(ingene = case_when(distance == 0 ~ "within",
+                            is.na(distance) ~ ">50kb",
+                            TRUE ~ "proximal")) %>% 
+  group_by(SNP) %>% 
+  top_n(1, wt = -distance) %>% 
+  ungroup() %>% 
+  count(ingene)
+```
+
+#### Full Dataset
+```{r}
+sim_seq_cojo_genes %>% write_csv("../analysis/genes.txt")
+
+sim_seq_cojo_genes %>% 
+  mutate(ingene = case_when(distance == 0 ~ "within",
+                            is.na(distance) ~ ">50kb",
+                            TRUE ~ "proximal")) %>% 
+  group_by(SNP) %>% 
+  top_n(1, wt = -distance) %>% 
+  ungroup() %>% 
+  count(ingene)
+```
+
+### Gene Ontology Analysis
+
+Gene ontology enrichment analysis using `gprofiler2::gost()` of gene names from GALLO annotation of log-transformed GPSM COJO hits
+
+Significance threshold set at FDR < 0.10
+
+####Purebred
+```{r, eval }
+sim_pb_seq_cojo_GO =
+  sim_pb_seq_cojo_genes %>% 
+  .$gene_name %>% unique() %>% 
+  gost(query = ., 
+      organism = "btaurus",
+      user_threshold = 0.1,
+      correction_method = "fdr")
+
+
+gostplot(sim_pb_seq_cojo_GO, capped = TRUE, interactive = TRUE)
+```
+
+#### Full Dataset
+```{r, eval }
+sim_seq_cojo_GO =
+  sim_seq_cojo_genes %>% 
+  .$gene_name %>% unique() %>% 
+  gost(query = ., 
+      organism = "btaurus",
+      user_threshold = 0.1,
+      correction_method = "fdr")
+
+
+gostplot(sim_seq_cojo_GO, capped = TRUE, interactive = TRUE)
+```
+
+### QTL Enrichments {.tabset}
+
+
+Removed milk-associated QTL, perform enrichment on whole genome QTL and by chromosome
+
+#### Purebred (Genome)
+```{r}
+sim_pb_seq_cojo %>%
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+
+#### Full Dataset (Genome)
+```{r}
+sim_seq_cojo %>%
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+
+#### purebred (per-Chromosome)
+```{r}
+sim_pb_seq_cojo %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+
+#### Young (per-chromosme)
+```{r}
+ran_young_seq_cojo %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+```
+
+### FAETH Scores of Significant loci
+13 non-NA FAETH SNPs in Purebred (6 in top 1/3)
+177 non-NA FAETH SNPs in Full (69)
+
+
+```{r}
+# sim_pb_FAETH =
+#   left_join(sim_pb_seq_cojo, FAETH_Scores, by = c("chrbp" = "SNP"))
+# 
+# sim_full_FAETH =
+#   left_join(sim_seq_cojo, FAETH_Scores, by = c("chrbp" = "SNP")) %>% 
+#   filter(!is.na(FAETH))
+
+sim_full_FAETH %>% 
+  filter(!is.na(FAETH),
+         FAETH > 1.6e-8)
+```
+
+
+### Annnotating with FAANG data
+
+```{r}
+sim_seq_cojo_functional = 
+  map2(.x = sim_seq_cojo$CHR, .y = sim_seq_cojo$BP,
+    ~filter(
+      FAANG,
+      CHR == .x,
+      START <= .y,
+      STOP >= .y)%>% 
+      mutate(COJO_SNP = paste(.x, .y, sep = ":"))) %>% 
+    reduce(bind_rows) %>% 
+  left_join(sim_seq_cojo,
+            by = c("COJO_SNP" = "chrbp")) 
+
+
+pb_sim_seq_cojo_functional = 
+  map2(.x = sim_pb_seq_cojo$CHR, .y = sim_pb_seq_cojo$BP,
+    ~filter(
+      FAANG,
+      CHR == .x,
+      START <= .y,
+      STOP >= .y)%>% 
+      mutate(COJO_SNP = paste(.x, .y, sep = ":"))) %>% 
+    reduce(bind_rows) %>% 
+  left_join(sim_pb_seq_cojo, 
+            by = c("COJO_SNP" = "chrbp"))
+
+
+
+pb_sim_seq_cojo_functional %>% 
+  count(COJO_SNP)
+
+
+sim_seq_cojo_functional %>% 
+  select(SNP,TISSUE) %>% 
+  distinct() %>% 
+  mutate(case = as.integer(1)) %>% 
+  pivot_wider(names_from = TISSUE, values_from = case, values_fill = as.integer(0)) %>% 
+  as.data.frame() %>% 
+  upset(nsets = 8, order.by = "freq")
+
+intersect(sim_seq_cojo$SNP, ran_young_seq_cojo$SNP)
+
+upset(movies, nsets = 6, number.angles = 30, point.size = 3.5, line.size = 2, 
+    mainbar.y.label = "Genre Intersections", sets.x.label = "Movies Per Genre", 
+    text.scale = c(1.3, 1.3, 1, 1, 2, 0.75))
+```
+
+### Gene overlap with nSL regions
+
+
+```{r}
+
+map2(.x = sim_pb_seq_cojo$CHR, .y = sim_pb_seq_cojo$BP,
+  ~filter(
+    pb_sim_nsl_sig_windows,
+    CHR == .x,
+    WindowStart-100000 <= .y,
+    WindowStop+100000 >= .y)) %>% 
+  reduce(bind_rows) 
+
+
+```

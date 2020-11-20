@@ -47,3 +47,55 @@ read_bolt_gwas = function(gwas_path){
            p = P_BOLT_LMM_INF)
   return(gwas_results)
 }
+
+
+genwin = function(selscandf, chr){
+  tmpdf = filter(selscandf,
+                 CHR == chr)
+  windows =
+    GenWin::splineAnalyze(Y = tmpdf$norm_nsl,
+                          map = tmpdf$BP) %>%
+    .$windowData
+  return(windows)
+}
+
+
+windowfinder = function(chromosome, basepair, windows){
+  window_id =
+    windows %>%
+    filter(CHR == chromosome &
+             WindowStart <= basepair &
+             WindowStop >= basepair) %>%
+    .$SNP
+  return(window_id)
+}
+
+FAANG =
+  read_tsv("data/FAANG_peaks.bed.gz",
+           col_names = c("CHR", "START", "STOP", "TMARK", "SCORE", "A", "B", "C", "D")) %>%
+  mutate(CHR = as.numeric(str_replace(CHR, "chr",""))) %>%
+  mutate(tmark = str_split_fixed(TMARK, "_", n = 5)[,1],
+         MARK = str_replace(tmark, "Macs2/", ""),
+         TISSUE = str_split_fixed(TMARK, "_", n = 5)[,2],
+         REP = str_split_fixed(TMARK, "_", n = 5)[,3]) %>%
+  select(CHR, START, STOP, MARK, TISSUE, REP)
+
+
+# ATAC_peaks =
+#   read_tsv("data/ATAC_peaks_ARS.bed",
+#            col_names = c("CHR", "start", "stop", "name", "score", "strand", paste0("X", seq(1,8)))) %>%
+#   mutate(CHR = as.numeric(str_replace(CHR, "chr", "")),
+#          width = stop - start,
+#          av_score = (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8)/8)
+#
+# FAANG_ATAC_peaks =
+#   read_tsv("data/FAANG_ATAC_peaks_ARS.bed",
+#            col_names = c("CHR", "start", "stop", "name", "score", "strand", paste0("X", seq(1,8)))) %>%
+#   mutate(CHR = as.numeric(str_replace(CHR, "chr", "")),
+#          width = stop - start,
+#          av_score = (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8)/8)
+#
+# FAETH_Scores =
+#   vroom("data/FAETH.txt.gz",
+#         delim = "\t") %>%
+#   filter(!is.na(FAETH))

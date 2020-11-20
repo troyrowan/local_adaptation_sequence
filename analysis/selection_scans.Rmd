@@ -246,25 +246,45 @@ Reading in Old and Young nSL data
 Here, in addition to identifying significant SNPs, we're also calculating a window-based levels of significance similar to the approach in [the XP-nSL paper](https://www.biorxiv.org/content/10.1101/2020.05.19.104380v1.full#F2) to account for LD creating similar nSL scores. 
 
 [The original nSL paper](https://academic.oup.com/mbe/article/31/5/1275/999180) doesn't do any sort of window-based significance cutoffs, opting simply to use the top 1% of variants 
-
+How many total windows
 ```{r}
 ran_nsl =
-  read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.out.100bins.norm.gz",
-             col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig")) %>% 
-    mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
-           SNP = paste(CHR, BP, sep = ":"))
+  read_tsv("output/selscan_window/200910_RAN.all.nsl.out.100bins.norm.windows.txt",
+           #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
+           col_types = cols(SNP = col_character(), window = col_character())) %>% 
+    group_by(window) %>% 
+    mutate(prop_sig = sum(sig)/n()) %>% 
+    select(window, prop_sig) %>% 
+    distinct() %>% 
+    select(window, prop_sig) %>% 
+    left_join(read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.windows.txt", 
+                       col_type = cols(SNP = col_character())),
+              by = c("window"="SNP")) %>% 
+  ungroup()
 
-ran_xpnsl =
-  read_tsv("output/200910_RAN/selscan/xpnsl/200910_RAN.xpnsl.out.norm.gz",
-           col_names = c("SNP", "BP", "gpos", "p1", "sl1", "p2", "sl2", "xpnsl", "norm_xpnsl", "sig"),
-           skip = 1) %>% 
-    mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
-           CHRBP = paste(CHR, BP, sep = ":"))
 
-ran_nsl_window = 
-  read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.windows.txt") %>% 
-  mutate(nsl_win = abs(Wstat),
-         SNP = paste(CHR, BP, sep = ":"))
+ran_nsl_sig_windows =
+  ran_nsl %>% 
+    filter(SNPcount > 3) %>% 
+    top_frac(0.005, wt = prop_sig)
+
+ran_nsl_sig_windows2 =
+  ran_nsl %>% 
+    filter(SNPcount > 3) %>% 
+    top_frac(0.01, wt = MeanY)
+
+# ran_xpnsl =
+#   read_tsv("output/200910_RAN/selscan/xpnsl/200910_RAN.xpnsl.out.norm.gz",
+#            col_names = c("SNP", "BP", "gpos", "p1", "sl1", "p2", "sl2", "xpnsl", "norm_xpnsl", "sig"),
+#            skip = 1) %>% 
+#     mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
+#            CHRBP = paste(CHR, BP, sep = ":"))
+
+ran_nsl %>% 
+  filter(SNPcount > 3) %>% 
+  top_frac(0.005, wt = MeanY) %>% 
+  .$MeanY %>% 
+  min()
 ```
 
 ### Distribution of Scores
@@ -281,7 +301,6 @@ plot_grid(
     geom_vline(xintercept = c(3, -3),
                color = "red")+
     labs(x = "Normalized nSL", title = "All Red Angus nSL"),
-  
   ran_xpnsl %>% 
     ggplot(aes(norm_xpnsl))+
     geom_histogram(bins = 100)+
@@ -291,24 +310,37 @@ plot_grid(
     geom_vline(xintercept = c(2.77, -2.77),
                color = "blue")+
     labs(x = "Normalized XP-nSL", title = "All Red Angus XP-nSL"),
-  nrow = 2)
+  ran_nsl_window %>% 
+    ggplot(aes(nsl_win))+
+    geom_histogram(bins = 100)+
+    theme_cowplot()+
+    geom_vline(xintercept = c(3, -3),
+               color = "red"),
+  nrow = 3)
+
+ran_nsl_window %>% 
+    ggplot(aes(nsl_win))+
+    geom_histogram(bins = 100)+
+    theme_cowplot()
+
+ran_nsl_window %>% 
+  top_frac(0.01, wt = nsl_win)
+
+
 ```
+
 
 ### Red Angus nSL Manhattan
 
+Looking at the average |nSL| value for windows w/ > 3 SNPs
 ```{r}
-# plot_grid(
-#   selscan_manhattans(ran_nsl %>% 
-#                        filter(abs(norm_nsl) > 0.5), 
-#                      col = norm_nsl)+
-#     ggtitle("Norm nSL"),
-#   selscan_manhattans(rn_nsl_window, col = Wstat)+
-#     ggtitle("Windows"),
-#   nrow = 2)
 
-selscan_manhattans(ran_nsl %>% 
-                       filter(abs(norm_nsl) > 1), 
-                     col = abs(norm_nsl))
+ran_nsl %>% 
+  dplyr::rename(SNP = window) %>% 
+  filter(SNPcount > 2) %>% 
+  selscan_manhattans(col = MeanY) + 
+  geom_hline(yintercept = 2.34, color = "red")+ 
+  geom_hline(yintercept = 2.15, color = "blue")
 ```
 
 ### XP-nSL Manhattan Plot
@@ -325,11 +357,13 @@ plot_grid(
   ran_xpnsl %>% 
     filter(abs(norm_xpnsl) > 0.5) %>% 
     selscan_manhattans(col = abs(norm_xpnsl))+
-    labs(y = "nSL", title = "Red Angus nSL"),
+    labs(y = "nSL", title = "Red Angus nSL")+
+  geom_hline(yintercept = 3, color = "red"),
   ran_nsl %>% 
     filter(abs(norm_nsl) > 0.5) %>% 
     selscan_manhattans(col = abs(norm_nsl))+
-    labs(y = "XP-nSL", title = "Red Angus XP-nSL"),
+    labs(y = "XP-nSL", title = "Red Angus XP-nSL")+
+  geom_hline(yintercept = 3, color = "red"),
   nrow = 2)
 ```
 
@@ -342,21 +376,42 @@ gpsm_xpnsl =
   left_join(ran_xpnsl, ran_gpsm_age) %>%
     select(SNP, b, norm_xpnsl)
 
+gpsm_nsl =
+  left_join(read_tsv("output/selscan_window/200910_RAN.all.nsl.out.100bins.norm.windows.txt",
+            #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
+            col_types = cols(SNP = col_character(), window = col_character())),
+            ran_gpsm_age,
+            by = c("SNP" = "chrbp"))
 
-cor(gpsm_xpnsl$b, abs(gpsm_xpnsl$norm_xpnsl), use = 'pairwise.complete.obs')
+cor(gpsm_nsl$b, abs(gpsm_nsl$norm_nsl), use = 'pairwise.complete.obs')
+
+
 ```
 
 ### Annotating selscan hits
 
+#### Full Dataset
+```{r}
+
+  mutate(ingene = case_when(distance == 0 ~ "within",
+                            is.na(distance) ~ ">50kb",
+                            TRUE ~ "proximal")) %>% 
+  group_by(SNP) %>% 
+  top_n(1, wt = -distance) %>% 
+  ungroup() %>% 
+  count(ingene)
+```
+
 #### Genes
 ```{r}
-ran_nsl %>% 
-  filter(abs(norm_nsl) > 3.5) %>% 
-  gene_annotation() %>% 
-    left_join(ran_nsl, 
-              by = c("CHR", "BP")) %>% 
-  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
-  datatable()
+
+# Count number of distinct windows that contain genes. 
+ran_nsl_sig_windows %>% 
+  dplyr::rename(BP1 = WindowStart, BP2 = WindowStop) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "haplotype", interval = 0, nThreads = 2) %>% 
+  select(window) %>% distinct()
 
 ran_xpnsl %>% 
   filter(abs(norm_xpnsl) > 3.5) %>% 
@@ -366,15 +421,45 @@ ran_xpnsl %>%
   select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
   select(gene_name) %>% distinct() %>% write_tsv("analysis/genes.txt")
   datatable()
-
-ran_nsl_window %>% 
-  top_frac(0.01, wt = abs(Wstat)) %>% 
-  gene_annotation() %>% 
-    left_join(ran_nsl, 
-              by = c("CHR", "BP")) %>% 
-  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
-  datatable()
+  
+ran_nsl_sig_windows %>% 
+  dplyr::rename(BP1 = WindowStart, BP2 = WindowStop) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "haplotype", interval = 0, nThreads = 2) %>% 
+    datatable()
 ```
+
+#### Selection Signature Overlaps
+
+```{r}
+ran_nsl_genes = 
+  ran_nsl_sig_windows %>% 
+    dplyr::rename(BP1 = WindowStart, BP2 = WindowStop) %>% 
+    find_genes_qtls_around_markers(db_file=genes,
+                                       marker_file= ., method = "gene",
+                                       marker = "haplotype", interval = 0) %>%
+    select(gene_name) %>% 
+    distinct() %>% 
+    .$gene_name
+
+sweeps = read_csv("data/meata_sweeeps.csv")
+
+ran_nsl_genes %>% 
+  purrr::map(
+    ~filter(sweeps,str_detect(`Gene Names`, .x))) %>% 
+  reduce(bind_rows) %>% 
+  distinct()
+   
+ran_nsl_genes %>% 
+  purrr::map(
+    ~filter(sweeps,str_detect(`Gene Names`, .x)) %>% 
+      mutate(driver = .x)) %>% 
+  reduce(bind_rows) %>% 
+  distinct() %>% 
+  count(driver)
+```
+
 
 #### Gene Ontology Analysis
 
@@ -384,13 +469,8 @@ Significance threshold set at FDR < 0.10
 ##### nSL
 ```{r, eval }
 ran_nsl_GO =
-  ran_nsl %>% 
-  filter(abs(norm_nsl) > 3.5) %>% 
-  gene_annotation(search_bp = 50000) %>% 
-    left_join(ran_nsl, 
-              by = c("CHR", "BP")) %>% 
-  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
-  .$gene_name %>% unique() %>% 
+  ran_nsl_genes %>% 
+  unique() %>% 
   gost(query = ., 
       organism = "btaurus",
       user_threshold = 0.1,
@@ -424,12 +504,12 @@ gostplot(ran_xpnsl_GO, capped = TRUE, interactive = TRUE)
 ##### nSL
 ```{r}
 ran_nsl_qtls =
-  ran_nsl %>%
-  filter(abs(norm_nsl)>3) %>% 
-  qtl_annotation() %>% 
-  filter(QTL_type != "Milk") %>% select(CHR, BP, trait_ID, breed, p_value, bayes_value, Flank_Markers) %>%  View()
-  group_by(CHR, BP, trait_ID) %>% 
-  slice(1)
+ ran_nsl_sig_windows %>% 
+  dplyr::rename(BP1 = WindowStart, BP2 = WindowStop) %>% 
+  find_genes_qtls_around_markers(db_file=qtl,
+                                       marker_file= ., method = "qtl",
+                                       marker = "haplotype", interval = 0) %>% 
+  filter(QTL_type != "Milk")
 
  ran_nsl_qtls%>% 
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
@@ -452,11 +532,8 @@ ran_xpnsl_qtls =
 ```
 #### QTL Enrichments (per-chromosome)
 ```{r}
-ran_nsl %>%
-  filter(abs(norm_nsl)>3.5) %>% 
-  qtl_annotation() %>% 
-  filter(QTL_type != "Milk") %>% 
-  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosomes", nThreads = 2) %>% 
+ran_nsl_qtls%>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
   datatable()
 ```
@@ -467,41 +544,50 @@ ran_nsl %>%
 
 Reading in Simmental nSL Results Data
 ```{r}
-pb_sim_nsl =
-  read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.purebred.nsl.out.100bins.norm.gz",
-             col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig")) %>% 
-    mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
-           SNP = paste(CHR, BP, sep = ":"))
-pb_sim_nsl_sigsnps =
-  pb_sim_nsl %>% 
-  filter(abs(norm_nsl)>3) %>% 
-  .$SNP
-
-pb_sim_nsl_window = 
-  read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.purebred.nsl.windows.txt") %>% 
-  mutate(nsl_win = abs(Wstat),
-         SNP = paste(CHR, BP, sep = ":"))
-
 sim_nsl =
-  read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.somesim.nsl.out.100bins.norm.gz",
-             col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig")) %>% 
-    mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
-           SNP = paste(CHR, BP, sep = ":"))
-sim_nsl_window = 
-  read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.somesim.nsl.windows.txt") %>% 
-  mutate(nsl_win = abs(Wstat),
-         SNP = paste(CHR, BP, sep = ":"))
-sim_nsl_sigsnps =
+  read_tsv("output/selscan_window/200907_SIM.all.nsl.out.100bins.norm.windows.txt",
+           #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
+           col_types = cols(SNP = col_character(), window = col_character())) %>% 
+    group_by(window) %>% 
+    mutate(prop_sig = sum(sig)/n()) %>% 
+    select(window, prop_sig) %>% 
+    distinct() %>% 
+    select(window, prop_sig) %>% 
+    left_join(read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.all.nsl.windows.txt", 
+                       col_type = cols(SNP = col_character())),
+              by = c("window"="SNP")) %>% 
+  ungroup()
+
+
+pb_sim_nsl =
+  read_tsv("output/selscan_window/200907_SIM.purebred.nsl.out.100bins.norm.windows.txt",
+           #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
+           col_types = cols(SNP = col_character(), window = col_character())) %>% 
+    group_by(window) %>% 
+    mutate(prop_sig = sum(sig)/n()) %>% 
+    select(window, prop_sig) %>% 
+    distinct() %>% 
+    select(window, prop_sig) %>% 
+    left_join(read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.purebred.nsl.windows.txt", 
+                       col_type = cols(SNP = col_character())),
+              by = c("window"="SNP")) %>% 
+  ungroup()
+
+
+sim_nsl_sig_windows =
   sim_nsl %>% 
-  filter(abs(norm_nsl)>3) %>% 
-  .$SNP
+    filter(SNPcount > 3) %>% 
+    top_frac(0.005, wt = MeanY)
 
+pb_sim_nsl_sig_windows =  
+  pb_sim_nsl %>% 
+    filter(SNPcount > 3) %>% 
+    top_frac(0.005, wt = MeanY)
 
-sim_xpnsl =
-  read_tsv("output/200907_SIM/selscan/xpnsl/200907_SIM.xpnsl.out.norm.gz") %>%
-    rename(SNP = id, BP = pos, normnsl = normxpehh) %>% 
-    mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
-           SNP = paste(CHR, BP, sep = ":"))
+##Overlapping Simmental nSL signatures:
+
+filter(sim_nsl_sig_windows,
+       )
 ```
 
 ### Purebred nSL Manhattan
@@ -538,7 +624,43 @@ selscan_manhattans(sim_nsl %>%
                    sigsnps = pb_sim_nsl_sigsnps)
 ```
 
+### Annotating selscan hits
 
+#### Genes
+```{r}
+
+
+
+# Count number of distinct windows that contain genes. 
+
+sim_nsl_sig_windows %>% 
+  dplyr::rename(BP1 = WindowStart, BP2 = WindowStop) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "haplotype", interval = 50000, nThreads = 2) %>% 
+  select(window) %>% distinct()
+
+sim_nsl_sig_windows %>% 
+  dplyr::rename(BP1 = WindowStart, BP2 = WindowStop) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "haplotype", interval = 0, nThreads = 2) %>% 
+  dplyr::rename(WindowStart = BP1, WindowStop = BP2) %>% 
+  right_join(sim_nsl_sig_windows) %>% 
+  select(CHR, WindowStart, WindowStop, SNPcount, MeanY, gene_id, gene_name, start_pos, end_pos) %>% 
+  datatable()
+
+
+ran_nsl_sig_windows %>% 
+  dplyr::rename(BP1 = WindowStart, BP2 = WindowStop) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "haplotype", interval = 0, nThreads = 2) %>% 
+  dplyr::rename(WindowStart = BP1, WindowStop = BP2) %>% 
+  right_join(ran_nsl_sig_windows) %>% 
+  select(CHR, WindowStart, WindowStop, SNPcount, MeanY, gene_id, gene_name, start_pos, end_pos) %>% 
+  datatable()
+```
 
 
 
@@ -563,7 +685,8 @@ We use all biallelic variants in these calculations to kepe the SFS as close to 
 
 ### Red Angus
 
-
+Top 0.05% of SNPs = Mu > 285
+Top 0.5% of SNPs = Mu > 
 ```{r}
 ran_raisd =
   seq(1,29) %>% 
@@ -571,59 +694,156 @@ ran_raisd =
       ~read_delim(paste0("output/200910_RAN/sfs_selection/RAiSD_Report.200910_RAN.chr", .x,".gz"),
                  skip = 1,
                  delim = "\t",
-                 col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
-        filter(Mu > 50) %>% 
+                 col_names = c("BP", "start", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
+        filter(Mu > 100) %>% 
         mutate(CHR = .x,
                SNP = paste(CHR, BP, sep = ":"))) %>% 
     reduce(bind_rows)
 
-ran_raisd_chip =
-  seq(1,29) %>% 
-    purrr::map(
-      ~read_delim(paste0("output/200910_RAN/sfs_selection/RAiSD_Report.200910_RAN.chip.chr", .x,".gz"),
-                 skip = 1,
-                 delim = "\t",
-                 col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
-        mutate(CHR = .x,
-               SNP = paste(CHR, BP, sep = ":"))
-      ) %>% 
-    reduce(bind_rows)
+# ran_raisd_chip =
+#   seq(1,29) %>% 
+#     purrr::map(
+#       ~read_delim(paste0("output/200910_RAN/sfs_selection/RAiSD_Report.200910_RAN.chip.chr", .x,".gz"),
+#                  skip = 1,
+#                  delim = "\t",
+#                  col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
+#         mutate(CHR = .x,
+#                SNP = paste(CHR, BP, sep = ":"))
+#       ) %>% 
+#     reduce(bind_rows)
+
+
 
 ran_raisd_genes = 
   ran_raisd %>% 
-  gene_annotation(search_bp = 0) %>% 
+  filter(Mu >= 354) %>% 
+  dplyr::rename(BP1 = start, BP2 = finish) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "haplotype") %>%
   filter(!is.na(gene_name)) %>% 
   left_join(ran_raisd)
 
-ran_raisd_genes %>% 
-  group_by(gene_name) %>% 
-  top_n(1, wt = Mu) %>% View()
-
-ran_raisd_genes %>% 
-  filter(Mu > 10) %>% 
-  selscan_manhattans(col = Mu)
+length(unique(ran_raisd_genes$gene_name))
 
 ran_raisd %>%
   selscan_manhattans(col = Mu)+
-  geom_hline(yintercept = 699,
-             color = "red")
+  geom_hline(yintercept = 355,
+               color = "red")  
+
+```
+####nSL overlaps
+```{r}
+
+ran_raisd_sig =
+  filter(ran_raisd, Mu > 354)
+
+
+map2(.x = ran_raisd_sig$CHR, .y = ran_raisd_sig$BP,
+  ~filter(
+    ran_nsl_sig_windows,
+    CHR == .x,
+    WindowStart-50000 <= .y,
+    WindowStop+50000 >= .y) %>% 
+    mutate(RAISD_SNP = paste(.x, .y, sep = ":"))) %>% 
+  reduce(bind_rows) 
+
+map2(.x = ran_raisd_sig$CHR, .y = ran_raisd_sig$BP,
+  ~filter(
+    ran_nsl_sig_windows,
+    CHR == .x,
+    WindowStart-10000 <= .y,
+    WindowStop+10000 >= .y) %>% 
+    mutate(RAISD_SNP = paste(.x, .y, sep = ":"))) %>% 
+  reduce(bind_rows) %>% 
+  count(RAISD_SNP)
+
+overlaps = 
+map2(.x = ran_raisd_sig$CHR, .y = ran_raisd_sig$BP,
+  ~filter(
+    ran_nsl_sig_windows,
+    CHR == .x,
+    WindowStart <= .y,
+    WindowStop >= .y) %>% 
+    mutate(RAISD_SNP = paste(.x, .y, sep = ":"))) %>% 
+  reduce(bind_rows) %>% 
+  count(RAISD_SNP)
+
+overlaps %>% 
+  mutate(CHR = as.numeric(str_split_fixed(RAISD_SNP, ":", n = 2)[,1]),
+         BP = as.numeric(str_split_fixed(RAISD_SNP, ":", n = 2)[,2])) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "snp", interval = 50000, nThreads = 2)
   
-ran_raisd_chip %>% 
-  filter(Mu > .1) %>% 
-  selscan_manhattans(col = Mu)+
-  geom_hline(yintercept = 7.94,
-             color = "red")
+
+```
 
 
-ran_raisd_chip %>% 
-  filter(Mu > 7.94) %>% 
-  gene_annotation(search_bp = 10000) %>% 
-  filter(!is.na(gene_name)) %>% 
-  left_join(ran_raisd_chip)
+#### Selection Signature Overlaps
+220 of the 392 genes we ID here are within sweep regions based on the meta-assembly paper (56% of genes)
+```{r}
+sweeps = read_csv("data/meata_sweeeps.csv") 
+
+ran_raisd_genes %>%
+  .$gene_name %>% 
+  unique() %>% 
+  purrr::map(
+    ~filter(sweeps,str_detect(`Gene Names`, .x))) %>% 
+  reduce(bind_rows) %>% 
+  distinct()
+   
+ran_raisd_genes %>%
+  .$gene_name %>% 
+  unique() %>% 
+  purrr::map(
+    ~filter(sweeps,str_detect(`Gene Names`, .x)) %>% 
+      mutate(driver = .x)) %>% 
+  reduce(bind_rows) %>% 
+  distinct() %>% 
+  count(driver)
+
+ran_raisd_genes %>% 
+  group_by(gene_id) %>% 
+  top_n(1, wt = Mu) %>% 
+  select(CHR, BP1, BP1, Mu, gene_id, gene_name, start_pos, end_pos) %>% write_tsv("analysis/genes.txt")
+```
+#### QTL Enrichments
+```{r}
+ran_raisd %>% 
+  filter(Mu >=285)%>% 
+  dplyr::rename(BP1 = start, BP2 = finish) %>% 
+  find_genes_qtls_around_markers(db_file=qtl,
+                                     marker_file= ., method = "qtl",
+                                     marker = "haplotype", interval = 0, nThreads = 2) %>% 
+  filter(QTL_type != "Milk") %>% View()
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+
+ran_raisd %>% 
+  filter(Mu >=285)%>% 
+  dplyr::rename(BP1 = start, BP2 = finish) %>% 
+  find_genes_qtls_around_markers(db_file=qtl,
+                                     marker_file= ., method = "qtl",
+                                     marker = "haplotype", interval = 0, nThreads = 2) %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+
 ```
 
 ### Simmental
+Test statistics for 12,913,808 SNPs
+Found 0.05% cutoff value with the following command: 
+> zcat RAiSD_Report.200907_SIM.somesim.chip.chr*gz | tail -n +2 | cut -f 7 | sort -g | tail -n 6500
 
+This equates to 6,557 SNPs significant
+Significance cutoff in Red Angus would be
+
+
+Need to have a look at the actual to. 0.5% of hits
 ```{r}
 sim_raisd =
   seq(1,29) %>% 
@@ -632,32 +852,151 @@ sim_raisd =
                  skip = 1,
                  delim = "\t",
                  col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
-        filter(Mu > 50) %>% 
+        filter(Mu > 100) %>% 
         mutate(CHR = .x,
                SNP = paste(CHR, BP, sep = ":"))
       ) %>% 
     reduce(bind_rows)
 
+
 sim_raisd_genes = 
   sim_raisd %>% 
-  gene_annotation(search_bp = 0) %>% 
+  dplyr::rename(BP1 = stat, BP2 = finish) %>% 
+  filter(Mu >=193.5) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "haplotype") %>%
   filter(!is.na(gene_name)) %>% 
-  left_join(sim_raisd)
-
-sim_raisd_genes %>% 
-  group_by(gene_name) %>% 
-  top_n(1, wt = Mu) %>% View()
+  left_join(sim_raisd) 
 
 sim_raisd %>% 
-  selscan_manhattans(col = Mu)
-
-filter(ran_raisd, Mu > 50) %>%
   selscan_manhattans(col = Mu)+
-  geom_hline(yintercept = 699,
+  geom_hline(yintercept = 193.5,
              color = "red")
-  
-ran_raisd %>% 
-  top_frac(0.0001, wt = Mu) %>% 
-  View()
+
+
+raisd_chr23 = read_delim("output/200907_SIM/sfs_selection/RAiSD_Report.200907_SIM.chr23.gz",
+               skip = 1,
+               delim = "\t",
+               col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
+  top_n(1000, wt = -BP)
+
+
+
+GenWin::splineAnalyze(Y = raisd_chr23$Mu, map = raisd_chr23$BP)
+
+ran_raisd_genes %>% 
+  group_by(gene_id) %>% 
+  top_n(1, wt = Mu) %>% 
+  select(CHR, BP1, BP2, Mu, gene_id, gene_name, start_pos, end_pos) %>% write_tsv("analysis/genes.txt") 
+
 ```
 
+#### Selection Signature Overlaps
+27 of the 48 genes we ID here are within sweep regions, accounting for 46 of the 902 total sweep regions in meta assembly
+```{r}
+sweeps = read_csv("data/meata_sweeeps.csv")
+
+ran_raisd_genes %>%
+  .$gene_name %>% 
+  unique() %>% 
+  purrr::map(
+    ~filter(sweeps,str_detect(`Gene Names`, .x))) %>% 
+  reduce(bind_rows) %>% 
+  distinct()
+   
+ran_raisd_genes %>%
+  .$gene_name %>% 
+  unique() %>% 
+  purrr::map(
+    ~filter(sweeps,str_detect(`Gene Names`, .x)) %>% 
+      mutate(driver = .x)) %>% 
+  reduce(bind_rows) %>% 
+  distinct() %>% 
+  count(driver)
+```
+
+####nSL overlaps
+```{r}
+
+sim_raisd_sig =
+  filter(sim_raisd, Mu > 193.5)
+
+
+map2(.x = sim_raisd_sig$CHR, .y = sim_raisd_sig$BP,
+  ~filter(
+    sim_nsl_sig_windows,
+    CHR == .x,
+    WindowStart-50000 <= .y,
+    WindowStop+50000 >= .y) %>% 
+    mutate(RAISD_SNP = paste(.x, .y, sep = ":"))) %>% 
+  reduce(bind_rows) 
+
+map2(.x = sim_raisd_sig$CHR, .y = sim_raisd_sig$BP,
+  ~filter(
+    sim_nsl_sig_windows,
+    CHR == .x,
+    WindowStart-10000 <= .y,
+    WindowStop+10000 >= .y) %>% 
+    mutate(RAISD_SNP = paste(.x, .y, sep = ":"))) %>% 
+  reduce(bind_rows) 
+
+overlaps = 
+map2(.x = sim_raisd_sig$CHR, .y = sim_raisd_sig$BP,
+  ~filter(
+    sim_nsl_sig_windows,
+    CHR == .x,
+    WindowStart <= .y,
+    WindowStop >= .y) %>% 
+    mutate(RAISD_SNP = paste(.x, .y, sep = ":"))) %>% 
+  reduce(bind_rows) %>% 
+  count(RAISD_SNP)
+
+overlaps %>% 
+  mutate(CHR = as.numeric(str_split_fixed(RAISD_SNP, ":", n = 2)[,1]),
+         BP = as.numeric(str_split_fixed(RAISD_SNP, ":", n = 2)[,2])) %>% 
+  find_genes_qtls_around_markers(db_file=genes,
+                                     marker_file= ., method = "gene",
+                                     marker = "snp", interval = 50000, nThreads = 2)
+  
+
+```
+
+#### QTL Enrichments
+```{r}
+sim_raisd %>% 
+  filter(Mu >=193.5) %>%  
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+
+sim_raisd %>% 
+  filter(Mu >=193.5) %>%  
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  datatable()
+
+
+```
+
+#### Gene Ontology Analysis
+
+Gene ontology enrichment analysis using `gprofiler2::gost()` of gene names from GALLO annotation of log-transformed GPSM COJO hits
+
+Significance threshold set at FDR < 0.10
+##### nSL
+```{r, eval }
+sim_raisd_GO =
+  sim_raisd_genes %>% 
+  gost(query = ., 
+      organism = "btaurus",
+      user_threshold = 0.1,
+      correction_method = "fdr")
+
+
+gostplot(ran_nsl_GO, capped = TRUE, interactive = TRUE)
+```

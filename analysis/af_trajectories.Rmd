@@ -1,0 +1,258 @@
+---
+title: "Allele Frequency Trajectories"
+author: "Troy Rowan"
+date: "11/12/2020"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, setup, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir=here::here())
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(cowplot)
+library(purrr)
+library(factoextra)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(fastDummies)
+library(pedigree)
+library(car)
+library(zoo)
+library(RcppRoll)
+library(GenWin)
+```
+
+
+##### .fam file creation for allele frequency trajectories
+This takes a fam file and codes the FID column as the individual's birth year. Then we calculate the allele frequency of each locus per birth year bin. 
+
+```{r}
+simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
+redangus = read_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
+
+read_delim("output/200910_RAN/imputed_genotypes/200910_RAN.850K.fam",
+           delim = " ",
+           col_names = c("FID", "international_id", "SIRE", "DAM", "SEX", "PHENO")) %>% 
+  left_join(select(redangus, international_id, age)) %>% 
+  select(age, international_id, SIRE, DAM, SEX, PHENO) %>% 
+  distinct() %>% 
+  write_delim("output/200910_RAN/imputed_genotypes/200910_RAN.age.fam", col_names = FALSE)
+
+read_delim("data/200907_SIM/",
+           delim = " ",
+           col_names = c("FID", "international_id", "SIRE", "DAM", "SEX", "PHENO")) %>% 
+  left_join(select(simmental, international_id, age)) %>% 
+  select(age, international_id, SIRE, DAM, SEX, PHENO) %>% 
+  distinct() %>% 
+  write_delim("output/200907_SIM/imputed_genotypes/200907_SIM.age.fam", col_names = FALSE)
+```
+
+
+Reading in .raw files with allele frequencies for linear regressions/visualization of allele frequency changes over the course of our datasets
+
+These are from the sequence data, extracted COJO SNPs for FULL and YOUNG datasets
+```{r}
+by2 <- function(n){
+  x = n/2
+  return(x)
+}
+
+
+ran_full_af = 
+  read_delim("output/200910_RAN/seq_cojo/200910_RAN.age.cojosnps.raw",
+             delim = " ")%>%
+  filter(!str_detect(FID, "NA")) %>%
+  dplyr::rename(birthyear = FID) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value) %>% 
+  select(-value, -IID, -variable)
+
+ran_young_af = 
+  read_delim("output/200910_RAN/seq_cojo/200910_RAN.young_age.cojosnps.raw",
+             delim = " ") %>%
+  filter(!str_detect(FID, "NA")) %>%
+  dplyr::rename(birthyear = FID) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value) %>% 
+  select(-value, -IID, -variable)
+
+
+sim_af = 
+  read_delim("output/200907_SIM/af_trajectories/200907_SIM.chr23.af.raw.gz",
+             delim = " ") %>%
+  left_join(select(simmental, international_id, birth_year), by = c("IID" = "international_id")) %>% 
+  select(birthyear =birth_year, IID, everything()) %>%
+  select(-FID) %>% 
+  filter(!is.na(birthyear)) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value) %>% 
+  select(-value, -IID, -variable)
+
+chr23_af = 
+  bind_rows(
+    ran_young_af %>% 
+      filter(rs %in% c("23:1032665:T:C", "23:1324051:C:T", "23:1366335:G:C", "23:1366691:G:T", "23:1768070:T:C", "23:1783688:T:C", "23:1805412:A:G")) %>% 
+      mutate(analysis = "Full Red Angus") %>% 
+    left_join(ran_age_seq_cojo, by = c("rs" = "SNP")),
+    ran_young_af %>% 
+      filter(rs %in% c("23:1324051:C:T","23:1366335:G:C","23:1366691:G:T", "23:1768070:T:C", "23:1800642:A:G", "23:1832160:A:G", "23:1918909:T:A")) %>% 
+      mutate(analysis = "Young Red Angus")%>% 
+    left_join(ran_young_seq_cojo, by = c("rs" = "SNP")),
+    sim_af %>% 
+      filter(rs %in% c("23:1047760:A:G", "23:1215338:G:T", "23:1315765:A:C", "23:1364693:A:T", "23:1511487:T:A", "23:1703480:C:A")) %>% 
+      mutate(analysis = "Full Simmental")%>% 
+    left_join(sim_seq_cojo, by = c("rs" = "SNP"))
+  )
+
+```
+
+Function for generating AF plot and 
+```{r}
+af_plot = function(add_df, SNP){
+  single_snp = 
+    add_df %>% 
+      select(birthyear, rs, AF) %>% 
+    filter(rs == SNP) %>% 
+    ggplot(aes(birthyear, AF))+
+    geom_smooth(size = 3)+
+    ylim(c(0,1))+
+    labs(x = "Birth Year", y = "Allele Frequency")+
+    theme_cowplot()
+  return(single_snp)
+}
+
+af_lm = function(add_df, SNP){
+  
+}
+
+chr23_af %>% 
+  ggplot(aes(x = birthyear, y = AF, group = rs, color = -log10(pJ)))+
+  geom_smooth(se = FALSE)+
+  facet_grid(~analysis)+
+  theme_cowplot()+
+  ylim(c(0,1))+
+  scale_color_viridis_c()+
+  labs(x = "Birth Year", y = "Allele Frequency", color = "-log10(COJO p)")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+chr23_af %>% 
+  ggplot(aes(x = birthyear, y = AF, group = rs, color = -log10(pJ)))+
+  geom_smooth(se = FALSE)+
+  facet_grid(~analysis,)+
+  theme_cowplot()+
+  ylim(c(0,1))+
+  scale_color_viridis_c()+
+  labs(x = "Birth Year", y = "Allele Frequency", color = "-log10(COJO p)")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+top_ten_snps =
+  rbind(ran_young_seq_cojo,
+        ran_age_seq_cojo) %>% 
+  filter(CHR == 23, BP > 1000000, BP < 2000000) %>% .$SNP
+  top_n(9, wt = -log10(p)) %>% .$SNP
+
+ 
+ran_young_af %>% 
+  filter(rs %in% top_ten_snps) %>% 
+  ggplot(data = ., aes(x = birthyear, y = AF))+
+         geom_smooth()+
+         ylim(c(0,1))+
+         labs(x = "Birth Year", y = "Allele Frequency", title = "ABC")+
+         theme_cowplot()+
+         facet_wrap(~rs, nrow = 3)
+     )
+
+ran_young_af %>% 
+  filter(rs %in% top_ten_snps) %>% 
+  ggplot(aes(x = birthyear, y = AF))+
+         geom_smooth()+
+         ylim(c(0,NA))+
+         labs(x = "Birth Year", y = "Allele Frequency", title = "")+
+         theme_cowplot()+
+         facet_wrap(~rs, nrow = 3, scales = "free_y")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+     
+rbind( 
+  filter(ran_young_af, rs %in% top_ten_snps),
+  filter(ran_full_af, rs %in% top_ten_snps)) %>% 
+  ggplot(aes(x = birthyear, y = AF))+
+         geom_smooth()+
+         ylim(c(0,NA))+
+         labs(x = "Birth Year", y = "Allele Frequency", title = "")+
+         theme_cowplot()+
+         facet_wrap(~rs, nrow = 5, scales = "free_y")+
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+```{r}
+
+chr2_af = 
+  bind_rows(
+    ran_full_af %>%
+      filter(rs %in% c("2:6757167:A:G", "2:7498211:T:C","2:8100524:G:T", "2:21860593:T:A", "2:27120579:A:G", "2:111403008:C:T", "2:113671290:C:G", "2:127446835:C:G")) %>%
+      mutate(analysis = "GPSM (Full)"),
+    ran_young_af %>% 
+      filter(rs %in% c("2:7500278:A:G", "2:8100524:G:T", "2:8674849:T:C", "2:9826292:C:T", "2:10679762:C:T", "2:12194425:G:C", "2:12208106:T:C", "2:12363109:A:G", "2:12386721:G:A", "2:12732917:G:A", "2:15449766:T:C", "2:15764320:C:G", "2:16047868:T:C", "2:19635098:C:A", "2:22112854:T:C", "2:22339424:A:G", "2:22745800:G:T", "2:22868999:T:C", "2:23027621:T:C", "2:23259680:G:A", "2:28639397:T:C", "2:28823286:A:T", "2:30374233:T:A", "2:32952841:C:T", "2:42247695:G:A", "2:45247236:T:G", "2:49303806:A:T", "2:53006426:C:G", "2:53126236:G:A", "2:53151542:A:G", "2:53189373:T:G", "2:53283910:C:T", "2:53353546:A:G", "2:53390590:G:A", "2:53730042:G:A", "2:53803504:G:A", "2:60054014:G:A", "2:63289368:G:A", "2:68387467:C:T", "2:76483168:C:T", "2:92863381:G:A", "2:102818589:G:A", "2:103217345:T:A", "2:103225507:A:G", "2:103741954:C:A", "2:104899441:A:G", "2:105543115:G:A", "2:113229961:G:T", "2:136159490:A:G")) %>% 
+      mutate(analysis = "GPSM (Young)"),
+    read_delim("output/200910_RAN/af_trajectories/200910_RAN.chr2.nsl_afs.raw.gz",
+             delim = " ") %>%
+  filter(!str_detect(FID, "NA")) %>%
+  dplyr::rename(birthyear = FID) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value,
+         analysis = "nSL") %>% 
+  select(-value, -IID, -variable),
+    read_delim("output/200910_RAN/af_trajectories/200910_RAN.chr2.raisd_afs.raw.gz",
+             delim = " ") %>%
+  filter(!str_detect(FID, "NA")) %>%
+  dplyr::rename(birthyear = FID) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value,
+         analysis = "RAiSD") %>% 
+  select(-value, -IID, -variable)
+  )
+
+
+chr2_af %>% 
+  filter(rs %in% c("2:7498211:T:C", "2:6757167:A:G", "2:21860593:T:A", "2:113671290:C:G", "2:111403008:C:T", "2:53151542:A:G", "2:103217345:T:A", "2:22339424:A:G", "2:7500278:A:G", "2:136159490:A:G", "2:22926713:C:T", "2:16900789:A:C", "2:89172015:A:C", "2:116449514:T:C", "2:5948954:C:T", "2:15116962:G:C", "2:38937843:A:C", "2:44444145:T:C", "2:81303175:C:T", "2:111108096:T:C")) %>% 
+  ggplot(aes(x = birthyear, y = AF, group = rs, color = analysis))+
+  geom_smooth(se = FALSE)+
+  facet_wrap(~analysis, nrow = 2)+
+  theme_cowplot()+
+  ylim(c(0,0.5))+
+  labs(x = "Birth Year", y = "Allele Frequency")+
+  scale_color_manual(values = c("dodgerblue", "indianred", "springgreen 3", "slateblue3"))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+
+
+```
+

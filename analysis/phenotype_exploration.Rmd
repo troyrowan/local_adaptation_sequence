@@ -84,7 +84,7 @@ simmental =
   read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv") %>%
   mutate(ASA_nbr = asa_nbr,
          dummyid = international_id) %>% 
-  left_join(read_csv("data/200907_SIM/breeds.csv") %>% 
+  left_join(read_csv("data/200907_SIM/breeds.csv.gz") %>% 
   pivot_wider(names_from = brd_cd, values_from = percent) %>% 
     replace(is.na(.), 0))
   

@@ -1,0 +1,750 @@
+---
+title: "Selection Manuscript Figures"
+author: "Troy Rowan"
+date: "2020-09-20"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+  markdown: 
+    wrap: 72
+---
+
+```{r, setup, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = here::here())
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(purrr)
+library(factoextra)
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(qvalue)
+library(GALLO)
+library(cowplot)
+library(gprofiler2)
+library(DT)
+library(ggforce)
+library(vroom)
+#source("../code/annotation_functions.R")
+```
+
+```{r}
+source("code/GCTA_functions.R")
+source("code/annotation_functions.R")
+simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
+redangus = read_csv("output/200910_RAN/phenotypes/200910_RAN.info.csv")
+```
+
+# Figure 1 
+
+Reading in files
+```{r}
+ran_seq_gpsm_age = 
+  seq(1,29) %>% 
+    purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.age.chr",.x,".mlma.gz"))) %>% 
+    purrr::reduce(bind_rows)
+
+#read_gwas("output/200910_RAN/gwas/200910_RAN.age.850K.mlma.gz")
+
+ran_gpsm_sigsnps =
+  ran_seq_gpsm_age %>% 
+  filter(p < 4.289e-9) %>% 
+  .$SNP
+
+ran_seq_gpsm_young_age = 
+  seq(1,29) %>% 
+    purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.young_age.chr",.x,".mlma.gz")) %>% 
+                 filter(p < 0.01)) %>% 
+    purrr::reduce(bind_rows)
+
+sim_seq_gpsm_purebred_age = 
+  seq(1,29) %>% 
+    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.pb_age.chr",.x,".mlma.gz"))) %>% 
+    purrr::reduce(bind_rows)
+
+sim_seq_gpsm_age = 
+  seq(1,29) %>% 
+    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.full_age.chr",.x,".mlma.gz"))) %>% 
+    purrr::reduce(bind_rows)
+
+ran_age_seq_cojo = 
+  list.files(path='output/200910_RAN/seq_cojo/',pattern="200910_RAN.age.chr") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200910_RAN/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1) %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
+    purrr::reduce(bind_rows) 
+
+ran_old_seq_cojo = 
+  list.files(path='output/200910_RAN/seq_cojo/',pattern="200910_RAN.old_age") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200910_RAN/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ)) %>% 
+    purrr::reduce(bind_rows) 
+
+ran_young_seq_cojo = 
+  list.files(path='output/200910_RAN/seq_cojo/',pattern="200910_RAN.young_age.chr") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200910_RAN/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1) %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
+    purrr::reduce(bind_rows)
+
+sim_pb_seq_cojo = 
+  list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.pb_age.chr") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200907_SIM/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1)  %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
+    purrr::reduce(bind_rows)
+
+sim_seq_cojo = 
+  list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.full_age") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200907_SIM/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1)  %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
+    purrr::reduce(bind_rows) 
+
+
+```
+
+
+
+
+Red Angus GPSM
+
+```{r}
+plot_grid(
+  ran_seq_gpsm_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_age_seq_cojo$SNP,
+                 sigsnpcolor = "dodgerblue")+
+    geom_hline(yintercept = 7.3, color = "blue"),
+  ran_seq_gpsm_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_age_seq_cojo$SNP,
+                 sigsnpcolor = "dodgerblue")+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(c(2,15)),
+  ran_seq_gpsm_young_age %>% 
+      ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_young_seq_cojo$SNP,
+                 sigsnpcolor = "indianred")+
+      geom_hline(yintercept = 7.3, color = "blue"),
+  ran_seq_gpsm_young_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_young_seq_cojo$SNP,
+                 sigsnpcolor = "indianred")+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(c(2,15)),
+    nrow = 2, labels = c("A", "B", "C", "D"))
+
+ggsave("output/figures/RAN_GPSM.png",
+       width = 12, height = 5, units = "in")
+```
+
+Simmental GPSM
+
+```{r}
+
+plot_grid(
+  sim_seq_gpsm_purebred_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = sim_pb_seq_cojo$SNP,
+                 sigsnpcolor = "slateblue3")+
+    geom_hline(yintercept = 7.3, color = "blue"),
+  sim_seq_gpsm_purebred_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = sim_pb_seq_cojo$SNP,
+                 sigsnpcolor = "slateblue3")+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(c(2,15)),
+  sim_seq_gpsm_age %>% 
+      ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = sim_seq_cojo$SNP,
+                 sigsnpcolor = "springgreen3")+
+      geom_hline(yintercept = 7.3, color = "blue"),
+  sim_seq_gpsm_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = sim_seq_cojo$SNP,
+                 sigsnpcolor = "springgreen3")+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(c(2,15)),
+    labels = c("A", "B", "C", "D"),
+    nrow = 2)
+
+ggsave("output/figures/SIM_GPSM.png",
+       width = 12, height = 5, units = "in")
+
+```
+
+## Chromosome 23
+
+AF trajectory plotting: Read in files make plot in this collapsed cell
+These are from the sequence data, extracted COJO SNPs for FULL and YOUNG datasets
+```{r}
+by2 <- function(n){
+  x = n/2
+  return(x)
+}
+
+
+ran_full_af = 
+  read_delim("output/200910_RAN/seq_cojo/200910_RAN.age.cojosnps.raw",
+             delim = " ")%>%
+  filter(!str_detect(FID, "NA")) %>%
+  dplyr::rename(birthyear = FID) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value) %>% 
+  select(-value, -IID, -variable)
+
+ran_young_af = 
+  read_delim("output/200910_RAN/seq_cojo/200910_RAN.young_age.cojosnps.raw",
+             delim = " ") %>%
+  filter(!str_detect(FID, "NA")) %>%
+  dplyr::rename(birthyear = FID) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value) %>% 
+  select(-value, -IID, -variable)
+
+
+sim_af = 
+  read_delim("output/200907_SIM/af_trajectories/200907_SIM.chr23.af.raw.gz",
+             delim = " ") %>%
+  left_join(select(simmental, international_id, birth_year), by = c("IID" = "international_id")) %>% 
+  select(birthyear =birth_year, IID, everything()) %>%
+  select(-FID) %>% 
+  filter(!is.na(birthyear)) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value) %>% 
+  select(-value, -IID, -variable)
+
+chr23_af = 
+  bind_rows(
+    # ran_young_af %>% 
+    #   filter(rs %in% c("23:1032665:T:C", "23:1324051:C:T", "23:1366335:G:C", "23:1366691:G:T", "23:1768070:T:C", "23:1783688:T:C", "23:1805412:A:G")) %>% 
+    #   mutate(analysis = "Full Red Angus") %>% 
+    # left_join(ran_age_seq_cojo, by = c("rs" = "SNP")),
+    ran_young_af %>% 
+      filter(rs %in% c("23:1324051:C:T","23:1366335:G:C","23:1366691:G:T", "23:1768070:T:C", "23:1800642:A:G", "23:1832160:A:G", "23:1918909:T:A")) %>% 
+      mutate(analysis = "Red Angus")%>% 
+    left_join(ran_young_seq_cojo, by = c("rs" = "SNP")),
+    sim_af %>% 
+      filter(rs %in% c("23:1047760:A:G", "23:1215338:G:T", "23:1315765:A:C", "23:1364693:A:T", "23:1511487:T:A", "23:1703480:C:A")) %>% 
+      mutate(analysis = "Simmental")%>% 
+    left_join(sim_seq_cojo, by = c("rs" = "SNP"))
+  )
+
+
+```
+
+```{r}
+chr2_af %>% 
+  mutate(p = case_when(p == 0 ~ 1e-310,
+                        TRUE ~ p)) %>% 
+  filter(analysis == "Full Red Angus" | rs %in% c("2:53151542:A:G", "2:103217345:T:A", "2:7500278:A:G", "2:22339424:A:G", "2:8100524:G:T", "2:8674849:T:C", "2:60054014:G:A")) %>% 
+  ggplot(aes(x = birthyear, y = AF, group = rs, color = -log10(p)))+
+  geom_smooth(se = FALSE)+
+  facet_grid(~analysis)+
+  theme_cowplot()+
+  ylim(c(0,0.5))+
+  scale_color_viridis_c()+
+  labs(x = "Birth Year", y = "Allele Frequency", color = "-log10(p)")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+chr23_af %>% 
+  mutate(p = case_when(p == 0 ~ 1e-310,
+                        TRUE ~ p)) %>% 
+  ggplot(aes(x = birthyear, y = AF, group = rs, color = -log10(p)))+
+  geom_smooth(se = FALSE, size = 2)+
+  facet_grid(~analysis,)+
+  theme_cowplot()+
+  ylim(c(0,1))+
+  scale_color_viridis_c(option = "inferno", begin = 0.25, end = 0.9)+
+  labs(x = "Birth Year", y = "Allele Frequency", color = "-log10(p)")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+
+```{r}
+CHR_YGPSM = read_tsv("output/200910_RAN/seq_gwas/200910_RAN.young_age.chr23.mlma.gz")
+CHR_YCOJO = read_tsv("output/200910_RAN/seq_cojo/200910_RAN.young_age.chr23.jma.cojo")
+
+CHR_GPSM = read_tsv("output/200910_RAN/seq_gwas/200910_RAN.age.chr23.mlma.gz")
+CHR_COJO = read_tsv("output/200910_RAN/seq_cojo/200910_RAN.age.chr23.jma.cojo")
+
+CHR_SGPSM = read_tsv("output/200907_SIM/seq_gwas/200907_SIM.full_age.chr23.mlma.gz")
+CHR_SCOJO = read_tsv("output/200907_SIM/seq_cojo/200907_SIM.full_age.chr23.jma.cojo")
+
+CHR_RAISD = read_tsv("output/200910_RAN/sfs_selection/RAiSD_Report.200910_RAN.chr23.gz",
+                 skip = 1,
+                 col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu"))
+CHR_NSL = read_tsv("output/selscan_window/200907_SIM.all.nsl.out.100bins.norm.windows.txt",
+                   col_types = cols(SNP = col_character(), window = col_character())) %>% filter(CHR == 23)
+
+CHR_YGPSM_CHIP = read_tsv("output/200910_RAN/gwas/200910_RAN.young_age.850K.mlma.gz") %>% 
+  filter(Chr == 23)
+
+
+ATAC = 
+  FAANG %>% 
+    filter(CHR == 23,
+           START >= 1000000,
+           START <= 1900000) %>% 
+  mutate(start = START/1000000,
+         stop = STOP/1000000,
+         SNP = paste(CHR, (START+STOP)/2))
+
+functional_plot = 
+  ggplot()+
+    geom_rect(data=ATAC %>% filter(TISSUE == "Adipose"), mapping=aes(x = NULL, y = NULL, xmin=start, xmax=stop, ymin=14, ymax=16, fill = MARK))+ 
+    geom_text(aes(x = 2, y = 15, label = "Adipose"))+
+    geom_rect(data=ATAC %>% filter(TISSUE == "Cerebellum"), mapping=aes(x = NULL, y = NULL, xmin=start, xmax=stop, ymin=12, ymax=14, fill = MARK))+
+    geom_text(aes(x = 2, y = 13, label = "Cerebellum"))+
+    geom_rect(data=ATAC %>% filter(TISSUE == "Cortex"), mapping=aes(x = NULL, y = NULL, xmin=start, xmax=stop, ymin=10, ymax=12, fill = MARK))+
+    geom_text(aes(x = 2, y = 11, label = "Cortex"))+
+    geom_rect(data=ATAC %>% filter(TISSUE == "Hypothalamus"), mapping=aes(x = NULL, y = NULL, xmin=start, xmax=stop, ymin=10, ymax=8, fill = MARK))+
+    geom_text(aes(x = 2, y = 9, label = "Hypothalamus"))+
+    geom_rect(data=ATAC %>% filter(TISSUE == "Liver"), mapping=aes(x = NULL, y = NULL, xmin=start, xmax=stop, ymin=6, ymax=8, fill = MARK))+
+    geom_text(aes(x = 2, y = 7, label = "Liver"))+
+    geom_rect(data=ATAC %>% filter(TISSUE == "Lung"), mapping=aes(x = NULL, y = NULL, xmin=start, xmax=stop, ymin=2, ymax=6, fill = MARK))+
+    geom_text(aes(x = 2, y = 5, label = "Lung"))+
+    geom_rect(data=ATAC %>% filter(TISSUE == "Muscle"), mapping=aes(x = NULL, y = NULL, xmin=start, xmax=stop, ymin=2, ymax=4, fill = MARK))+
+    geom_text(aes(x = 2, y = 3, label = "Muscle"))+
+    geom_rect(data=ATAC %>% filter(TISSUE == "Spleen"), mapping=aes(x = NULL, y = NULL, xmin=start, xmax=stop, ymin=0, ymax=2, fill = MARK))+
+    geom_text(aes(x = 2, y = 1, label = "Spleen"))+
+    #geom_rect(aes(x = NULL, y = NULL, xmin=0.268191, xmax=0.961226, ymin=-12, ymax=-2), fill = "indianred")+
+    geom_rect(aes(x = NULL, y = NULL, xmin=1.448844, xmax=1.456438, ymin=-12, ymax=-2), fill = "orange")+
+    geom_rect(aes(x = NULL, y = NULL, xmin=1.742293, xmax=1.743649, ymin=-12, ymax=-2), fill = "orange")+
+    # geom_text(aes(x = 0.268191 + (0.961226 - 0.268191) / 2, y = 5,
+    #               label = "KHDRBS2"),
+    #           size = 5)+
+    geom_text(aes(x = 1.448844 + (1.456438 - 1.448844) / 2, y = -15,
+                  label = "LOC100141197"),
+              size = 5)+
+    geom_text(aes(x = 1.742293 + (1.743649 - 1.742293) / 2, y = -15,
+                  label = "LOC782044"),
+              size = 5)+
+    labs(x = "Megabases", y = "", fill = "Epigenetic Mark Type")+
+    theme_cowplot()+
+    #xlim(c(1,2))+
+    ylim(c(17, -17))+
+    theme(legend.position = c(0.1, .8),
+          axis.text.y = element_text(color = "white"),
+          axis.ticks.y = element_line(color = "white"),
+          axis.line.y = element_line(color = "white"))
+
+
+plot_grid(
+  plot_grid(CHR_GPSM %>% 
+    dplyr::rename(CHR = Chr, BP = bp) %>% 
+    filter(p < 0.1) %>% 
+    mutate(BP = BP/1000000) %>% 
+    ggplot(aes(x = BP, y = -log10(p)))+
+    geom_point(alpha = 0.5)+
+    geom_point(data = CHR_COJO, aes(x = bp/1000000, y = -log10(p)), color = "indianred", size = 2)+
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+    scale_y_continuous(labels = scales::number_format(accuracy = 0.1))+
+    labs(x = "Megabases")+
+    #xlim(c(1,2))+
+    geom_hline(yintercept = 7.3, color = "red")+
+    theme_cowplot(),
+  CHR_SGPSM %>% 
+  dplyr::rename(CHR = Chr, BP = bp) %>% 
+    filter(p<0.1) %>% 
+    mutate(BP = BP/1000000) %>% 
+    ggplot(aes(x = BP, y = -log10(p)))+
+    geom_point(alpha = 0.5)+
+    geom_point(data = CHR_SCOJO, aes(x = bp/1000000, y = -log10(p)), color = "indianred", size = 2)+
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+    scale_y_continuous(labels = scales::number_format(accuracy = 0.1))+
+    labs(x = "Megabases")+
+    #xlim(c(1,2))+
+    geom_hline(yintercept = 7.3, color = "red")+
+    theme_cowplot(),
+  nrow = 1, labels = c("A", "B")),
+  CHR_GPSM %>% 
+    filter(Chr == 23,
+           bp > 1000000,
+           bp < 2000000) %>% 
+    dplyr::rename(CHR = Chr, BP = bp) %>% 
+    mutate(BP = BP/1000000) %>% 
+    ggplot(aes(x = BP, y = -log10(p)))+
+    geom_point(alpha = 0.5)+
+    geom_point(data = CHR_COJO, aes(x = bp/1000000, y = -log10(p)), color = "indianred", size = 2)+
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+    scale_y_continuous(labels = scales::number_format(accuracy = 0.1))+
+    labs(x = "")+
+    xlim(c(1,2))+
+    geom_hline(yintercept = 7.3, color = "red")+
+    theme_cowplot(),
+  CHR_SGPSM %>% 
+    filter(Chr == 23,
+           bp > 1000000,
+           bp < 2000000) %>% 
+    dplyr::rename(CHR = Chr, BP = bp) %>% 
+    mutate(BP = BP/1000000) %>% 
+    ggplot(aes(x = BP, y = -log10(p)))+
+    geom_point(alpha = 0.5)+
+    geom_point(data = CHR_SCOJO, aes(x = bp/1000000, y = -log10(p)), color = "indianred", size = 2)+
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+    labs(x = "")+
+    xlim(c(1,2))+
+    geom_hline(yintercept = 7.3, color = "red")+
+    theme_cowplot(),
+  functional_plot,
+  chr23_af %>% 
+  mutate(p = case_when(p == 0 ~ 1e-310,
+                        TRUE ~ p)) %>% 
+  ggplot(aes(x = birthyear, y = AF, group = rs, color = -log10(p)))+
+  geom_smooth(se = FALSE, size = 2)+
+  facet_grid(~analysis,)+
+  theme_cowplot()+
+  ylim(c(0,1))+
+  scale_color_viridis_c(option = "inferno", begin = 0.25, end = 0.9)+
+  labs(x = "Birth Year", y = "Allele Frequency", color = "-log10(p)")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)),
+  nrow = 5,
+  labels = c("", "C", "D", "E", "F"),
+  rel_heights = c(1,1,1,1,1),
+  align = "h"
+)
+
+ggsave("output/figures/CHR23.png", width = 12, height = 15, units = "in")
+
+
+  
+functional_plot
+```
+
+## Sequence vs 850K compare
+
+```{r}
+CHR_YGPSM = read_tsv("output/200910_RAN/seq_gwas/200910_RAN.young_age.chr23.mlma.gz")
+CHR_YGPSM_CHIP = read_tsv("output/200910_RAN/gwas/200910_RAN.young_age.850K.mlma.gz") %>% 
+  filter(Chr == 23)
+
+plot_grid(
+  CHR_YGPSM_CHIP %>% 
+      filter(Chr == 23,
+             bp > 0,
+             bp < 2000000) %>% 
+      dplyr::rename(CHR = Chr, BP = bp) %>% 
+      mutate(BP = BP/1000000) %>% 
+      ggplot(aes(x = BP, y = -log10(p)))+
+      geom_point(alpha = 0.5)+
+      #geom_point(data = CHR_YCOJO, aes(x = bp/1000000, y = -log10(p)), color = "indianred", size = 2)+
+      scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+      labs(x = "Megabases", title = "850K Imputed")+
+      xlim(c(0,2))+
+      geom_hline(yintercept = 7.3, color = "red")+
+      theme_cowplot(),
+  CHR_YGPSM %>% 
+      filter(Chr == 23,
+             bp > 0,
+             bp < 2000000) %>% 
+      dplyr::rename(CHR = Chr, BP = bp) %>% 
+      mutate(BP = BP/1000000) %>% 
+      ggplot(aes(x = BP, y = -log10(p)))+
+      geom_point(alpha = 0.5)+
+      #geom_point(data = CHR_YCOJO, aes(x = bp/1000000, y = -log10(p)), color = "indianred", size = 2)+
+      scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+      labs(x = "Megabases", title = "Sequence Imputed")+
+      xlim(c(0,2))+
+      geom_hline(yintercept = 7.3, color = "red")+
+      theme_cowplot(),
+  nrow = 2,
+  labels = c("A", "B")
+)
+```
+
+
+## Chromosome 2
+
+```{r}
+chr2_ldplot = 
+  plot_grid(
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)/1000) %>% 
+    filter(R2 > 0.01,
+           dist < 100) %>% 
+    ggplot(aes(x=dist, y = R2))+
+    geom_point(alpha = 0.01,color = "indianred")+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "indianred")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "", title = "GPSM", y = expression("r "^2)),
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.nSL.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)/1000) %>% 
+    filter(R2 > 0.01,
+           dist < 100) %>% 
+    ggplot(aes(x=dist, y = R2))+
+    geom_point(alpha = 0.01,color = "springgreen3")+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "springgreen3")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "Distance to focal SNP (kb)", y = " ", title = "nSL"),
+  read.table("output/200910_RAN/ld/200910_RAN.chr2.RAiSD.ld.gz", sep="",header=T) %>%  
+    mutate(dist = abs(BP_A - BP_B)/1000) %>% 
+    filter(R2 > 0.01,
+           dist < 100) %>% 
+    ggplot(aes(x=dist, y = R2))+
+    geom_point(alpha = 0.01,color = "slateblue3")+
+    stat_smooth(method ="loess", se = FALSE, size = 2, alpha = 1, color = "slateblue3")+
+    ylim(c(0,1))+
+    theme_cowplot()+
+    scale_color_viridis_d()+
+    labs(x = "", y = " ", title = "RAiSD"),
+  nrow = 1)
+
+chr2_af = 
+  bind_rows(
+    ran_full_af %>%
+      filter(rs %in% c("2:6757167:A:G", "2:7498211:T:C","2:8100524:G:T", "2:21860593:T:A", "2:27120579:A:G", "2:111403008:C:T", "2:113671290:C:G", "2:127446835:C:G")) %>%
+      mutate(analysis = "GPSM (Full)"),
+    ran_young_af %>% 
+      filter(rs %in% c("2:7500278:A:G", "2:8100524:G:T", "2:8674849:T:C", "2:9826292:C:T", "2:10679762:C:T", "2:12194425:G:C", "2:12208106:T:C", "2:12363109:A:G", "2:12386721:G:A", "2:12732917:G:A", "2:15449766:T:C", "2:15764320:C:G", "2:16047868:T:C", "2:19635098:C:A", "2:22112854:T:C", "2:22339424:A:G", "2:22745800:G:T", "2:22868999:T:C", "2:23027621:T:C", "2:23259680:G:A", "2:28639397:T:C", "2:28823286:A:T", "2:30374233:T:A", "2:32952841:C:T", "2:42247695:G:A", "2:45247236:T:G", "2:49303806:A:T", "2:53006426:C:G", "2:53126236:G:A", "2:53151542:A:G", "2:53189373:T:G", "2:53283910:C:T", "2:53353546:A:G", "2:53390590:G:A", "2:53730042:G:A", "2:53803504:G:A", "2:60054014:G:A", "2:63289368:G:A", "2:68387467:C:T", "2:76483168:C:T", "2:92863381:G:A", "2:102818589:G:A", "2:103217345:T:A", "2:103225507:A:G", "2:103741954:C:A", "2:104899441:A:G", "2:105543115:G:A", "2:113229961:G:T", "2:136159490:A:G")) %>% 
+      mutate(analysis = "GPSM (Young)"),
+    read_delim("output/200910_RAN/af_trajectories/200910_RAN.chr2.nsl_afs.raw.gz",
+             delim = " ") %>%
+  filter(!str_detect(FID, "NA")) %>%
+  dplyr::rename(birthyear = FID) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value,
+         analysis = "nSL") %>% 
+  select(-value, -IID, -variable),
+    read_delim("output/200910_RAN/af_trajectories/200910_RAN.chr2.raisd_afs.raw.gz",
+             delim = " ") %>%
+  filter(!str_detect(FID, "NA")) %>%
+  dplyr::rename(birthyear = FID) %>%
+  mutate_at(.vars = vars(contains(":")), .funs = by2) %>%
+  select(-PAT, -MAT, -SEX, -PHENOTYPE) %>%
+  reshape2::melt(id = c("birthyear", "IID")) %>%
+  mutate(rs = str_split_fixed(variable, "_", n = 2)[,1],
+         AF = value,
+         analysis = "RAiSD") %>% 
+  select(-value, -IID, -variable)
+  )
+
+chr2_afs = 
+  chr2_af %>% 
+    filter(rs %in% c("2:7498211:T:C", "2:6757167:A:G", "2:21860593:T:A", "2:113671290:C:G", "2:111403008:C:T", "2:53151542:A:G", "2:103217345:T:A", "2:22339424:A:G", "2:7500278:A:G", "2:136159490:A:G", "2:22926713:C:T", "2:16900789:A:C", "2:89172015:A:C", "2:116449514:T:C", "2:5948954:C:T", "2:15116962:G:C", "2:38937843:A:C", "2:44444145:T:C", "2:81303175:C:T", "2:111108096:T:C")) %>% 
+    ggplot(aes(x = birthyear, y = AF, group = rs, color = analysis))+
+    geom_smooth(se = FALSE)+
+    facet_wrap(~analysis, nrow = 1, scales = "free_y")+
+    theme_cowplot()+
+    ylim(c(0,0.5))+
+    labs(x = "Year", y = "Allele Frequency")+
+    scale_color_manual(values = c("dodgerblue", "indianred", "springgreen 3", "slateblue3"))+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "none",
+          strip.background = element_blank(),
+          strip.text = element_text(hjust = 0, size = rel(1.1), face = "bold"))
+
+chr2_afs
+```
+
+
+```{r}
+CHR_YGPSM = read_tsv("output/200910_RAN/seq_gwas/200910_RAN.young_age.chr2.mlma.gz")
+CHR_YCOJO = read_tsv("output/200910_RAN/seq_cojo/200910_RAN.young_age.chr2.jma.cojo")
+
+CHR_GPSM = read_tsv("output/200910_RAN/seq_gwas/200910_RAN.age.chr2.mlma.gz")
+CHR_COJO = read_tsv("output/200910_RAN/seq_cojo/200910_RAN.age.chr2.jma.cojo")
+CHR_RAISD = read_tsv("output/200910_RAN/sfs_selection/RAiSD_Report.200910_RAN.chr2.gz",
+                 skip = 1,
+                 col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu"))
+CHR_NSL = 
+  ran_nsl %>% 
+  filter(CHR == 2)
+
+CHR_YSIG = 
+  CHR_YGPSM %>% 
+  filter(p <  4.289e-9) %>% 
+  .$SNP
+
+CHR_SIG = 
+  CHR_GPSM %>% 
+  filter(p <  4.289e-9) %>% 
+  .$SNP
+
+chr2_manhattans = 
+  plot_grid(
+    CHR_GPSM %>% 
+      dplyr::rename(CHR = Chr, BP = bp) %>% 
+      filter(p < 0.1) %>% 
+      mutate(BP = BP/1000000) %>% 
+      ggplot(aes(x = BP, y = -log10(p)))+
+      geom_point(alpha = 0.5)+
+      geom_point(data = CHR_COJO, aes(x = bp/1000000, y = -log10(p)), color = "dodgerblue")+
+      #geom_point(data = filter(CHR_GPSM, SNP %in% CHR_YSIG), aes(x = bp/1000000, y = -log10(p)), color = "springgreen", alpha = 0.5)+
+      scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+      labs(x = "Megabases")+
+      ylim(c(0,40))+
+      geom_hline(yintercept = 7.3, color = "red")+
+      theme_cowplot(),
+    CHR_YGPSM %>% 
+      dplyr::rename(CHR = Chr, BP = bp) %>% 
+      filter(p < 0.1) %>% 
+      mutate(BP = BP/1000000) %>% 
+      ggplot(aes(x = BP, y = -log10(p)))+
+      geom_point(alpha = 0.5)+
+      geom_point(data = CHR_YCOJO, aes(x = bp/1000000, y = -log10(p)), color = "indianred")+
+      #geom_point(data = filter(CHR_YGPSM, SNP %in% CHR_SIG), aes(x = bp/1000000, y = -log10(p)), color = "indianred", alpha = 0.5)+
+      scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+      labs(x = "Megabases")+
+      geom_hline(yintercept = 7.3, color = "red")+
+      ylim(c(0,40))+
+      theme_cowplot(),
+    CHR_NSL %>%
+      mutate(BP = BP/1000000) %>%
+      ggplot(aes(x = BP, y = MeanY))+
+      geom_point(alpha = 0.5)+
+      scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+      labs(x = "Megabases", y = "Mean Window |nSL|")+
+      geom_hline(yintercept = 2.15, color = "red")+
+      theme_cowplot()+
+      geom_vline(xintercept = CHR_YCOJO$bp/1000000,
+                 color = "indianred",
+                 alpha = 0.5)+
+      geom_vline(xintercept = CHR_COJO$bp/1000000,
+                 color = "dodgerblue",
+                 alpha = 0.5),
+    CHR_RAISD %>%
+      filter(Mu > 10) %>%
+      mutate(BP = BP/1000000) %>%
+      ggplot(aes(x = BP, y = Mu))+
+      geom_point(alpha = 0.5)+
+      #geom_point(data = filter(CHR_YGPSM, SNP %in% CHR_SIG), aes(x = bp/1000000, y = -log10(p)), color = "indianred", alpha = 0.5)+
+      scale_x_continuous(breaks = scales::pretty_breaks(n = 5))+
+      labs(x = "Megabases", y = expression(mu))+
+      geom_hline(yintercept = 285, color = "red")+
+      theme_cowplot()+
+      geom_vline(xintercept = CHR_YCOJO$bp/1000000,
+                 color = "indianred",
+                 alpha = 0.5)+
+      geom_vline(xintercept = CHR_COJO$bp/1000000,
+                 color = "dodgerblue",
+                 alpha = 0.5),
+    nrow = 2,
+    align = "v",
+    labels = c("A", "B", "C", "D")
+  )
+
+
+
+plot_grid(chr2_manhattans,
+          chr2_ldplot,
+          chr2_afs,
+          labels = c("", "E", "F"),
+          rel_heights = c(1, 0.5, 0.5),
+          nrow = 3)
+
+ggsave("output/figures/CHR2.png", width = 12, height = 12, units = "in")
+```
+
+### Sweep Manhattan Plots
+```{r}
+
+plot_grid(
+  sim_nsl %>% dplyr::rename(SNP = window) %>% 
+    filter(SNPcount > 3) %>% 
+    selscan_manhattans(col = MeanY)+
+    geom_hline(yintercept = 2.38, color = "red")+
+    labs(y = "Mean nSL value"),
+  sim_raisd%>%
+    selscan_manhattans(col = Mu)+
+    geom_hline(yintercept = 193.5, color = "red")+
+    labs(y = expression(paste("RAiSD ", mu, " value"))),
+nrow = 2,
+labels = c("A", "B"))
+
+ggsave("output/figures/SIM.sweep.png", width = 12, height = 5, units = "in")
+
+plot_grid(
+  ran_nsl %>% dplyr::rename(SNP = window) %>% 
+    filter(SNPcount > 3) %>% 
+    selscan_manhattans(col = MeanY)+
+    geom_hline(yintercept = 2.34, color = "red")+
+    labs(y = "Mean nSL value"),
+  ran_raisd%>%
+    selscan_manhattans(col = Mu)+
+    geom_hline(yintercept = 285, color = "red")+
+    labs(y = expression(paste("RAiSD ", mu, " value"))),
+nrow = 2,
+labels = c("A", "B"))
+
+ggsave("output/figures/RAN.sweep.png", width = 12, height = 5, units = "in")
+
+```
+
+### QQ Plots
+
+```{r}
+
+plot_grid(
+  read_tsv("output/200910_RAN/seq_gwas/200910_RAN.full_age.pvalues.txt.gz",
+           col_names = c("p"),
+           col_types = cols(p = col_double())) %>% 
+    .$p %>% 
+    ggqq(),
+  read_tsv("output/200910_RAN/seq_gwas/200910_RAN.young_age.pvalues.txt.gz",
+           col_names = c("p"),
+           col_types = cols(p = col_double())) %>% 
+    .$p %>% 
+    ggqq(),
+  read_tsv("output/200907_SIM/seq_gwas/200907_SIM.full_age.pvalues.txt.gz",
+           col_names = c("p"),
+           col_types = cols(p = col_double())) %>% 
+    #filter(p < 0.1) %>% 
+    .$p %>% 
+    ggqq(),
+  read_tsv("output/200907_SIM/seq_gwas/200907_SIM.pb_age.pvalues.txt.gz",
+           col_names = c("p"),
+           col_types = cols(p = col_double())) %>%
+    .$p %>% 
+    ggqq(),
+  nrow = 2,
+  labels = "AUTO"
+  )
+
+ggsave("output/figures/QQPLOTS.png", height = 10, width = 10, units = "in")
+```
+

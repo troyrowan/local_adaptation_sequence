@@ -21,3 +21,4 @@ Welcome to the Local Adaptation Sequence-Level Analysis Project Site
 [Red Angus GPSM Results](RAN_GPSM.html): Results from GREML and LMM analysis of various transformed generation proxies in Red Angus dataset.
 
 [Simmental GPSM Results](200907_SIM_GPSM.html): Results from 811K analysis of Simmental dataset using various subsets of the simmental data. GREML estimates and GPSM results/
+

@@ -1,0 +1,347 @@
+---
+title: "Purebred Simmental GPSM Analysis "
+author: "Troy Rowan"
+date: "2020-09-20"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+  markdown: 
+    wrap: 72
+---
+
+```{r, setup, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = here::here())
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(purrr)
+library(factoextra)
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(qvalue)
+library(GALLO)
+library(cowplot)
+library(gprofiler2)
+library(DT)
+#source("../code/annotation_functions.R")
+```
+
+```{r}
+source("code/GCTA_functions.R")
+source("code/annotation_functions.R")
+simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv")
+
+
+```
+
+
+# Purebred Simmental GPSM Analysis
+
+## REML variance component estimates {.tabset}
+
+
+| Variable  | n      | h^2      | SE    |
+|-----------|--------|----------|-------|
+| Raw Age   | 13,379 | 0.617    | 0.004 |
+| Sqrt Age  | 13,379 | 0.551    | 0.011 |
+| Cbrt Age  | 13,379 | 0.552    | 0.011 |
+| Log Age   | 13,379 | 0.551    | 0.011 |
+| Old Age   | 4,634  | 0.482    | 0.020 |
+| Young Age | 8,745  | 0.448    | 0.015 |
+| Eqi Gen   | 13,153 | 0.656    | 0.010 |
+
+
+## Individual Residuals and Breeding Values {.tabset}
+
+These are REML estimates of individual's breeding values and residuals
+from GCTA GREML analysis
+
+### Age
+
+```{r}
+plot_grid(
+  read_blp("output/201020_PBSIM/greml/201020_PBSIM.age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("PB Simmental\nRaw Age GPSM\nResiduals")+
+    theme_cowplot(),
+  read_blp("output/201020_PBSIM/greml/201020_PBSIM.age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nBreeding Values")+
+    theme_cowplot())
+```
+
+### Square Root
+
+```{r}
+plot_grid(
+  read_blp("output/201020_PBSIM/greml/201020_PBSIM.sqrt_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("PB Simmental\nSquare Root Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/201020_PBSIM/greml/201020_PBSIM.sqrt_age.850K.indi.blp") %>% 
+  left_join(simmental %>% 
+              select(international_id, age)) %>% 
+  ggplot(aes(sample = BV))+
+  stat_qq()+
+  stat_qq_line(color = "red")+
+  ggtitle("\nBreeding Values")+
+  theme_cowplot())
+```
+
+### Cube Root
+
+```{r}
+plot_grid(
+  read_blp("output/201020_PBSIM/greml/201020_PBSIM.cbrt_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("PB Simmental\nCube Root Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/201020_PBSIM/greml/201020_PBSIM.cbrt_age.850K.indi.blp") %>% 
+  left_join(simmental %>% 
+              select(international_id, age)) %>% 
+  ggplot(aes(sample = BV))+
+  stat_qq()+
+  stat_qq_line(color = "red")+
+  ggtitle("\nGPSM Breeding Values")+
+  theme_cowplot())
+```
+
+### Log
+
+```{r}
+
+plot_grid(read_blp("output/201020_PBSIM/greml/201020_PBSIM.log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("PB Simmental\nLog Transformed Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/201020_PBSIM/greml/201020_PBSIM.log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+### Youg Raw Age
+
+```{r}
+
+plot_grid(read_blp("output/201020_PBSIM/greml/201020_PBSIM.young_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = Residual))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("(2012-Present) PB Simmental\n Raw Age \nGPSM Residuals")+
+    theme_cowplot(),
+  read_blp("output/201020_PBSIM/greml/201020_PBSIM.young_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+    ggplot(aes(sample = BV))+
+    stat_qq()+
+    stat_qq_line(color = "red")+
+    ggtitle("\nGPSM Breeding Values")+
+    theme_cowplot())
+
+
+```
+
+
+## n(SigSNPs)
+
+```{r eval=TRUE, echo=FALSE}
+pbsim_gpsm_age = 
+  read_gwas("output/201020_PBSIM/gwas/201020_PBSIM.age.850K.mlma.gz")
+
+pbsim_gpsm_sqrtage = 
+  read_gwas("output/201020_PBSIM/gwas/201020_PBSIM.sqrt_age.850K.mlma.gz")
+
+pbsim_gpsm_cbrtage = 
+  read_gwas("output/201020_PBSIM/gwas/201020_PBSIM.cbrt_age.850K.mlma.gz")
+
+pbsim_gpsm_logage = 
+  read_gwas("output/201020_PBSIM/gwas/201020_PBSIM.log_age.850K.mlma.gz")
+
+pbyoung_sim_gpsm_age = 
+  read_gwas("output/201020_PBSIM/gwas/201020_PBSIM.young_age.850K.mlma.gz")
+
+pbold_sim_gpsm_age = 
+  read_gwas("output/201020_PBSIM/gwas/201020_PBSIM.old_age.850K.mlma.gz")
+
+pbsim_gpsm_equigen = 
+  read_gwas("output/201020_PBSIM/gwas/201020_PBSIM.equiGen_nozero.850K.mlma.gz")
+
+
+sigcheck = function(df){
+
+  gwasdf = 
+    df %>% 
+    mutate(nominal = case_when(p <= 1e-5 ~ TRUE,
+                             TRUE ~ FALSE),
+           bonferroni = case_when(p <= 7.55e-07 ~ TRUE,
+                             TRUE ~ FALSE),
+           q0.1 = case_when(q <= 0.10 ~ TRUE,
+                             TRUE ~ FALSE),
+           q0.05 = case_when(q <= 0.05 ~ TRUE,
+                             TRUE ~ FALSE))%>% 
+  select(nominal, bonferroni, q0.1, q0.05) %>% 
+  colSums() 
+  return(gwasdf)
+}
+
+rbind(sigcheck(pbsim_gpsm_age),
+      sigcheck(pbsim_gpsm_sqrtage),
+      sigcheck(pbsim_gpsm_cbrtage),
+      sigcheck(pbsim_gpsm_logage),
+      sigcheck(pbyoung_sim_gpsm_age),
+      sigcheck(pbold_sim_gpsm_age),
+      sigcheck(pbsim_gpsm_equigen)) %>% 
+  datatable(caption = "Number of significant SNPs at various significance levels using different dependent variables")
+  
+```
+
+## GPSM GWAS Manhattan Plots for Transformed Age {.tabset}
+
+### Raw Age
+
+(Significance threshold - Bonferroni)
+
+```{r}
+
+ggmanhattan2(pbsim_gpsm_age,
+             prune = 0.01, 
+             sig_threshold_p = 7.55e-7,
+             sigsnps = read_gwas("output/200907_SIM/gwas/200907_SIM.age.850K.mlma.gz") %>% 
+               filter(p < 7.55e-07) %>% .$SNP
+             )
+
+#Saving significant SNPs from ALL Simmental dataset forfor highlighting in other plots:
+sim_raw_age_sigsnps = 
+  read_gwas("output/200907_SIM/gwas/200907_SIM.age.850K.mlma.gz") %>% 
+    filter(p < 7.55e-07) %>% .$SNP
+```
+### Square Root
+Square Root Transformed Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+
+```{r}
+ggmanhattan2(pbsim_gpsm_sqrtage,
+             prune = 0.01, 
+             sig_threshold_p = 7.55e-7)
+```
+
+### Cube Root
+Cube Root Transformed Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+
+
+```{r}
+ggmanhattan2(pbsim_gpsm_sqrtage,
+             prune = 0.01, 
+             sig_threshold_p = 7.55e-7)
+
+```
+
+### Log
+Log Transformed Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+Green points indicate SNPs identified as significant in the log-transformed GPSM in the full Simmental dataset
+
+```{r}
+ggmanhattan2(pbsim_gpsm_logage,
+             prune = 0.01, 
+             sig_threshold_p = 7.55e-7,
+             sigsnps = read_gwas("output/200907_SIM/gwas/200907_SIM.log_age.850K.mlma.gz") %>% 
+               filter(p < 7.55e-07) %>% .$SNP
+             )
+```
+### Young Raw Age
+
+Log Transformed Age Manahattan Plots (Significance threshold -
+Bonferroni)
+
+Green points indicate SNPs identified as significant in the log-transformed GPSM in the full Simmental dataset
+
+```{r}
+read_gwas("")
+ggmanhattan2(pbyoung_sim_gpsm_age,
+             prune = 0.01, 
+             sig_threshold_p = 7.55e-7,
+             sigsnps = read_gwas("output/200907_SIM/gwas/200907_SIM.young_age.850K.mlma.gz") %>% 
+               filter(p < 7.55e-07) %>% .$SNP
+             )
+```
+
+### Old  Age
+
+Old animal only (Born before Jan 1, 2012) Raw Age and log-transformed Manhattan Plots
+
+Green points indicate SNPs identified as significant in the log-transformed GPSM in the full Simmental dataset
+
+The large amount of overlap here is likely because the majority of early genotyped Simmental animals are actually purebred. This means that this analysis isn't really changing that much of the 
+
+```{r}
+
+read_gwas("out")
+ggmanhattan2(pbold_sim_gpsm_age,
+             prune = 0.01, 
+             sig_threshold_p = 7.55e-7,
+             sigsnps = read_gwas("output/200907_SIM/gwas/200907_SIM.old_age.850K.mlma.gz") %>% 
+               filter(p < 7.55e-07) %>% .$SNP
+             )
+
+```
+
+
+### Equivalent Generation Number
+
+Equivalent generation number of Simmental animals (after removing potentially problematic "gen 0 animals")
+
+Looks nearly identical to what we see when using raw age (in either the full dataset or old animals only)
+
+Orange points are significant in the raw age analysis of this Purbred Simmental dataset
+
+```{r}
+ggmanhattan2(pbsim_gpsm_equigen,
+             prune = 0.01, 
+             sig_threshold_p = 7.55e-7,
+             sigsnps2 = pbsim_gpsm_age %>% filter(p<7.55e-7) %>% .$SNP)
+
+```

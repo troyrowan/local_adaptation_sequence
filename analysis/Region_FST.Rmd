@@ -1,0 +1,43 @@
+---
+title: "Region_FST"
+author: "Troy Rowan"
+date: "2020-10-01"
+output: 
+  html_document:
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir=here::here())
+library(workflowr)
+library(knitr)
+library(cowplot)
+library(purrr)
+library(tidyverse)
+
+```
+#Look at this stuff {.tabset}
+
+```{r}
+testdf = 
+  data_frame(chr = rep(seq(1,10),10),
+          x = rnorm(100),
+          y = rnorm(100))
+
+plotz = 
+  seq(1,10) %>% 
+  purrr::map(
+    ~filter(testdf, chr == .x) %>% 
+      ggplot(aes(x, y))+
+      geom_point()
+  )
+
+
+imap(plotz, ~{
+      cat('## Subtab ',.y,'\n')
+      cat('\n')})  
+```
