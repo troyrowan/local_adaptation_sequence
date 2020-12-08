@@ -197,6 +197,34 @@ plot_grid(
 ggsave("output/figures/SIM_GPSM.png",
        width = 12, height = 5, units = "in")
 
+filter(sim_seq_gpsm_purebred_age, p < 4.289e-9) %>% .$SNP %>% length()
+
+plot_grid(
+  sim_seq_gpsm_purebred_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = filter(sim_seq_gpsm_age, p < 4.289e-9) %>% .$SNP,
+                 sigsnpcolor = "slateblue3")+
+    geom_hline(yintercept = 7.3, color = "blue"),
+  sim_seq_gpsm_purebred_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = filter(sim_seq_gpsm_age, p < 4.289e-9) %>% .$SNP,
+                 sigsnpcolor = "slateblue3")+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(c(2,15)),
+  sim_seq_gpsm_age %>% 
+      ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = filter(sim_seq_gpsm_purebred_age, p < 4.289e-9) %>% .$SNP,
+                 sigsnpcolor = "springgreen3")+
+      geom_hline(yintercept = 7.3, color = "blue"),
+  sim_seq_gpsm_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = filter(sim_seq_gpsm_purebred_age, p < 4.289e-9) %>% .$SNP,
+                 sigsnpcolor = "springgreen3")+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(c(2,15)),
+    nrow = 2)
+ggsave("output/figures/SIM_GPSM2.png",
+       width = 12, height = 6, units = "in")
 ```
 
 ## Chromosome 23
@@ -452,8 +480,8 @@ functional_plot
 ## Sequence vs 850K compare
 
 ```{r}
-CHR_YGPSM = read_tsv("output/200910_RAN/seq_gwas/200910_RAN.young_age.chr23.mlma.gz")
-CHR_YGPSM_CHIP = read_tsv("output/200910_RAN/gwas/200910_RAN.young_age.850K.mlma.gz") %>% 
+CHR_YGPSM = read_tsv("output/200910_RAN/seq_gwas/200910_RAN.age.chr23.mlma.gz")
+CHR_YGPSM_CHIP = read_tsv("output/200910_RAN/gwas/200910_RAN.age.850K.mlma.gz") %>% 
   filter(Chr == 23)
 
 plot_grid(
@@ -485,8 +513,7 @@ plot_grid(
       xlim(c(0,2))+
       geom_hline(yintercept = 7.3, color = "red")+
       theme_cowplot(),
-  nrow = 2,
-  labels = c("A", "B")
+  nrow = 2
 )
 ```
 
@@ -679,6 +706,171 @@ plot_grid(chr2_manhattans,
 
 ggsave("output/figures/CHR2.png", width = 12, height = 12, units = "in")
 ```
+### Age Distributions
+```{r}
+plot_grid(
+  redangus %>% 
+    select(birth_date) %>%
+    ggplot()+
+    geom_histogram(aes(x = birth_date), mutate(redangus, z = FALSE), bins = 100, fill = "indianred")+
+    geom_histogram(aes(x = birth_date), mutate(redangus, z = TRUE), bins = 250, fill = "indianred")+
+    theme_cowplot()+
+    labs(x = "Birth Date", y = "Count")+
+    facet_zoom(xlim = c(as.Date("1975-01-01"),as.Date("2012-01-01")), ylim = c(0,175), zoom.data = z, horizontal = FALSE),
+  simmental %>% 
+    select(birth_date) %>%
+    ggplot()+
+    geom_histogram(aes(x = birth_date), mutate(simmental, z = FALSE), bins = 100, fill = "dodgerblue")+
+    geom_histogram(aes(x = birth_date), mutate(simmental, z = TRUE), bins = 250, fill = "dodgerblue")+
+    theme_cowplot()+
+    labs(x = "Birth Date", y = "Count")+
+    facet_zoom(xlim = c(as.Date("1965-01-01"),as.Date("2008-01-01")), ylim = c(0,175), zoom.data = z, horizontal = FALSE), 
+  nrow = 2, labels = "AUTO")
+ggsave("output/figures/age_distribution.png", width = 10, height = 10, units = "in")
+```
+
+### GREML Residual qq-plots
+```{r}
+make_qq <- function(dd, x) {
+    dd<-dd[order(dd[[x]]), ]
+    dd$qq <- qnorm(ppoints(nrow(dd)))
+    dd
+}
+plot_grid(
+  read_blp("output/200910_RAN/greml/200910_RAN.age.850K.indi.blp") %>% 
+      left_join(redangus %>% 
+                  select(international_id, age)) %>% 
+    make_qq("Residual") %>%
+    ggplot()+
+    geom_point(aes(x = qq, y = Residual, color = age))+
+    labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+    stat_qq_line(aes(sample = Residual),color = "red")+
+    scale_color_viridis_c()+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+  make_qq("BV") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = BV, color = age))+
+  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = BV),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+  make_qq("Residual") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = Residual, color = age))+
+  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = Residual),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+  make_qq("BV") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = BV, color = age))+
+  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = BV),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  nrow = 2,
+  labels = "AUTO")
+ggsave("output/figures/raw_age_greml_qq.png", width = 10, height = 8, units = "in")
+```
+
+### Log ransformation qq-plots GREML
+```{r}
+plot_grid(
+  read_blp("output/200910_RAN/greml/200910_RAN.log_age.850K.indi.blp") %>% 
+      left_join(redangus %>% 
+                  select(international_id, age)) %>% 
+    make_qq("Residual") %>%
+    ggplot()+
+    geom_point(aes(x = qq, y = Residual, color = age))+
+    labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+    stat_qq_line(aes(sample = Residual),color = "red")+
+    scale_color_viridis_c()+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.log_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+  make_qq("BV") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = BV, color = age))+
+  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = BV),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+  make_qq("Residual") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = Residual, color = age))+
+  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = Residual),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.log_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+  make_qq("BV") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = BV, color = age))+
+  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = BV),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  nrow = 2,
+  labels = "AUTO")
+ggsave("output/figures/log_age_greml_qq.png", width = 10, height = 8, units = "in")
+```
+### Transform Manhattans Red Angus
+```{r}
+ran_gpsm_age = 
+ read_gwas("output/200910_RAN/gwas/200910_RAN.age.850K.mlma.gz")
+ran_gpsm_youngage = 
+ read_gwas("output/200910_RAN/gwas/200910_RAN.young_age.850K.mlma.gz")
+ran_gpsm_logage = 
+ read_gwas("output/200910_RAN/gwas/200910_RAN.log_age.850K.mlma.gz")
+
+ssnps = filter(ran_gpsm_logage, p < 6.17e-8) %>% .$SNP
+
+plot_grid(
+  ggmanhattan2(ran_gpsm_age,
+               prune = 0.01, 
+               sig_threshold_p = 6.17e-8,
+               sigsnps = ssnps),
+  ggmanhattan2(ran_gpsm_age,
+               prune = 0.01, 
+               sig_threshold_p = 6.17e-8,
+               sigsnps = ssnps)+
+    ylim(c(0,15)),
+  ggmanhattan2(ran_gpsm_logage,
+               prune = 0.01, 
+               sig_threshold_p = 6.17e-8),
+  ggmanhattan2(ran_gpsm_logage,
+               prune = 0.01, 
+               sig_threshold_p = 6.17e-8)+
+    ylim(c(0,15)),
+  ggmanhattan2(ran_gpsm_youngage,
+               prune = 0.01, 
+               sig_threshold_p = 6.17e-8,
+               sigsnps = ssnps),
+  ggmanhattan2(ran_gpsm_youngage,
+               prune = 0.01, 
+               sig_threshold_p = 6.17e-8,
+               sigsnps = ssnps)+
+    ylim(c(0,15)),
+  nrow = 3,
+  labels = "AUTO")
+ggsave("output/figures/transformation_manhattans.png", width = 10, height = 8, units = "in")
+```
+
 
 ### Sweep Manhattan Plots
 ```{r}
@@ -693,8 +885,7 @@ plot_grid(
     selscan_manhattans(col = Mu)+
     geom_hline(yintercept = 193.5, color = "red")+
     labs(y = expression(paste("RAiSD ", mu, " value"))),
-nrow = 2,
-labels = c("A", "B"))
+nrow = 2, align = "h")
 
 ggsave("output/figures/SIM.sweep.png", width = 12, height = 5, units = "in")
 
@@ -708,8 +899,7 @@ plot_grid(
     selscan_manhattans(col = Mu)+
     geom_hline(yintercept = 285, color = "red")+
     labs(y = expression(paste("RAiSD ", mu, " value"))),
-nrow = 2,
-labels = c("A", "B"))
+nrow = 2, align = "h")
 
 ggsave("output/figures/RAN.sweep.png", width = 12, height = 5, units = "in")
 

@@ -6,17 +6,24 @@ read_blp = function(blp_path){
   return(blp_results)
 }
 library(qvalue)
+library(tidyverse)
+
 read_gwas = function(gwas_path){
   gwas_results =
     read_tsv(gwas_path) %>%
+    filter(p < 0.01) %>%
     mutate(chrbp = paste(Chr, bp, sep = ":"),
            maf = case_when(Freq > 0.5 ~ 1-Freq,
-                           TRUE ~ Freq),
-           q = qvalue(p)$qvalues) %>%
+                           TRUE ~ Freq)) %>%
     dplyr::rename(CHR = Chr, BP = bp)
   return(gwas_results)
 }
 
+make_qq <- function(dd, x) {
+  dd<-dd[order(dd[[x]]), ]
+  dd$qq <- qnorm(ppoints(nrow(dd)))
+  dd
+}
 
 ggmanhattan2 = function(inputfile,
                         prune = 1.0,
@@ -74,9 +81,9 @@ ggmanhattan2 = function(inputfile,
          y = case_when(v == "p" ~ expression(paste(-log10, "(", italic('p'), ")")),
                        v == "q" ~ expression(paste(-log10, "(", italic('q'), ")"))))+
     theme_bw() +
-    geom_point(data = subset(don, SNP %in% sigsnps), color=sigsnpcolor, size = pointsize, alpha = 0.5) +
-    geom_point(data = subset(don, SNP %in% sigsnps2), color=sigsnpcolor2, size = pointsize, alpha = 0.5) +
-    geom_point(data = subset(don, SNP %in% sigsnps3), color=sigsnpcolor3, size = pointsize, alpha = 0.5) +
+    geom_point(data = subset(don, SNP %in% sigsnps), color=sigsnpcolor, size = pointsize, alpha = 1) +
+    geom_point(data = subset(don, SNP %in% sigsnps2), color=sigsnpcolor2, size = pointsize, alpha = 1) +
+    geom_point(data = subset(don, SNP %in% sigsnps3), color=sigsnpcolor3, size = pointsize, alpha = 1) +
     geom_hline(yintercept = case_when(v == "p" ~ -log10(sig_threshold_p),
                                       v == "q" ~ -log10(sig_threshold_q)),
                color = "red",
@@ -100,6 +107,8 @@ ggmanhattan2 = function(inputfile,
   #       axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = 2.5, face = "bold"))
   return(gwas_plot)
 }
+
+
 
 selscan_manhattans = function(inputfile,
                         col = ihs,

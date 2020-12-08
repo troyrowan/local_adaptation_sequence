@@ -183,6 +183,23 @@ sim_fam %>%
   
 ```
 
+### Comparing BoxCox Transforms
+```{r}
+
+cor(boxCoxVariable(simmental$age, lambda = 0.03446877),
+    bcPower(simmental$age, lambda = 0.0345))
+
+EnvStats::boxcox(simmental$age, optimize = TRUE)
+
+bcPower(simmental$age, lambda = 0.0345) %>% as.data.frame() %>% 
+  ggplot(aes(.))+
+  geom_histogram()
+
+out = boxcox(lm(simmental$age~1))
+
+range(out$x[out$y > max(out$y)-qchisq(0.95,1)/2])
+```
+
 ##Subsetting Purebred Simmentals
 ```{r}
 sim_fam %>%

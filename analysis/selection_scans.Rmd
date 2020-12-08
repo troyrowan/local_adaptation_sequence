@@ -865,9 +865,10 @@ sim_raisd_genes =
   filter(Mu >=193.5) %>% 
   find_genes_qtls_around_markers(db_file=genes,
                                      marker_file= ., method = "gene",
-                                     marker = "haplotype") %>%
+                                     marker = "haplotype", interval = 50000) %>%
   filter(!is.na(gene_name)) %>% 
-  left_join(sim_raisd) 
+  left_join(sim_raisd) %>% 
+  select(SNP) %>% distinct()
 
 sim_raisd %>% 
   selscan_manhattans(col = Mu)+

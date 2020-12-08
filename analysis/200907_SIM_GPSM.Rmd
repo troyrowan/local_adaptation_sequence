@@ -1020,11 +1020,12 @@ Significance threshold set at FDR < 0.10
 ```{r, eval }
 sim_pb_seq_cojo_GO =
   sim_pb_seq_cojo_genes %>% 
-  .$gene_name %>% unique() %>% 
+  .$gene_id %>% unique() %>% 
   gost(query = ., 
       organism = "btaurus",
       user_threshold = 0.1,
       correction_method = "fdr")
+sim_pb_seq_cojo_GO$result
 
 
 gostplot(sim_pb_seq_cojo_GO, capped = TRUE, interactive = TRUE)
@@ -1034,7 +1035,7 @@ gostplot(sim_pb_seq_cojo_GO, capped = TRUE, interactive = TRUE)
 ```{r, eval }
 sim_seq_cojo_GO =
   sim_seq_cojo_genes %>% 
-  .$gene_name %>% unique() %>% 
+  .$gene_id %>% unique() %>% 
   gost(query = ., 
       organism = "btaurus",
       user_threshold = 0.1,
