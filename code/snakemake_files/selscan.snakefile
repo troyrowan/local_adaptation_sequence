@@ -8,17 +8,17 @@ for x in expand("output/{run_name}/log/slurm_out/{rule}", run_name = ["200910_RA
 
 rule selscan:
 	input:
-		expand("output/{run_name}/selscan/{test}/{run_name}.{subset}.{test}.out.100bins.norm.gz",
-		test = ["nsl"],
-		run_name = ["200910_RAN"],
-		subset = ["all"]),
+		# expand("output/{run_name}/selscan/{test}/{run_name}.{subset}.{test}.out.100bins.norm.gz",
+		# test = ["nsl"],
+		# run_name = ["200910_RAN"],
+		# subset = ["all"]),
 		# expand("output/{run_name}/selscan/{test}/{run_name}.{subset}.{test}.out.100bins.norm.gz",
 		# test = ["nsl"],
 		# run_name = ["200910_RAN", "200907_SIM"],
 		# subset = ["oldest_1000", "oldest_5000", "young_1000", "young_5000","purebred"]),
-		# expand("output/{run_name}/selscan/{test}/{run_name}.{test}.out.norm.gz",
-		# test = ["xpnsl"],
-		# run_name = ["200910_RAN", "200907_SIM"])
+		expand("output/{run_name}/selscan/{test}/{run_name}.{test}.out.norm.gz",
+		test = ["xpnsl"],
+		run_name = ["200910_RAN", "200907_SIM"])
 
 
 rule tabix:

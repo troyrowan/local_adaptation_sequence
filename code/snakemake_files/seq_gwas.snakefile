@@ -9,14 +9,14 @@ for x in expand("output/{run_name}/log/psrecord/{rule}", run_name = config['run_
 
 rule envgwas:
 	input:
-		expand("output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.mlma.gz",
-		phenotype = config["phenotypes"],
-		run_name = config["run_name"],
-		chr = list(range(20,30))),
-		# expand("output/{run_name}/seq_cojo/{run_name}.{phenotype}.chr{chr}.jma.cojo",
+		# expand("output/{run_name}/seq_gwas/{run_name}.{phenotype}.chr{chr}.mlma.gz",
 		# phenotype = config["phenotypes"],
 		# run_name = config["run_name"],
-		# chr = list(range(4,30)))
+		# chr = list(range(1,30))),
+		expand("output/{run_name}/seq_cojo/{run_name}.{phenotype}.chr{chr}.jma.cojo",
+		phenotype = config["phenotypes"],
+		run_name = config["run_name"],
+		chr = list(range(1,30)))
 
 phenotype_dict = config["phenotype_dict"]
 n_dict = config["n"]
