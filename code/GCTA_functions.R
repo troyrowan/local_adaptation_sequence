@@ -19,6 +19,17 @@ read_gwas = function(gwas_path){
   return(gwas_results)
 }
 
+read_gwas2 = function(gwas_path){
+  gwas_results =
+    read_tsv(gwas_path) %>%
+      mutate(chrbp = paste(Chr, bp, sep = ":"),
+           maf = case_when(Freq > 0.5 ~ 1-Freq,
+                           TRUE ~ Freq)) %>%
+    dplyr::rename(CHR = Chr, BP = bp)
+  return(gwas_results)
+}
+
+
 make_qq <- function(dd, x) {
   dd<-dd[order(dd[[x]]), ]
   dd$qq <- qnorm(ppoints(nrow(dd)))

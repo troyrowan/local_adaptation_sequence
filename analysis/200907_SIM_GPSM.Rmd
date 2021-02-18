@@ -444,6 +444,27 @@ read_blp("output/200907_SIM/greml/200907_SIM.pb_old_age.850K.indi.blp") %>%
     theme_cowplot()
 ```
 
+### Transform GPSM Results (Chromosome 1)
+
+```{r}
+sim_age =
+  read_gwas("output/200907_SIM/gwas/single_chrom/200907_SIM.age.chr1.850K.mlma")
+
+sim_bc = 
+  read_gwas("output/200907_SIM/gwas/single_chrom/200907_SIM.bc_age.chr1.850K.mlma")
+
+sim_log = 
+  read_gwas("output/200907_SIM/gwas/single_chrom/200907_SIM.log_age.chr1.850K.mlma")
+
+plot_grid(ggmanhattan2(sim_age),
+ggmanhattan2(sim_log),
+ggmanhattan2(sim_bc),
+nrow = 3)
+
+```
+
+
+
 ## n(SigSNPs)
 
 GWAS results for the 685,120 SNPs with MAF > 0.01 in our imputed dataset. 
@@ -484,7 +505,6 @@ pb_young_age =
 
 pb_old_age = 
   read_gwas("output/200907_SIM/gwas/200907_SIM.pb_old_age.850K.mlma.gz")
-
 
 sigcheck = function(df){
 

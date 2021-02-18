@@ -32,7 +32,7 @@ library(ggforce)
 #library(MASS)
 library(tidyverse)
 library(EnvStats)
-library(optiSel)
+#library(optiSel)
 library(car)
 #source("code/GCTA_functions.R")
 ```
@@ -61,11 +61,11 @@ sim_fam =
              col_names = c("fam_id", "international_id", "sire", "dam", "sex", "phenotype"))
 
 #Counts generation number of simmentals (by various metrics)
-# sim_gens = 
-#   read_csv("data/200907_SIM/mizzou-data-request/6-gen-ped.csv")%>% 
-#     select(id = animal, sire, dam) %>% 
-#     select(Indiv = id, Sire = sire, Dam = dam) %>% 
-#     summary.Pedig()
+sim_gens =
+  read_csv("data/200907_SIM/mizzou-data-request/6-gen-ped.csv")%>%
+    select(id = animal, sire, dam) %>%
+    select(Indiv = id, Sire = sire, Dam = dam) %>% View()
+    summary.Pedig()
 
 sim_fam %>%
   left_join(filter(simmental, asa_nbr != 2326708)) %>% 
@@ -87,8 +87,18 @@ simmental =
   left_join(read_csv("data/200907_SIM/breeds.csv.gz") %>% 
   pivot_wider(names_from = brd_cd, values_from = percent) %>% 
     replace(is.na(.), 0))
-  
 
+read_tsv("C:/Users/troyrowan/Downloads/ran_longped.txt") %>%
+  na_if(0) %>%
+  select(Indiv = id, Sire = sire, Dam= dam) %>% 
+  filter(!Sire %in% .$Dam &
+        !Dam %in% .$sire) %>% 
+  summary.Pedig() %>% 
+  write_tsv("C:/Users/troyrowan/Downloads/redangus_generations.txt")
+
+read_csv("data/200907_SIM/mizzou-data-request/6-gen-ped.csv")%>%
+  select(id = animal, sire, dam) %>%
+  select(Indiv = id, Sire = sire, Dam = dam)
 ```
 
 ### Comparing %SIM over time
@@ -138,6 +148,19 @@ sim_fam %>%
   slice(1:1) %>% 
   ungroup() %>% 
   write_tsv("output/200907_SIM/phenotypes/200907_SIM.generation_proxy.txt", col_names = FALSE) 
+
+sim_fam %>% 
+  left_join(filter(simmental, 
+                   asa_nbr != 2326708)) %>% 
+  mutate(FID = international_id) %>% 
+  select(FID, IID = international_id, age) %>% 
+  distinct() %>%
+    mutate(bc_age = bcPower(age, lambda = 0.0345))%>% 
+  group_by(IID) %>% 
+  slice(1:1) %>% 
+  ungroup() %>% 
+  select(-age) %>% 
+  write_tsv("output/200907_SIM/phenotypes/200907_SIM.boxcoxrun.txt", col_names = FALSE) 
 
 
 sim_fam %>% 
@@ -195,9 +218,7 @@ bcPower(simmental$age, lambda = 0.0345) %>% as.data.frame() %>%
   ggplot(aes(.))+
   geom_histogram()
 
-out = boxcox(lm(simmental$age~1))
 
-range(out$x[out$y > max(out$y)-qchisq(0.95,1)/2])
 ```
 
 ##Subsetting Purebred Simmentals

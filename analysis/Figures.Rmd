@@ -162,6 +162,33 @@ plot_grid(
 
 ggsave("output/figures/RAN_GPSM.png",
        width = 12, height = 5, units = "in")
+
+ran_age_sigsnps = filter(ran_seq_gpsm_age, p < 5e-8) %>% .$SNP
+ran_young_age_sigsnps = filter(ran_seq_gpsm_young_age, p < 5e-8) %>% .$SNP
+plot_grid(
+  ran_seq_gpsm_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_young_age_sigsnps,
+                 sigsnpcolor = "dodgerblue")+
+    geom_hline(yintercept = 7.3, color = "blue"),
+  ran_seq_gpsm_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_young_age_sigsnps,
+                 sigsnpcolor = "dodgerblue")+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(c(2,15)),
+  ran_seq_gpsm_young_age %>% 
+      ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_age_sigsnps,
+                 sigsnpcolor = "indianred")+
+      geom_hline(yintercept = 7.3, color = "blue"),
+  ran_seq_gpsm_young_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_age_sigsnps,
+                 sigsnpcolor = "indianred")+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(c(2,15)),
+    nrow = 2, labels = c("A", "B", "C", "D"))
 ```
 
 Simmental GPSM
@@ -743,7 +770,7 @@ plot_grid(
     make_qq("Residual") %>%
     ggplot()+
     geom_point(aes(x = qq, y = Residual, color = age))+
-    labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+    labs(x = "Theoretical Res.", y = "Observed Res.", color = "Years since Birth\non 01/01/2020")+
     stat_qq_line(aes(sample = Residual),color = "red")+
     scale_color_viridis_c()+
     theme_cowplot(),
@@ -753,7 +780,7 @@ plot_grid(
   make_qq("BV") %>%
   ggplot()+
   geom_point(aes(x = qq, y = BV, color = age))+
-  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  labs(x = "Theoretical BV", y = "Observed BV", color = "Years since Birth\non 01/01/2020")+
   stat_qq_line(aes(sample = BV),color = "red")+
   scale_color_viridis_c()+
   theme_cowplot(),
@@ -763,7 +790,7 @@ plot_grid(
   make_qq("Residual") %>%
   ggplot()+
   geom_point(aes(x = qq, y = Residual, color = age))+
-  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  labs(x = "Theoretical Res.", y = "Observed Res.", color = "Years since Birth\non 01/01/2020")+
   stat_qq_line(aes(sample = Residual),color = "red")+
   scale_color_viridis_c()+
   theme_cowplot(),
@@ -773,7 +800,7 @@ plot_grid(
   make_qq("BV") %>%
   ggplot()+
   geom_point(aes(x = qq, y = BV, color = age))+
-  labs(x = "Theoretical", y = "Observed", color = "Years since Birth\non 01/01/2020")+
+  labs(x = "Theoretical BV", y = "Observed BV", color = "Years since Birth\non 01/01/2020")+
   stat_qq_line(aes(sample = BV),color = "red")+
   scale_color_viridis_c()+
   theme_cowplot(),
@@ -782,10 +809,63 @@ plot_grid(
 ggsave("output/figures/raw_age_greml_qq.png", width = 10, height = 8, units = "in")
 ```
 
+### GREML Residual qq-plots for Box-Cox Transform
+```{r}
+make_qq <- function(dd, x) {
+    dd<-dd[order(dd[[x]]), ]
+    dd$qq <- qnorm(ppoints(nrow(dd)))
+    dd
+}
+plot_grid(
+  read_blp("output/200910_RAN/greml/200910_RAN.bc_age.850K.indi.blp") %>% 
+      left_join(redangus %>% 
+                  select(international_id, age)) %>% 
+    make_qq("Residual") %>%
+    ggplot()+
+    geom_point(aes(x = qq, y = Residual, color = age))+
+    labs(x = "Theoretical Res.", y = "Observed Res.", color = "Years since Birth\non 01/01/2020")+
+    stat_qq_line(aes(sample = Residual),color = "red")+
+    scale_color_viridis_c()+
+    theme_cowplot(),
+  read_blp("output/200910_RAN/greml/200910_RAN.bc_age.850K.indi.blp") %>% 
+    left_join(redangus %>% 
+                select(international_id, age)) %>% 
+  make_qq("BV") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = BV, color = age))+
+  labs(x = "Theoretical BV", y = "Observed BV", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = BV),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.bc_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+  make_qq("Residual") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = Residual, color = age))+
+  labs(x = "Theoretical Res.", y = "Observed Res.", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = Residual),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  read_blp("output/200907_SIM/greml/200907_SIM.bc_age.850K.indi.blp") %>% 
+    left_join(simmental %>% 
+                select(international_id, age)) %>% 
+  make_qq("BV") %>%
+  ggplot()+
+  geom_point(aes(x = qq, y = BV, color = age))+
+  labs(x = "Theoretical BV", y = "Observed BV", color = "Years since Birth\non 01/01/2020")+
+  stat_qq_line(aes(sample = BV),color = "red")+
+  scale_color_viridis_c()+
+  theme_cowplot(),
+  nrow = 2,
+  labels = "AUTO")
+ggsave("output/figures/bc_age_greml_qq.png", width = 10, height = 8, units = "in")
+```
+
 ### Log ransformation qq-plots GREML
 ```{r}
 plot_grid(
-  read_blp("output/200910_RAN/greml/200910_RAN.log_age.850K.indi.blp") %>% 
+  read_blp("output/200910_RAN/greml/200910_RAN.nc_age.850K.indi.blp") %>% 
       left_join(redangus %>% 
                   select(international_id, age)) %>% 
     make_qq("Residual") %>%

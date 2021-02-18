@@ -36,6 +36,7 @@ library(DT)
 library(ggforce)
 library(vroom)
 library(qvalue)
+library(moments)
 #source("../code/annotation_functions.R")
 ```
 
@@ -430,28 +431,28 @@ sigcheck = function(df){
 }
 
 ran_gpsm_age = 
-  read_gwas("output/200910_RAN/gwas/200910_RAN.age.850K.mlma.gz")
+  read_gwas2("output/200910_RAN/gwas/200910_RAN.age.850K.mlma.gz")
 
 ran_gpsm_sqrtage = 
-  read_gwas("output/200910_RAN/gwas/200910_RAN.sqrt_age.850K.mlma.gz")
+  read_gwas2("output/200910_RAN/gwas/200910_RAN.sqrt_age.850K.mlma.gz")
 
 ran_gpsm_cbrtage = 
-  read_gwas("output/200910_RAN/gwas/200910_RAN.cbrt_age.850K.mlma.gz")
+  read_gwas2("output/200910_RAN/gwas/200910_RAN.cbrt_age.850K.mlma.gz")
 
 ran_gpsm_bcage = 
-  read_gwas("output/200910_RAN/gwas/200910_RAN.bc_age.850K.mlma.gz")
+  read_gwas2("output/200910_RAN/gwas/200910_RAN.bc_age.850K.mlma.gz")
 
 ran_gpsm_logage = 
-  read_gwas("output/200910_RAN/gwas/200910_RAN.log_age.850K.mlma.gz")
+  read_gwas2("output/200910_RAN/gwas/200910_RAN.log_age.850K.mlma.gz")
 
 ran_gpsm_youngage = 
-  read_gwas("output/200910_RAN/gwas/200910_RAN.young_age.850K.mlma.gz")
+  read_gwas2("output/200910_RAN/gwas/200910_RAN.young_age.850K.mlma.gz")
 
 ran_gpsm_younglogage = 
-  read_gwas("output/200910_RAN/gwas/200910_RAN.young_log_age.850K.mlma.gz")
+  read_gwas2("output/200910_RAN/gwas/200910_RAN.young_log_age.850K.mlma.gz")
 
 ran_gpsm_oldage = 
-  read_gwas("output/200910_RAN/gwas/200910_RAN.old_age.850K.mlma.gz")
+  read_gwas2("output/200910_RAN/gwas/200910_RAN.old_age.850K.mlma.gz")
 
 ran_gpsm_oldlogage = 
   read_gwas("output/200910_RAN/gwas/200910_RAN.old_log_age.850K.mlma.gz")
@@ -469,6 +470,25 @@ mutate(analysis = c("ran_gpsm_age", "ran_gpsm_sqrtage", "ran_gpsm_cbrtage","ran_
 select(analysis, everything()) %>% 
 datatable(caption = "Number of significant SNPs at various significance levels with different dependent variables")
   
+```
+
+
+# Checking normality of GPSM betas
+```{r}
+skewness(ran_gpsm_age$b)
+skewness(ran_gpsm_logage$b)
+skewness(ran_gpsm_bcage$b)
+
+skewness(redangus$age)
+
+ran_gpsm_age %>% 
+  ggplot(aes(b))+
+  geom_histogram()
+
+
+skewness(rnorm(n = 800000, mean = 0, sd = 0.051))
+
+
 ```
 
 
@@ -779,6 +799,11 @@ ran_seq_gpsm_old_age_age %>%
 
 ```
 
+#### Testing normality of GPSM betas
+```{r}
+
+```
+
 
 ### Manhattan Plots {.tabset}
 
@@ -916,7 +941,7 @@ ran_nsl_window =
   read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.windows.txt") %>% 
   mutate(nsl_win = abs(Wstat),
          SNP = paste(CHR, BP, sep = ":")) 
-  
+
 ```
 
 
@@ -961,6 +986,28 @@ ran_young_seq_cojo =
     purrr::reduce(bind_rows)
 
 ```
+
+###Genic region enrichment
+I'm guessing that these are going to end up all not being significant.
+
+```{r}
+genes %>% 
+  filter(chr == 1) %>% 
+  mutate(bp = map2(.x = start_pos, .y = end_pos, .f = ~seq(.x,.y))) %>% 
+  unnest(bp) %>%
+  select(chr, bp) %>% 
+  unique()
+  
+
+#Base Pairs of genes in autosomes
+
+957545734
+
+#Total autosomal base pairs
+phyper(76, 957545734, 1619298914, 248, lower.tail = FALSE)
+
+```
+
 
 ### COJO SNP overlap
 ```{r}
@@ -1086,11 +1133,11 @@ ran_age_seq_cojo_FAETH %>%
 
 
 ### Gene Annotations for COJO hits:
-
+ 
 For outputting unique gene lists
-```{r}
+```{r} 
 ran_age_seq_cojo %>% 
-  gene_annotation(search_bp = 50000) %>% 
+  gene_annotation(search_bp = 50000) %>% View()
     left_join(ran_age_seq_cojo, 
               by = c("CHR", "BP")) %>% 
   select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
@@ -1099,7 +1146,25 @@ ran_age_seq_cojo %>%
   unique() %>% 
   write_tsv("output/200910_RAN/genes/200910_RAN.age.gpsm.genes.50kb.txt",
             col_names = FALSE)
+#Output for genewalk
+read_tsv("output/200910_RAN/genes/200910_RAN.age.gpsm.cojogenes.50kb.txt") %>% 
+  arrange(log10(p)) %>% 
+  filter(!is.na(gene_name)) %>% 
+  select(gene_id) %>% .$gene_id %>%  
+  gprofiler2::gorth(source_organism = "btaurus", target_organism = "hsapiens") %>% 
+  select(ortholog_ensg) %>% 
+  unique() %>% 
+  write_tsv("output/200910_RAN/genes/200910_RAN.age.gpsm.genes.50kb.humanortho.txt", col_names = FALSE)
 
+ read_tsv("output/200910_RAN/genes/200910_RAN.age.gpsm.cojogenes.50kb.txt") %>% 
+  arrange(log10(p)) %>% 
+  filter(!is.na(gene_name)) %>% 
+  select(gene_id) %>% .$gene_id %>%  
+  gprofiler2::gorth(source_organism = "btaurus", target_organism = "hsapiens") %>% 
+  select(ortholog_ensg) %>% 
+  unique() %>% 
+  write_tsv("output/200910_RAN/genes/200910_RAN.young_age.gpsm.genes.50kb.humanortho.txt", col_names = FALSE)   
+    
 ran_young_seq_cojo %>% 
   gene_annotation(search_bp = 50000) %>% 
     left_join(ran_young_seq_cojo, 
@@ -1161,6 +1226,7 @@ ran_age_seq_cojo_genes =
     select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
   select(gene_name) %>% 
   distinct() %>% 
+  filter(!is.na(gene_name)) %>% 
   .$gene_name
 
 sweeps = read_csv("data/meata_sweeeps.csv")
@@ -1185,7 +1251,8 @@ ran_young_seq_cojo_genes =
                 by = c("CHR", "BP")) %>% 
     select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
   select(gene_name) %>% 
-  distinct() %>% 
+  distinct() %>%
+  filter(!is.na(gene_name)) %>% 
   .$gene_name
 
 sweeps = read_csv("data/meata_sweeeps.csv")
@@ -1217,13 +1284,22 @@ sweeps %>%
 
 ### Shared Genes beetween FULL and YOUNG datasets
 ```{r}
-intersect(ran_age_seq_cojo_genes, ran_young_seq_cojo_genes) %>% 
-  length()
+intersect(ran_age_seq_cojo_genes, ran_young_seq_cojo_genes)
 
 length(ran_young_seq_cojo_genes)
 length(ran_age_seq_cojo_genes)
 
-filter
+bind_rows(ran_age_seq_cojo %>% 
+            filter(p < 5e-8) %>% 
+            mutate(dataset = "AGE"), 
+          ran_young_seq_cojo %>% 
+            filter(p < 5e-8) %>% 
+            mutate(dataset = "YOUNG")) %>% 
+  arrange(CHR,BP) %>% 
+  group_by(CHR) %>% 
+  mutate(distance = BP - lag(BP, 1)) %>% View()
+  filter(dataset == "AGE",
+         distance > 1000000)
 ```
 
 
@@ -1393,6 +1469,41 @@ ran_young_seq_cojo_functional %>%
   upset(nsets = 20, order.by = "freq")
 
 ```
+### Hypergeometric test of significant marks
+
+Base pairs covered by each of the following epigenetic marks:
+H3K27ac = 225,723,813 bp, ~8% of genome, binomial p-value = 6.6e-7
+H3K4me1 = 182,645,598
+
+```{r}
+# ATAC
+#binom.test(34, 248, , alternative = "greater")
+# CTCF
+binom.test(18, 248, 0.067, alternative = "greater")
+# H3K27ac
+binom.test(16, 248, 0.081, alternative = "greater")
+# H3K27me3
+#binom.test(63, 248, , alternative = "greater")
+# H3K4me1
+binom.test(17, 248, 0.065, alternative = "greater")
+# H3K4me3
+binom.test(5, 248, 0.026, alternative = "greater")
+```
+#### For young animals only:
+```{r}
+# ATAC
+#binom.test(84, 417, , alternative = "greater")
+# CTCF
+binom.test(31, 417, 0.067, alternative = "greater")
+# H3K27ac
+binom.test(32, 417, 0.081, alternative = "greater")
+# H3K27me3
+#binom.test(112, 417, , alternative = "greater")
+# H3K4me1
+binom.test(28, 417, 0.065, alternative = "greater")
+# H3K4me3
+binom.test(15, 417, 0.026, alternative = "greater")
+```
 
 
 ### Testing significance of annotated marks
@@ -1532,10 +1643,20 @@ read_tsv("output/200910_RAN/cojo/200910_RAN.age.850K.jma.cojo.gz") %>%
 
 ```{r}
 RAN_Tajima = read_tsv("output/200910_RAN/200910_RAN.1kbulls.Tajima.D")
-
+filter(RAN_Tajima, 
+       CHROM == 23, BIN_START < 2000000, BIN_START > 1000000) %>% 
+  filter(TajimaD > 2)
 CHR23TD %>% 
   select(CHR = CHROM, BP = BIN_START, TajimaD, SNP = N_SNPS) %>%
   selscan_manhattans(col = TajimaD)
+
+RAN_Tajima %>% 
+  ggplot(aes(TajimaD))+
+  geom_density()
+RAN_Tajima %>% 
+  top_frac(0.1, wt = TajimaD) %>% 
+  .$TajimaD %>% 
+  min()
 
 ```
 

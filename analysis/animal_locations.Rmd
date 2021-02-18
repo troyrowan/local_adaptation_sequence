@@ -730,7 +730,7 @@ redangus %>%
   select(dummyfam, international_id, HighPlains, UpperMidwest, AridPrairie, CornBelt, Foothills, ForestedMountains, FescueBelt, Southeast, Desert) %>% 
   left_join(ran_envvars) %>% 
   select(dummyfam, international_id, meantemp, precip, elev, minvap, maxvap, mintemp, maxtemp, dewpoint, lat, long, HighPlains, UpperMidwest, AridPrairie, CornBelt, Foothills, ForestedMountains, FescueBelt, Southeast, Desert) %>% 
-  write_tsv("output/200910_RAN/phenotypes/200910_RAN.noLSF.allenv.txt")
+  write_tsv("../output/200910_RAN/phenotypes/200910_RAN.noLSF.allenv.txt")
 
 redangus%>% 
   mutate(region = case_when(breeder_zip == "51018" ~ NA_character_,

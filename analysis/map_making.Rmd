@@ -539,3 +539,23 @@ k9_all %>%
       ggtitle(paste("    All Variables, k = 9, Seed #1"))
 ```
 
+### Updating Harly's Zip Code Decoder with all variable k = 9 data
+```{r}
+
+read_csv("../data/ecoregion_key.csv") %>% 
+  mutate(x = round(lng, digits = 1),
+         y = round(lat, digits = 1)) %>% 
+  left_join(k9_all %>% 
+              mutate(x = round(x, digits = 1),
+                     y = round(y, digits = 1))) %>% 
+  distinct() %>% View()
+  rename(threevar_ecoregion = desc, allvar_ecoregion = region) %>% 
+  select(-x, -y) %>% 
+  write_csv("ecoregion_decoder.csv")
+  fuzzy_left_join(k9_all, by = c("lat" = "y" , "lng" = "x"), match_fun = )
+
+k9_all %>% 
+  write_csv("k9_all.csv")
+ 
+```
+

@@ -10,7 +10,7 @@ genwin = function(selscandf, chr){
   tmpdf = filter(selscandf,
                  CHR == chr)
   windows =
-    GenWin::splineAnalyze(Y = tmpdf$norm_nsl,
+    GenWin::splineAnalyze(Y = abs(tmpdf$norm_nsl),
                           map = tmpdf$BP) %>%
     .$windowData
   return(windows)
@@ -21,7 +21,7 @@ n_cores = availableCores() - 1
 plan(multicore, workers = 30)
 
 pb_sim_nsl =
-  read_tsv("200907_SIM.purebred.nsl.our.100bins.norm.gz",
+  read_tsv("200907_SIM.purebred.nsl.out.100bins.norm.gz",
            col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig")) %>%
   mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
          SNP = paste(CHR, BP, sep = ":"))
@@ -41,7 +41,7 @@ seq(1,29) %>%
 
 
 all_sim_nsl =
-  read_tsv("200907_SIM.somesim.nsl.our.100bins.norm.gz",
+  read_tsv("200907_SIM.somesim.nsl.out.100bins.norm.gz",
            col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig")) %>%
   mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
          SNP = paste(CHR, BP, sep = ":"))
@@ -61,7 +61,7 @@ seq(1,29) %>%
 
 
 ran_nsl =
-  read_tsv("200910_RAN.all.nsl.our.100bins.norm.gz",
+  read_tsv("200910_RAN.all.nsl.out.100bins.norm.gz",
            col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig")) %>%
   mutate(CHR = as.numeric(str_split_fixed(SNP, ":", n = 4)[,1]),
          SNP = paste(CHR, BP, sep = ":"))

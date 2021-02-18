@@ -727,10 +727,16 @@ ran_raisd_genes =
 length(unique(ran_raisd_genes$gene_name))
 
 ran_raisd %>%
+  filter(Mu > 355) %>% 
+  group_by(CHR) %>% 
+  mutate(dist = BP - lag(BP, 1)) %>% 
+  filter(is.na(dist) | dist > 100000)
+  filter(CHR == 29) %>% 
   selscan_manhattans(col = Mu)+
   geom_hline(yintercept = 355,
                color = "red")  
 
+sum(c(20, 25, 12, 25, 16, 11, 11, 13, 6, 4, 14, 13, 11, 16, 8, 16, 2, 4, 7, 4, 11, 9, 5, 4, 4, 9, 6, 6, 4))
 ```
 ####nSL overlaps
 ```{r}
@@ -891,6 +897,12 @@ ran_raisd_genes %>%
   top_n(1, wt = Mu) %>% 
   select(CHR, BP1, BP2, Mu, gene_id, gene_name, start_pos, end_pos) %>% write_tsv("analysis/genes.txt") 
 
+
+sim_raisd %>%
+   filter(Mu > 355) %>% 
+   group_by(CHR) %>% 
+   mutate(dist = BP - lag(BP, 1)) %>% 
+   filter(is.na(dist) | dist > 100000)
 ```
 
 #### Selection Signature Overlaps
