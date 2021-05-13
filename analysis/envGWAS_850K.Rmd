@@ -1,0 +1,152 @@
+---
+title: "envGWAS_850K"
+author: "Troy Rowan"
+date: "2021-03-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, setup, include = FALSE}
+set.seed(325333)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(workflowr)
+library(knitr)
+library(maps)
+library(ggthemes)
+library(purrr)
+library(factoextra)
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(pedigree)
+library(qvalue)
+library(GALLO)
+library(cowplot)
+library(gprofiler2)
+library(DT)
+library(UpSetR)
+library(kableExtra)
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+```{r}
+source("code/GCTA_functions.R")
+#source("code/annotation_functions.R")
+
+```
+
+# Simmental 
+### 850K envGWAS
+```{r}
+sim_envgwas = 
+  # list.files("output/200907_SIM/gwas") %>% 
+  #   map(
+  #     ~read_gwas2(paste0("output/200907_SIM/gwas/", .x)) %>% 
+  #       mutate(variable = .x)) %>% 
+  #   reduce(bind_rows) %>% 
+  # mutate(variable = str_replace(variable, pattern = "200907_SIM.", ""),
+  #        variable = str_replace(variable, pattern = ".850K.mlma.gz", ""))
+  # read_csv("output/200907_SIM/gwas/200907_SIM.AllGWAS.850K.mlma.gz",
+  #          col_types = cols(SNP = col_character(), chrbp = col_character()))
+  read_csv("output/200907_SIM/gwas/tester.gwas.txt",
+           col_types = cols(SNP = col_character(), chrbp = col_character()))
+
+# sim_envgwas %>% 
+#   sample_n(500000) %>% 
+#   write_csv("output/200907_SIM/gwas/tester.gwas.txt")
+
+sim_multisig = 
+  filter(sim_envgwas, p < 1e-5) %>% 
+  count(SNP, sort = TRUE)%>%
+  filter(n>1) %>% 
+  .$SNP
+
+``` 
+
+```{r, results = 'asis'}
+cat('## Simmental 850K envGWAS {.tabset}   \n')
+invisible(
+  sim_envgwas %>% 
+      dplyr::group_split(variable) %>% 
+      purrr::imap(.,~{
+        # create tabset for each group 
+        cat('### Tab',.y,'   \n')
+        cat('\n')
+        #p <- ggmanhattan2(filter(.x, p < 0.1), sigsnps = sim_multisig)
+        p <- filter(.x, p < 0.1) %>% ggplot(aes(CHR, BP))+geom_point()
+        cat(as.character(htmltools::tagList(p)))
+      })
+)
+```
+
+<!-- ### Number of significant SNPs in each analysis at 850K level  -->
+
+<!-- ```{r} -->
+<!-- filter(sim_envgwas, q < 0.1) %>%  -->
+<!--   count(variable)%>% -->
+<!--   kbl() %>% -->
+<!--   kable_styling() -->
+<!-- ``` -->
+
+<!-- ### Number of SNPs that are shared across analyses: -->
+<!-- ```{r} -->
+<!-- filter(sim_envgwas, p < 1e-5) %>%  -->
+<!--   count(SNP, sort = TRUE)%>% -->
+<!--   filter(n>1) %>%  -->
+<!--   kbl() %>% -->
+<!--   kable_styling() -->
+<!-- ``` -->
+
+<!-- # Red Angus -->
+
+<!-- ### 850K envGWAS -->
+<!-- ```{r} -->
+
+<!-- ran_envgwas =  -->
+<!--   # list.files("output/200910_RAN/gwas") %>% -->
+<!--   #   map( -->
+<!--   #     ~read_gwas2(paste0("output/200910_RAN/gwas/", .x)) %>% -->
+<!--   #       mutate(variable = .x)) %>% -->
+<!--   #   reduce(bind_rows) %>% -->
+<!--   # mutate(variable = str_replace(variable, pattern = "200910_RAN.", ""), -->
+<!--   #        variable = str_replace(variable, pattern = ".850K.mlma.gz", ""), -->
+<!--   #        variable = str_replace(variable, pattern = "_noLSF", "")) -->
+
+<!-- #write_csv(ran_envgwas, "output/200910_RAN/gwas/200910_RAN.AllGWAS.850K.mlma.gz") -->
+<!--   read_csv("output/200910_RAN/gwas/200910_RAN.AllGWAS.850K.mlma.gz", -->
+<!--            col_types = cols(SNP = col_character(), chrbp = col_character())) %>%  -->
+<!--   filter(CHR < 30) -->
+
+<!-- ran_multisig =  -->
+<!--   filter(ran_envgwas, p < 1e-5) %>%  -->
+<!--   count(SNP, sort = TRUE)%>% -->
+<!--   filter(n>1) %>%  -->
+<!--   .$SNP -->
+
+<!-- unique(ran_envgwas$variable) %>% -->
+<!--   purrr::map(~ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = q, sigsnps = ran_multisig)+ -->
+<!--                ggtitle(.x)) -->
+
+<!-- ```  -->
+
+<!-- ### Number of significant SNPs in each analysis at 850K level  -->
+
+<!-- ```{r} -->
+<!-- filter(ran_envgwas, q < 0.1) %>%  -->
+<!--   count(variable)%>% -->
+<!--   kbl() %>% -->
+<!--   kable_styling() -->
+<!-- ``` -->
+
+<!-- ### Number of SNPs that are shared across analyses: -->
+<!-- ```{r} -->
+<!-- filter(ran_envgwas, p < 1e-5) %>%  -->
+<!--   count(SNP, sort = TRUE)%>% -->
+<!--   filter(n>1) %>%  -->
+<!--   kbl() %>% -->
+<!--   kable_styling() -->
+<!-- ``` -->
