@@ -252,11 +252,12 @@ ran_nsl =
   read_tsv("output/selscan_window/200910_RAN.all.nsl.out.100bins.norm.windows.txt",
            #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
            col_types = cols(SNP = col_character(), window = col_character())) %>% 
-    group_by(window) %>% 
-    mutate(prop_sig = sum(sig)/n()) %>% 
-    select(window, prop_sig) %>% 
-    distinct() %>% 
-    select(window, prop_sig) %>% 
+    group_by(window) %>%
+    summarize(MeanY = mean(abs(norm_nsl))) %>% 
+    # mutate(prop_sig = sum(sig)/n()) %>% 
+    # select(window, prop_sig) %>% 
+    distinct() %>% ungroup()
+    #select(window, prop_sig) %>% 
     left_join(read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.windows.txt", 
                        col_type = cols(SNP = col_character())),
               by = c("window"="SNP")) %>% 
@@ -685,7 +686,7 @@ We use all biallelic variants in these calculations to kepe the SFS as close to 
 
 ### Red Angus
 
-Top 0.05% of SNPs = Mu > 285
+Top 0.05% of SNPs = Mu > 355
 Top 0.5% of SNPs = Mu > 
 ```{r}
 ran_raisd =
@@ -695,7 +696,7 @@ ran_raisd =
                  skip = 1,
                  delim = "\t",
                  col_names = c("BP", "start", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
-        filter(Mu > 100) %>% 
+        #filter(Mu > 100) %>% 
         mutate(CHR = .x,
                SNP = paste(CHR, BP, sep = ":"))) %>% 
     reduce(bind_rows)
@@ -858,7 +859,7 @@ sim_raisd =
                  skip = 1,
                  delim = "\t",
                  col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
-        filter(Mu > 100) %>% 
+        #filter(Mu > 100) %>% 
         mutate(CHR = .x,
                SNP = paste(CHR, BP, sep = ":"))
       ) %>% 

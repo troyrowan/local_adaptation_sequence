@@ -46,7 +46,6 @@ simmental = read_csv("output/200907_SIM/phenotypes/200907_SIM.info.csv") %>%
   left_join(read_csv("data/200907_SIM/breeds.csv.gz") %>% 
   pivot_wider(names_from = brd_cd, values_from = percent) %>% 
     replace(is.na(.), 0))
-
 colnames(simmental)
 ```
 
@@ -769,20 +768,34 @@ sim_seq_gpsm_age =
                 filter(p < 0.01)) %>% 
     purrr::reduce(bind_rows)
 
-sim_seq_gpsm_purebred_age = 
-  seq(1,29) %>% 
+sim_seq_gpsm_age = #read_csv("output/200907_SIM/seq_gwas/200907_SIM.full_age.combined.mlma.gz")
+  seq(1,29) %>%
+    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.full_age.chr",.x,".mlma.gz")) %>% 
+                 filter(p < 0.01)) %>%
+    purrr::reduce(bind_rows) 
+#   filter(!is.na(p), p > 0) %>% 
+#   mutate(q = qvalue(p)$qvalues) %>% 
+#   filter(p<0.01)
+#write_csv(sim_seq_gpsm_age, "output/200907_SIM/seq_gwas/200907_SIM.full_age.combined.mlma.gz"))
+
+sim_seq_gpsm_purebred_age = #read_csv("output/200907_SIM/seq_gwas/200907_SIM.pb_age.combined.mlma.gz") 
+  seq(1,29) %>%
     purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.pb_age.chr",.x,".mlma.gz")) %>% 
-                 filter(p < 0.01)) %>% 
-    purrr::reduce(bind_rows)
+                 filter(p < 0.01)) %>%
+    purrr::reduce(bind_rows) 
+#   filter(!is.na(p), p > 0) %>% 
+#   mutate(q = qvalue(p)$qvalues) %>% 
+#   filter(p<0.01)
+#write_csv(sim_seq_gpsm_purebred_age, "output/200907_SIM/seq_gwas/200907_SIM.pb_age.combined.mlma.gz")
 
 sim_seq_gpsm_purebred_sigsnps =
   sim_seq_gpsm_purebred_age %>% 
-  filter(p < 4.289e-9) %>% 
+  filter(p < 5e-8) %>% 
   .$SNP
 
 sim_seq_gpsm_sigsnps =
   sim_seq_gpsm_age %>% 
-  filter(p < 4.289e-9) %>% 
+  filter(p < 5e-8) %>% 
   .$SNP
 
 sim_seq_gpsm_purebred_age %>% 
@@ -790,6 +803,86 @@ sim_seq_gpsm_purebred_age %>%
   View()
 ```
 
+## Sequence-imputed COJO
+[COJO documentation](https://cnsgenomics.com/software/gcta/#COJO)
+
+[COJO citation](https://www.nature.com/articles/ng.2213)
+
+Used `--cojo-slct` procedure with a significance cutoff of 5e-8
+
+Reading in single-chromosome COJO files.
+```{r}
+sim_pb_seq_cojo = 
+  list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.pb_age.chr") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200907_SIM/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1)  %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
+    purrr::reduce(bind_rows) %>% 
+  filter(p < 5e-8)
+
+sim_pb_seq_cojo %>% 
+  select(SNP) %>% 
+  write_tsv("output/200907_SIM/seq_cojo/200907_SIM.purebred.cojosnps.txt",
+            col_names = FALSE)
+
+
+sim_pb_seq_cojo_genes =
+  sim_pb_seq_cojo %>% 
+    gene_annotation() %>% 
+      left_join(sim_pb_seq_cojo, 
+                by = c("CHR", "BP")) %>% 
+    select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
+  left_join(sim_pb_seq_cojo)
+
+
+sim_seq_cojo = 
+  list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.full_age") %>% 
+  purrr::map(
+  ~read_tsv(paste0("output/200907_SIM/seq_cojo/",.x),
+           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
+           skip = 1)  %>% 
+    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
+    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
+    purrr::reduce(bind_rows)  %>% View()
+  filter(p < 5e-8)
+
+sim_seq_cojo %>% 
+  select(SNP) %>% 
+  write_tsv("output/200907_SIM/seq_cojo/200907_SIM.full.cojosnps.txt",
+            col_names = FALSE)
+
+
+sim_seq_cojo_genes =
+  sim_seq_cojo %>% 
+    gene_annotation() %>% 
+      left_join(sim_seq_cojo, 
+                by = c("CHR", "BP")) %>% 
+    select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream)
+
+
+filter(sim_seq_cojo,
+       SNP %in% sim_pb_seq_cojo$SNP)
+
+
+sim_pb_seq_cojo %>% 
+  gene_annotation() %>% 
+  #   right_join(sim_pb_seq_cojo, 
+  #             by = c("CHR", "BP")) %>% 
+  # select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>%
+  select(gene_id) %>% 
+  write_tsv("output/200907_SIM/genes/200907_SIM.pb_age.gpsm.cojogenes.50kb.txt") 
+
+sim_seq_cojo %>% 
+  gene_annotation() %>% 
+    right_join(sim_pb_seq_cojo, 
+              by = c("CHR", "BP")) %>% 
+  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>%
+  select(gene_id) %>% 
+  write_tsv("output/200907_SIM/genes/200907_SIM.age.gpsm.cojogenes.50kb.txt") 
+```
 
 ### Manhattan Plots {.tabset}
 
@@ -800,7 +893,7 @@ sim_seq_gpsm_purebred_age %>%
   ggmanhattan2(sig_threshold_p = 4.289e-9,
                sigsnps = sim_pb_seq_cojo$SNP)+
   ggtitle("Purebred Simmental Age GPSM")+
-  geom_hline(yintercept = 7.3, color = "blue")
+  geom_hline(yintercept = 7.3, color = "blue", size = 0.25)
 ```
 
 #### Full  Simmental Manhattan Plot
@@ -809,7 +902,7 @@ sim_seq_gpsm_age %>%
   ggmanhattan2(sig_threshold_p = 4.289e-9,
                sigsnps = sim_seq_cojo$SNP)+
   ggtitle("Full Simmental GPSM")+
-  geom_hline(yintercept = 7.3, color = "blue")
+  geom_hline(yintercept = 7.3, color = "blue", size = 0.25)
 ```
 
 #### Single Chromosome (Still RAN, copied code)
@@ -877,76 +970,6 @@ ran_nsl_window =
   mutate(nsl_win = abs(Wstat),
          SNP = paste(CHR, BP, sep = ":")) 
   
-```
-
-
-## Sequence-imputed COJO
-
-
-[COJO documentation](https://cnsgenomics.com/software/gcta/#COJO)
-
-[COJO citation](https://www.nature.com/articles/ng.2213)
-
-Used `--cojo-slct` procedure with a significance cutoff of 5e-8
-
-Reading in single-chromosome COJO files.
-```{r}
-sim_pb_seq_cojo = 
-  list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.pb_age.chr") %>% 
-  purrr::map(
-  ~read_tsv(paste0("output/200907_SIM/seq_cojo/",.x),
-           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
-           skip = 1)  %>% 
-    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
-    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
-    purrr::reduce(bind_rows) 
-
-sim_pb_seq_cojo %>% 
-  select(SNP) %>% 
-  write_tsv("output/200907_SIM/seq_cojo/200907_SIM.purebred.cojosnps.txt",
-            col_names = FALSE)
-
-
-sim_pb_seq_cojo_genes =
-  sim_pb_seq_cojo %>% 
-    gene_annotation() %>% 
-      left_join(sim_pb_seq_cojo, 
-                by = c("CHR", "BP")) %>% 
-    select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% 
-  left_join(sim_pb_seq_cojo)
-
-
-sim_seq_cojo = 
-  list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.full_age") %>% 
-  purrr::map(
-  ~read_tsv(paste0("output/200907_SIM/seq_cojo/",.x),
-           col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
-           skip = 1)  %>% 
-    mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
-    select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
-    purrr::reduce(bind_rows) 
-
-sim_seq_cojo %>% 
-  select(SNP) %>% 
-  write_tsv("output/200907_SIM/seq_cojo/200907_SIM.full.cojosnps.txt",
-            col_names = FALSE)
-
-
-sim_seq_cojo_genes =
-  sim_seq_cojo %>% 
-    gene_annotation() %>% 
-      left_join(sim_seq_cojo, 
-                by = c("CHR", "BP")) %>% 
-    select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream)
-filter(sim_seq_cojo,
-       SNP %in% sim_pb_seq_cojo$SNP)
-
-
-sim_pb_seq_cojo %>% 
-  gene_annotation() %>% 
-    right_join(sim_pb_seq_cojo, 
-              by = c("CHR", "BP")) %>% 
-  select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream) %>% write_tsv("output/200907_SIM/genes/200907_SIM.pb_age.gpsm.cojogenes.50kb.txt") 
 ```
 
 ### Gene overlap with other sweep regions
@@ -1067,7 +1090,6 @@ gostplot(sim_seq_cojo_GO, capped = TRUE, interactive = TRUE)
 
 ### QTL Enrichments {.tabset}
 
-
 Removed milk-associated QTL, perform enrichment on whole genome QTL and by chromosome
 
 #### Purebred (Genome)
@@ -1077,7 +1099,7 @@ sim_pb_seq_cojo %>%
   filter(QTL_type != "Milk") %>% 
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
-  datatable()
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
 ```
 
 #### Full Dataset (Genome)
@@ -1087,7 +1109,7 @@ sim_seq_cojo %>%
   filter(QTL_type != "Milk") %>% 
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
-  datatable()
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
 ```
 
 #### purebred (per-Chromosome)
@@ -1095,19 +1117,19 @@ sim_seq_cojo %>%
 sim_pb_seq_cojo %>% 
   qtl_annotation() %>% 
   filter(QTL_type != "Milk") %>% 
-  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
-  datatable()
+  select(QTL, CHR, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
 ```
 
-#### Young (per-chromosme)
+#### All Simmentals (per-chromosme)
 ```{r}
-ran_young_seq_cojo %>% 
+sim_seq_cojo %>% 
   qtl_annotation() %>% 
   filter(QTL_type != "Milk") %>% 
-  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "Chromosome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
-  datatable()
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
 ```
 
 ### FAETH Scores of Significant loci
@@ -1173,13 +1195,9 @@ sim_seq_cojo_functional %>%
 
 intersect(sim_seq_cojo$SNP, ran_young_seq_cojo$SNP)
 
-upset(movies, nsets = 6, number.angles = 30, point.size = 3.5, line.size = 2, 
-    mainbar.y.label = "Genre Intersections", sets.x.label = "Movies Per Genre", 
-    text.scale = c(1.3, 1.3, 1, 1, 2, 0.75))
 ```
 
 ### Gene overlap with nSL regions
-
 
 ```{r}
 
@@ -1192,4 +1210,48 @@ map2(.x = sim_pb_seq_cojo$CHR, .y = sim_pb_seq_cojo$BP,
   reduce(bind_rows) 
 
 
+```
+
+
+### FAETH Score Annotations for COJO Hits
+1) Write out SNP names, will just use grep in `joinable_FAETH_ARS.txt` file to find these SNPs as reading in isn't exactly helpful
+2) Read them in and compare to distribution of FAETH scores for each 
+Commands:
+
+```{bash}
+> grep  "1:3352625 \|1:61531249 \|1:73642610 \|1:77725549 \|1:83366220 \|1:116426585 \|1:138174200 \|1:148977866 \|10:15230809 \|10:72150020 \|11:9618528 \|11:10320067 \|11:35298587 \|11:40622540 \|12:10389893""13:5265127 \|13:54972441 \|13:62953764 \|14:28004 \|14:49287354 \|14:73484234 \|15:12560656 \|16:19306230 \|16:68139329 \|16:69753875 \|16:80472677 \|18:17601507 \|19:5623613 \|19:9112394 \|19:41125865""19:41424654 \|19:41455508 \|19:41475958 \|19:50003578 \|19:61356130 \|2:8446150 \|2:18746402 \|2:55376156 \|2:110497930 \|20:239032 \|20:403389 \|20:551322 \|21:9215988 \|21:13262130 \|21:53926949""21:60287401 \|22:217161 \|22:4210516 \|22:29060571 \|22:35870837 \|22:53287768 \|23:1215338 \|23:1364693 \|23:1703480 \|24:22906902 \|24:37710027 \|24:42694930 \|24:53373647 \|24:54440833 \|25:103091 \|25:31611386 \|26:336694 \|26:637478 \|26:15479911 \|26:23177966 \|26:29267776 \|26:30204705 \|26:43873418 \|26:49218021 \|27:25401227 \|27:25461238 \|27:43137915 \|28:453022 \|28:651415 \|28:653959 \|28:734840 \|28:22269385 \|28:28655083 \|28:44729927 \|29:36699558 \|3:41051147 \|3:80968000 \|4:9041671 \|4:80519900 \|4:94308044 \|4:109250336 \|5:57493686 \|5:57634610 \|5:93614140 \|5:99045153 \|6:18953217 \|6:32793962 \|6:37125595 \|6:56131336 \|6:66912346 \|6:69611972 \|6:88028948 \|7:87911770 \|7:88579496 \|7:98762847 \|8:61247 \|8:30539090 \|9:9797726 \|9:35655076 \|9:70486526 \|9:78588331 \|9:85445646 \|9:102588250" data/FAETH_intermediates/joinable_FAETH_ARS.txt.gz >  output/200907_SIM/seq_cojo/FAETH/200907_SIM.full.cojo.FAETH.txt
+
+> zgrep "10:79754801 \|11:22050073 \|11:87285051 \|14:28004 \|15:12562669 \|19:41531506 \|23:48871744 \|24:16995085 \|27:34027409 \|28:456198 \|3:64753653 \|3:114578270 \|4:118488747 \|5:57260953 \|5:57681446 \|5:104937352 \|6:69949875 \|8:61247" data/FAETH_intermediates/joinable_FAETH_ARS.txt.gz > output/200907_SIM/seq_cojo/FAETH/200907_SIM.purebred.cojo.FAETH.txt
+```
+
+The top 1/2 FAETH score cutoff = 1.48e-8
+The top 1/3 FAETH score cutoff = 1.60e-8
+```{r}
+sim_seq_cojo_FAETH = 
+  read_delim("output/200907_SIM/seq_cojo/FAETH/200907_SIM.full.cojo.FAETH.txt",
+           col_names = c("SNP", "UMDSNP", "CHR", "BP", "bull.FAETH1.1", "cow.FAETH1.1", "annotation", "aseQTL", "eeQTL", "geQTL", "bull.ldscore50kb", "bull.maf", "ChIPSeq", "mQTL", "selection.sig", "young", "variant.density50kb", "sQTL", "conserved100way", "cow.ldscore50kb", "cow.maf"), 
+           col_type = cols(SNP = col_character()),
+           delim = " ") %>% 
+  mutate(FAETH = (bull.FAETH1.1 + cow.FAETH1.1)/2,
+         top_half = case_when(FAETH >= 1.48e-8 ~ TRUE,
+                              TRUE ~ FALSE),
+         top_third = case_when(FAETH >= 1.60e-8 ~ TRUE,
+                              TRUE ~ FALSE))
+
+sim_pb_seq_cojo_FAETH = 
+  read_delim("output/200907_SIM/seq_cojo/FAETH/200907_SIM.purebred.cojo.FAETH.txt",
+           col_names = c("SNP", "UMDSNP", "CHR", "BP", "bull.FAETH1.1", "cow.FAETH1.1", "annotation", "aseQTL", "eeQTL", "geQTL", "bull.ldscore50kb", "bull.maf", "ChIPSeq", "mQTL", "selection.sig", "young", "variant.density50kb", "sQTL", "conserved100way", "cow.ldscore50kb", "cow.maf"),
+           col_type = cols(SNP = col_character()),
+           delim = " ") %>% 
+  mutate(FAETH = (bull.FAETH1.1 + cow.FAETH1.1)/2,
+         top_half = case_when(FAETH >= 1.48e-8 ~ TRUE,
+                              TRUE ~ FALSE),
+         top_third = case_when(FAETH >= 1.60e-8 ~ TRUE,
+                              TRUE ~ FALSE))
+
+
+sim_seq_cojo_FAETH %>% count(top_half)
+sim_seq_cojo_FAETH %>% count(top_third)
+sim_pb_seq_cojo_FAETH %>% count(top_half)
+sim_pb_seq_cojo_FAETH %>% count(top_third)
 ```

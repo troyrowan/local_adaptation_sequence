@@ -119,6 +119,7 @@ nsl_snps %>%
 
 plot_grid(
   read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
+    filter(SNP_A %in% ran_young_seq_cojo$SNP) %>% 
     mutate(dist = abs(BP_A - BP_B)) %>% 
     filter(R2 > 0.00,
            dist < 100000) %>% 
@@ -162,6 +163,7 @@ plot_grid(
 bind_rows(
     read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
     mutate(dist = abs(BP_A - BP_B)) %>% 
+      filter(SNP_A %in% ran_young_seq_cojo$SNP) %>% 
     filter(R2 > 0.05,
            dist < 100000) %>% mutate(analysis = "GPSM"),
     read.table("output/200910_RAN/ld/200910_RAN.chr2.RAiSD.ld.gz", sep="",header=T) %>%  
@@ -251,6 +253,7 @@ Average LD around significant SNPs
 ld = 
 bind_rows(
       read.table("output/200910_RAN/ld/200910_RAN.chr2.young_gpsm_sigsnps.ld.gz", sep="",header=T) %>%  
+        filter(SNP_A %in% ran_young_seq_cojo$SNP) %>% 
       mutate(dist = abs(BP_A - BP_B),
              analysis = "GPSM"),
       read.table("output/200910_RAN/ld/200910_RAN.chr2.RAiSD.ld.gz", sep="",header=T) %>%  

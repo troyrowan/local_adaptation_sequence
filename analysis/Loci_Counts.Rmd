@@ -1,0 +1,117 @@
+---
+title: "Both Breeds"
+author: "Troy Rowan"
+date: "5/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+length(ran_age_seq_cojo$SNP)
+length(ran_young_seq_cojo$SNP)
+length(sim_seq_cojo$SNP)
+length(sim_pb_seq_cojo$SNP)
+
+length(intersect(ran_age_seq_cojo$SNP, ran_young_seq_cojo$SNP))
+intersect(sim_seq_cojo$SNP, sim_pb_seq_cojo$SNP)
+sum(
+length(ran_age_seq_cojo$SNP),
+length(ran_young_seq_cojo$SNP),
+length(sim_seq_cojo$SNP),
+length(sim_pb_seq_cojo$SNP))
+```
+
+RAN Age = 37 in or within 50 kb
+RAN Young = 60 in or within 50 kb
+SIM Full = 68 in or within 50 kb
+SIM Pb = 13 in or within 50 kb
+
+RAN Age = 20 within 50 kb
+RAN Young = 24 within 50 kb
+SIM Full = 36 within 50 kb
+SIM Pb = 7 within 50 kb
+```{r}
+ran_age_seq_cojo %>% 
+  gene_annotation() %>% 
+  mutate(SNP = paste(CHR, BP, sep = ":")) %>% 
+  select(SNP) %>% 
+  distinct()
+
+ran_young_seq_cojo %>% 
+  gene_annotation() %>% 
+  mutate(SNP = paste(CHR, BP, sep = ":")) %>% 
+  select(SNP) %>% 
+  distinct()
+
+sim_seq_cojo %>% 
+  gene_annotation() %>% 
+  mutate(SNP = paste(CHR, BP, sep = ":")) %>% 
+  select(SNP) %>% 
+  distinct()
+
+sim_pb_seq_cojo %>% 
+  gene_annotation() %>% 
+  mutate(SNP = paste(CHR, BP, sep = ":")) %>% 
+  select(SNP) %>% 
+  distinct()
+#############################################
+ran_age_seq_cojo %>% 
+  gene_annotation() %>% 
+  mutate(SNP = paste(CHR, BP, sep = ":")) %>% 
+  group_by(SNP) %>% 
+  top_n(1, wt = -distance) %>%
+  filter(distance > 0) %>% 
+  select(SNP) %>% 
+  distinct()
+
+ran_young_seq_cojo %>% 
+  gene_annotation() %>% 
+  mutate(SNP = paste(CHR, BP, sep = ":")) %>% 
+  group_by(SNP) %>% 
+  top_n(1, wt = -distance) %>%
+  filter(distance > 0) %>% 
+  select(SNP) %>% 
+  distinct()
+
+sim_seq_cojo %>% 
+  gene_annotation() %>% 
+  mutate(SNP = paste(CHR, BP, sep = ":")) %>% 
+  group_by(SNP) %>% 
+  top_n(1, wt = -distance) %>%
+  filter(distance > 0) %>% 
+  select(SNP) %>% 
+  distinct()
+
+sim_pb_seq_cojo %>% 
+  gene_annotation() %>% 
+  mutate(SNP = paste(CHR, BP, sep = ":")) %>% 
+  group_by(SNP) %>% 
+  top_n(1, wt = -distance) %>%
+  filter(distance > 0) %>% 
+  select(SNP) %>% 
+  distinct()
+
+```
+```{r}
+sum(length(unique(ran_age_seq_cojo_functional$COJO_SNP)),
+length(unique(ran_young_seq_cojo_functional$COJO_SNP)),
+length(unique(sim_seq_cojo_functional$COJO_SNP)),
+length(unique(pb_sim_seq_cojo_functional$COJO_SNP)))
+```
+
+```{r}
+ran_age_seq_cojo_FAETH %>% count(top_third)
+ran_young_seq_cojo_FAETH %>% count(top_third)
+sim_seq_cojo_FAETH %>% count(top_third)
+sim_pb_seq_cojo_FAETH %>% count(top_third)
+
+30+38+26+13+25
+8+26+7+4
+
+binom.test(45, 132, 0.3333, alternative = "greater")
+```
+
