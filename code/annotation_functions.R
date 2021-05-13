@@ -7,7 +7,7 @@ library(tidyverse)
 library(GALLO)
 setwd(here::here())
 genes =
-  import_gff_gtf(db_file = "data/Bos_taurus.ARS-UCD1.2.101.gtf.gz", file_type = "gtf")
+  import_gff_gtf(db_file = "data/Bos_taurus.ARS-UCD1.2.103.gtf.gz", file_type = "gtf")
 
 qtl =
   import_gff_gtf(db_file = "data/Bos_taurus.ARS-UCD1.2.QTL.gff.gz", file_type = "gff")
@@ -70,16 +70,16 @@ windowfinder = function(chromosome, basepair, windows){
   return(window_id)
 }
 
-FAANG =
-  read_tsv("data/FAANG_peaks.bed.gz",
-           col_names = c("CHR", "START", "STOP", "TMARK", "SCORE", "A", "B", "C", "D")) %>%
-  mutate(CHR = as.numeric(str_replace(CHR, "chr",""))) %>%
-  mutate(tmark = str_split_fixed(TMARK, "_", n = 5)[,1],
-         MARK = str_replace(tmark, "Macs2/", ""),
-         TISSUE = str_split_fixed(TMARK, "_", n = 5)[,2],
-         REP = str_split_fixed(TMARK, "_", n = 5)[,3]) %>%
-  select(CHR, START, STOP, MARK, TISSUE, REP)
 
+# FAANG =
+#   read_tsv("data/FAANG_peaks.bed.gz",
+#            col_names = c("CHR", "START", "STOP", "TMARK", "SCORE", "A", "B", "C", "D")) %>%
+#   mutate(CHR = as.numeric(str_replace(CHR, "chr",""))) %>%
+#   mutate(tmark = str_split_fixed(TMARK, "_", n = 5)[,1],
+#          MARK = str_replace(tmark, "Macs2/", ""),
+#          TISSUE = str_split_fixed(TMARK, "_", n = 5)[,2],
+#          REP = str_split_fixed(TMARK, "_", n = 5)[,3]) %>%
+#   select(CHR, START, STOP, MARK, TISSUE, REP)
 
 # ATAC_peaks =
 #   read_tsv("data/ATAC_peaks_ARS.bed",

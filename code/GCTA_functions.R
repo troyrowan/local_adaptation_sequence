@@ -11,7 +11,7 @@ library(tidyverse)
 read_gwas = function(gwas_path){
   gwas_results =
     read_tsv(gwas_path) %>%
-    filter(p < 0.01) %>%
+    #filter(p < 0.01) %>%
     mutate(chrbp = paste(Chr, bp, sep = ":"),
            maf = case_when(Freq > 0.5 ~ 1-Freq,
                            TRUE ~ Freq)) %>%
@@ -22,9 +22,11 @@ read_gwas = function(gwas_path){
 read_gwas2 = function(gwas_path){
   gwas_results =
     read_tsv(gwas_path) %>%
-      mutate(chrbp = paste(Chr, bp, sep = ":"),
-           maf = case_when(Freq > 0.5 ~ 1-Freq,
-                           TRUE ~ Freq)) %>%
+      mutate(
+        chrbp = paste(Chr, bp, sep = ":"),
+        maf = case_when(Freq > 0.5 ~ 1-Freq,
+                           TRUE ~ Freq),
+        q = qvalue(p)$qvalues) %>%
     dplyr::rename(CHR = Chr, BP = bp)
   return(gwas_results)
 }
