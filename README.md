@@ -1,5 +1,3 @@
-# local_adaptation_sequence
+# Comprehensive Selection Mapping of Beef Cattle
 
-A [workflowr][] project.
 
-[workflowr]: https://github.com/jdblischak/workflowr
