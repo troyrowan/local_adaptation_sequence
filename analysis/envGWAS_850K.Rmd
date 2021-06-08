@@ -259,9 +259,9 @@ ran_multisig =
 
 ran_manhattans = 
   unique(ran_envgwas$variable) %>%
-    purrr::map(~plot_grid(ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = p)+
+    purrr::map(~plot_grid(ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = p, value = p)+
                  ggtitle(.x),
-                          ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = q),
+                          ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = q, value = q),
                           nrow = 2))
 
 ```
