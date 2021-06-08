@@ -490,16 +490,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreea0199018f672d4cea3f5974e7714a81e5b14b1a0targetblanka019901a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/a0199018f672d4cea3f5974e7714a81e5b14b1a0" target="_blank">a019901</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreeb86dd2385ccdb05171365412c535694ba7afe432targetblankb86dd23a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/b86dd2385ccdb05171365412c535694ba7afe432" target="_blank">b86dd23</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreea0199018f672d4cea3f5974e7714a81e5b14b1a0targetblanka019901a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomtroyrowanlocaladaptationsequencetreeb86dd2385ccdb05171365412c535694ba7afe432targetblankb86dd23a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/a0199018f672d4cea3f5974e7714a81e5b14b1a0" target="_blank">a019901</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/troyrowan/local_adaptation_sequence/tree/b86dd2385ccdb05171365412c535694ba7afe432" target="_blank">b86dd23</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -580,6 +580,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/b86dd2385ccdb05171365412c535694ba7afe432/analysis/envGWAS_850K.Rmd" target="_blank">b86dd23</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+<td>
+Red angus corrections
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/troyrowan/local_adaptation_sequence/4608b543186981c49dd89da19d0dd28162e4538f/docs/envGWAS_850K.html" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1757,7 +1791,7 @@ ran_manhattans =
   unique(ran_envgwas$variable) %&gt;%
     purrr::map(~plot_grid(ggmanhattan2(filter(ran_envgwas, variable == .x &amp; p &lt; 0.1),pcol = p)+
                  ggtitle(.x),
-                          ggmanhattan2(filter(ran_envgwas, variable == .x &amp; p &lt; 0.1),pcol = p),
+                          ggmanhattan2(filter(ran_envgwas, variable == .x &amp; p &lt; 0.1),pcol = q),
                           nrow = 2))</code></pre>
 </div>
 <div id="envgwas-runs-1" class="section level2 tabset">
@@ -1788,6 +1822,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-27-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-27-1.png" target="_blank">f56f685</a>
@@ -1832,6 +1877,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-28-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-28-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -1872,6 +1928,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-29-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-29-1.png" target="_blank">f56f685</a>
@@ -1916,6 +1983,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-30-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-30-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -1956,6 +2034,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-31-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-31-1.png" target="_blank">f56f685</a>
@@ -2000,6 +2089,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-32-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-32-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -2040,6 +2140,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-33-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-33-1.png" target="_blank">f56f685</a>
@@ -2084,6 +2195,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-34-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-34-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -2124,6 +2246,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-35-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-35-1.png" target="_blank">f56f685</a>
@@ -2168,6 +2301,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-36-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-36-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -2208,6 +2352,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-37-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-37-1.png" target="_blank">f56f685</a>
@@ -2252,6 +2407,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-38-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-38-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -2292,6 +2458,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-39-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-39-1.png" target="_blank">f56f685</a>
@@ -2336,6 +2513,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-40-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-40-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -2376,6 +2564,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-41-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-41-1.png" target="_blank">f56f685</a>
@@ -2420,6 +2619,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-42-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-42-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -2460,6 +2670,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-43-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-43-1.png" target="_blank">f56f685</a>
@@ -2504,6 +2725,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-44-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-44-1.png" target="_blank">f56f685</a>
 </td>
 <td>
@@ -2544,6 +2776,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/troyrowan/local_adaptation_sequence/blob/4608b543186981c49dd89da19d0dd28162e4538f/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-45-1.png" target="_blank">4608b54</a>
+</td>
+<td>
+Troy Rowan
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/troyrowan/local_adaptation_sequence/blob/f56f685424338167e475132ad80b6e9a25623232/docs/figure/envGWAS_850K.Rmd/unnamed-chunk-45-1.png" target="_blank">f56f685</a>
