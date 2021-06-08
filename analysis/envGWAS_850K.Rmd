@@ -259,8 +259,10 @@ ran_multisig =
 
 ran_manhattans = 
   unique(ran_envgwas$variable) %>%
-    purrr::map(~ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = p, sigsnps = ran_multisig)+
-                 ggtitle(.x))
+    purrr::map(~plot_grid(ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = p)+
+                 ggtitle(.x),
+                          ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = p),
+                          nrow = 2))
 
 ```
 
@@ -419,7 +421,7 @@ Number of SNPs in each analysis that reaches genome-wide significance at
 2) p < 1e-5
 3) q < 0.1
 ```{r}
-sim_envgwas %>% 
+ran_envgwas %>% 
   group_by(variable) %>% 
   summarize(bonfCount = sum(p < 6e-8),
             pCount = sum(p < 1e-5),
