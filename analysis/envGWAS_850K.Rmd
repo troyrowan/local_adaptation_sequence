@@ -35,13 +35,15 @@ knitr::opts_knit$set(root.dir = here::here())
 
 ```{r}
 source("code/GCTA_functions.R")
-#source("code/annotation_functions.R")
+source("code/annotation_functions.R")
 
 ```
 
 # Simmental 
+
 ### 850K envGWAS
-```{r}
+Manhattan plots with both p and q values
+```{r, eval = TRUE, echo = FALSE}
 sim_envgwas = 
   # list.files("output/200907_SIM/gwas") %>% 
   #   map(
@@ -50,10 +52,10 @@ sim_envgwas =
   #   reduce(bind_rows) %>% 
   # mutate(variable = str_replace(variable, pattern = "200907_SIM.", ""),
   #        variable = str_replace(variable, pattern = ".850K.mlma.gz", ""))
-  # read_csv("output/200907_SIM/gwas/200907_SIM.AllGWAS.850K.mlma.gz",
-  #          col_types = cols(SNP = col_character(), chrbp = col_character()))
-  read_csv("output/200907_SIM/gwas/tester.gwas.txt",
+  read_csv("output/200907_SIM/gwas/200907_SIM.AllGWAS.850K.mlma.gz",
            col_types = cols(SNP = col_character(), chrbp = col_character()))
+  # read_csv("output/200907_SIM/gwas/tester.gwas.txt",
+  #          col_types = cols(SNP = col_character(), chrbp = col_character()))
 
 # sim_envgwas %>% 
 #   sample_n(500000) %>% 
@@ -64,89 +66,372 @@ sim_multisig =
   count(SNP, sort = TRUE)%>%
   filter(n>1) %>% 
   .$SNP
-
 ``` 
 
-```{r, results = 'asis'}
-cat('## Simmental 850K envGWAS {.tabset}   \n')
-invisible(
-  sim_envgwas %>% 
-      dplyr::group_split(variable) %>% 
-      purrr::imap(.,~{
-        # create tabset for each group 
-        cat('### Tab',.y,'   \n')
-        cat('\n')
-        #p <- ggmanhattan2(filter(.x, p < 0.1), sigsnps = sim_multisig)
-        p <- filter(.x, p < 0.1) %>% ggplot(aes(CHR, BP))+geom_point()
-        cat(as.character(htmltools::tagList(p)))
-      })
-)
+```{r}
+sim_manhattans = 
+  unique(sim_envgwas$variable) %>%
+    purrr::map(~plot_grid(ggmanhattan2(filter(sim_envgwas, variable == .x & p < 0.1), pcol = p, value = p) + ggtitle(.x),
+                          ggmanhattan2(filter(sim_envgwas, variable == .x & p < 0.1), pcol = q, value = q),
+                          nrow = 2))
+
 ```
 
-<!-- ### Number of significant SNPs in each analysis at 850K level  -->
+## envGWAS Runs {.tabset}
 
-<!-- ```{r} -->
-<!-- filter(sim_envgwas, q < 0.1) %>%  -->
-<!--   count(variable)%>% -->
-<!--   kbl() %>% -->
-<!--   kable_styling() -->
-<!-- ``` -->
+### AridPrairie
 
-<!-- ### Number of SNPs that are shared across analyses: -->
-<!-- ```{r} -->
-<!-- filter(sim_envgwas, p < 1e-5) %>%  -->
-<!--   count(SNP, sort = TRUE)%>% -->
-<!--   filter(n>1) %>%  -->
-<!--   kbl() %>% -->
-<!--   kable_styling() -->
-<!-- ``` -->
+```{r}
+sim_manhattans[[1]]
+```
 
-<!-- # Red Angus -->
+### CornBelt
 
-<!-- ### 850K envGWAS -->
-<!-- ```{r} -->
+```{r}
+sim_manhattans[[2]]
+```
 
-<!-- ran_envgwas =  -->
-<!--   # list.files("output/200910_RAN/gwas") %>% -->
-<!--   #   map( -->
-<!--   #     ~read_gwas2(paste0("output/200910_RAN/gwas/", .x)) %>% -->
-<!--   #       mutate(variable = .x)) %>% -->
-<!--   #   reduce(bind_rows) %>% -->
-<!--   # mutate(variable = str_replace(variable, pattern = "200910_RAN.", ""), -->
-<!--   #        variable = str_replace(variable, pattern = ".850K.mlma.gz", ""), -->
-<!--   #        variable = str_replace(variable, pattern = "_noLSF", "")) -->
+### Desert
 
-<!-- #write_csv(ran_envgwas, "output/200910_RAN/gwas/200910_RAN.AllGWAS.850K.mlma.gz") -->
-<!--   read_csv("output/200910_RAN/gwas/200910_RAN.AllGWAS.850K.mlma.gz", -->
-<!--            col_types = cols(SNP = col_character(), chrbp = col_character())) %>%  -->
-<!--   filter(CHR < 30) -->
+```{r}
+sim_manhattans[[3]]
+```
 
-<!-- ran_multisig =  -->
-<!--   filter(ran_envgwas, p < 1e-5) %>%  -->
-<!--   count(SNP, sort = TRUE)%>% -->
-<!--   filter(n>1) %>%  -->
-<!--   .$SNP -->
+### dewpoint
 
-<!-- unique(ran_envgwas$variable) %>% -->
-<!--   purrr::map(~ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = q, sigsnps = ran_multisig)+ -->
-<!--                ggtitle(.x)) -->
+```{r}
+sim_manhattans[[4]]
+```
 
-<!-- ```  -->
+### elev
 
-<!-- ### Number of significant SNPs in each analysis at 850K level  -->
+```{r}
+sim_manhattans[[5]]
+```
 
-<!-- ```{r} -->
-<!-- filter(ran_envgwas, q < 0.1) %>%  -->
-<!--   count(variable)%>% -->
-<!--   kbl() %>% -->
-<!--   kable_styling() -->
-<!-- ``` -->
+### FescueBelt
 
-<!-- ### Number of SNPs that are shared across analyses: -->
-<!-- ```{r} -->
-<!-- filter(ran_envgwas, p < 1e-5) %>%  -->
-<!--   count(SNP, sort = TRUE)%>% -->
-<!--   filter(n>1) %>%  -->
-<!--   kbl() %>% -->
-<!--   kable_styling() -->
-<!-- ``` -->
+```{r}
+sim_manhattans[[6]]
+```
+
+### Foothills
+
+```{r}
+sim_manhattans[[7]]
+```
+
+### ForestedMountains
+
+```{r}
+sim_manhattans[[8]]
+```
+
+### HighPlains
+
+```{r}
+sim_manhattans[[9]]
+```
+
+### latitude
+
+```{r}
+sim_manhattans[[10]]
+```
+
+### longitude
+
+```{r}
+sim_manhattans[[11]]
+```
+
+### maxtemp
+
+```{r}
+sim_manhattans[[12]]
+```
+
+### maxvap
+
+```{r}
+sim_manhattans[[13]]
+```
+
+### meantemp
+
+```{r}
+sim_manhattans[[14]]
+```
+
+### mintemp
+
+```{r}
+sim_manhattans[[15]]
+```
+
+### minvap
+
+```{r}
+sim_manhattans[[16]]
+```
+
+### precip
+
+```{r}
+sim_manhattans[[17]]
+```
+
+### Southeast
+
+```{r}
+sim_manhattans[[18]]
+```
+
+### UpperMidwest
+
+```{r}
+sim_manhattans[[19]]
+```
+
+```{r, results = 'asis', eval = FALSE}
+# cat('# # Simmental 850K envGWAS {.tabset}   \n')
+# invisible(
+#   sim_envgwas %>% 
+#       dplyr::group_split(variable) %>% 
+#       purrr::imap(.,~{
+#         # create tabset for each group 
+#         cat('### Tab',.y,'   \n')
+#         cat('\n')
+#         #p <- ggmanhattan2(filter(.x, p < 0.1), sigsnps = sim_multisig)
+#         p <- filter(.x, p < 0.1) %>% ggplot(aes(CHR, BP))+geom_point()
+#         cat(as.character(htmltools::tagList(p)))
+#       })
+# )
+```
+
+## Number of significant SNPs in each analysis at 850K level
+Number of SNPs in each analysis that reaches genome-wide significance at
+1) Bonferroni
+2) p < 1e-5
+3) q < 0.1
+```{r}
+sim_envgwas %>% 
+  group_by(variable) %>% 
+  summarize(bonfCount = sum(p < 6e-8),
+            pCount = sum(p < 1e-5),
+            qCount = sum(q < 0.1))
+```
+
+## Number of SNPs that are shared across zones/variables
+```{r}
+filter(sim_envgwas, p < 1e-5) %>%
+  count(SNP, sort = TRUE)%>%
+  filter(n>1) %>%
+  kbl() %>%
+  kable_styling()
+```
+
+# Red Angus
+
+### 850K envGWAS
+```{r}
+
+ran_envgwas =
+  # list.files("output/200910_RAN/gwas") %>%
+  #   map(
+  #     ~read_gwas2(paste0("output/200910_RAN/gwas/", .x)) %>%
+  #       mutate(variable = .x)) %>%
+  #   reduce(bind_rows) %>%
+  # mutate(variable = str_replace(variable, pattern = "200910_RAN.", ""),
+  #        variable = str_replace(variable, pattern = ".850K.mlma.gz", ""),
+  #        variable = str_replace(variable, pattern = "_noLSF", ""))
+
+#write_csv(ran_envgwas, "output/200910_RAN/gwas/200910_RAN.AllGWAS.850K.mlma.gz")
+  read_csv("output/200910_RAN/gwas/200910_RAN.AllGWAS.850K.mlma.gz",
+           col_types = cols(SNP = col_character(), chrbp = col_character())) %>%
+  filter(CHR < 30)
+
+ran_multisig =
+  filter(ran_envgwas, p < 1e-5) %>%
+  count(SNP, sort = TRUE)%>%
+  filter(n>1) %>%
+  .$SNP
+
+ran_manhattans = 
+  unique(ran_envgwas$variable) %>%
+    purrr::map(~ggmanhattan2(filter(ran_envgwas, variable == .x & p < 0.1),pcol = p, sigsnps = ran_multisig)+
+                 ggtitle(.x))
+
+```
+
+## envGWAS Runs {.tabset}
+
+### AridPrairie
+
+```{r}
+ran_manhattans[[1]]
+```
+
+### CornBelt
+
+```{r}
+ran_manhattans[[2]]
+```
+
+### Desert
+
+```{r}
+ran_manhattans[[3]]
+```
+
+### dewpoint
+
+```{r}
+ran_manhattans[[4]]
+```
+
+### elev
+
+```{r}
+ran_manhattans[[5]]
+```
+
+### FescueBelt
+
+```{r}
+ran_manhattans[[6]]
+```
+
+### Foothills
+
+```{r}
+ran_manhattans[[7]]
+```
+
+### ForestedMountains
+
+```{r}
+ran_manhattans[[8]]
+```
+
+### HighPlains
+
+```{r}
+ran_manhattans[[9]]
+```
+
+### latitude
+
+```{r}
+ran_manhattans[[10]]
+```
+
+### longitude
+
+```{r}
+ran_manhattans[[11]]
+```
+
+### maxtemp
+
+```{r}
+ran_manhattans[[12]]
+```
+
+### maxvap
+
+```{r}
+ran_manhattans[[13]]
+```
+
+### meantemp
+
+```{r}
+ran_manhattans[[14]]
+```
+
+### mintemp
+
+```{r}
+ran_manhattans[[15]]
+```
+
+### minvap
+
+```{r}
+ran_manhattans[[16]]
+```
+
+### precip
+
+```{r}
+ran_manhattans[[17]]
+```
+
+### Southeast
+
+```{r}
+ran_manhattans[[18]]
+```
+
+### UpperMidwest
+
+```{r}
+ran_manhattans[[19]]
+```
+
+### Annotating Genes
+Skipping for now 
+```{r, eval = FALSE, echo = FALSE}
+
+ran_envgwas_genes=
+  filter(ran_envgwas, q < 0.1)%>% 
+      gene_annotation() %>% 
+        left_join(filter(ran_envgwas, q < 0.1), 
+                  by = c("CHR", "BP")) %>% 
+      select(-chr, -start_pos, -end_pos, -gene_biotype, -width, -strand, -upstream, -downstream)
+
+ran_envgwas_genes %>% 
+  group_by(variable) %>% 
+  group_map(
+  ~select(., gene_id) %>% .$gene_id %>%  unique() %>% 
+  gost(query = ., 
+      organism = "btaurus",
+      user_threshold = 0.1,
+      correction_method = "fdr") %>% 
+  .$result %>% arrange(-p_value) %>% 
+    mutate(variable = name))
+list(unique(ran_envgwas$variable))
+ran_envgwas_genes %>% 
+  group_by(variable) %>% 
+  group_map(
+  ~qtl_annotation(.) %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type))
+```
+
+
+## Number of significant SNPs in each analysis at 850K level
+Number of SNPs in each analysis that reaches genome-wide significance at
+1) Bonferroni
+2) p < 1e-5
+3) q < 0.1
+```{r}
+sim_envgwas %>% 
+  group_by(variable) %>% 
+  summarize(bonfCount = sum(p < 6e-8),
+            pCount = sum(p < 1e-5),
+            qCount = sum(q < 0.1))
+```
+
+## Number of SNPs that are shared across zones/variables
+At p < 1e-5 threshold
+```{r}
+filter(ran_envgwas, p < 1e-5) %>%
+  count(SNP, sort = TRUE)%>%
+  filter(n>1) %>%
+  kbl() %>%
+  kable_styling()
+```
