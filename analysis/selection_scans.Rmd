@@ -252,16 +252,19 @@ ran_nsl =
   read_tsv("output/selscan_window/200910_RAN.all.nsl.out.100bins.norm.windows.txt",
            #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
            col_types = cols(SNP = col_character(), window = col_character())) %>% 
-    group_by(window) %>%
-    summarize(MeanY = mean(abs(norm_nsl))) %>% 
-    # mutate(prop_sig = sum(sig)/n()) %>% 
-    # select(window, prop_sig) %>% 
-    distinct() %>% ungroup()
+  group_by(window) %>% 
+    mutate(MeanY =  mean(abs(norm_nsl)),
+           prop_sig = sum(sig)/n(),
+           SNPcount = n()) %>% 
+    distinct() %>% ungroup() 
     #select(window, prop_sig) %>% 
-    left_join(read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.windows.txt", 
-                       col_type = cols(SNP = col_character())),
-              by = c("window"="SNP")) %>% 
-  ungroup()
+    # left_join(read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.out.100bins.norm.gz", 
+    #                    col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig"),
+    #                  col_type = cols(SNP = col_character())),
+    # # left_join(read_tsv("output/200910_RAN/selscan/nsl/200910_RAN.all.nsl.windows.txt", 
+    #                    col_type = cols(SNP = col_character())),
+  #             by = c("window"="SNP")) %>% 
+  # ungroup()
 
 
 ran_nsl_sig_windows =
@@ -541,38 +544,87 @@ ran_nsl_qtls%>%
 
 
 
-## Simmental
 
-Reading in Simmental nSL Results Data
+### Red Angus nSL QTL Enrichment Analysis
 ```{r}
+ran_nsl %>% 
+  #dplyr::rename(SNP = window) %>% 
+  filter(SNPcount > 3 & MeanY > 2.32) %>% 
+  mutate(CHR = as.numeric(str_split_fixed(window, ":", 2)[,1]),
+         BP = as.numeric(str_split_fixed(window, ":", 2)[,2])) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>%
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
+
+ran_nsl %>% 
+  #dplyr::rename(SNP = window) %>% 
+  filter(SNPcount > 3 & MeanY > 2.32) %>% 
+  distinct() %>% 
+  mutate(CHR = as.numeric(str_split_fixed(window, ":", 2)[,1]),
+         BP = as.numeric(str_split_fixed(window, ":", 2)[,2])) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>%
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, CHR, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type) %>% 
+  group_by(QTL) %>% 
+  top_n(1, wt = N_QTLs) %>% 
+  arrange(adj.pval) %>% 
+  View()
+```
+
+
+## Reading in Simmental nSL Results Data
+```{r}
+# sim_nsl =
+#   read_tsv("output/selscan_window/200907_SIM.all.nsl.out.100bins.norm.windows.txt",
+#            #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
+#            col_types = cols(SNP = col_character(), window = col_character())) %>% 
+#     group_by(window) %>% 
+#     mutate(prop_sig = sum(sig)/n()) %>% 
+#     select(window, prop_sig) %>% 
+#     distinct() %>% 
+#     select(window, prop_sig) %>% 
+#     left_join(read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.all.nsl.windows.txt", 
+#                        col_type = cols(SNP = col_character())),
+#               by = c("window"="SNP")) %>% 
+#   ungroup()
+
 sim_nsl =
   read_tsv("output/selscan_window/200907_SIM.all.nsl.out.100bins.norm.windows.txt",
            #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
            col_types = cols(SNP = col_character(), window = col_character())) %>% 
-    group_by(window) %>% 
-    mutate(prop_sig = sum(sig)/n()) %>% 
-    select(window, prop_sig) %>% 
-    distinct() %>% 
-    select(window, prop_sig) %>% 
-    left_join(read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.all.nsl.windows.txt", 
-                       col_type = cols(SNP = col_character())),
-              by = c("window"="SNP")) %>% 
-  ungroup()
-
+  group_by(window) %>% 
+    mutate(MeanY =  mean(abs(norm_nsl)),
+           prop_sig = sum(sig)/n(),
+           SNPcount = n()) %>% 
+    distinct() %>% ungroup() 
 
 pb_sim_nsl =
   read_tsv("output/selscan_window/200907_SIM.purebred.nsl.out.100bins.norm.windows.txt",
            #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
            col_types = cols(SNP = col_character(), window = col_character())) %>% 
-    group_by(window) %>% 
-    mutate(prop_sig = sum(sig)/n()) %>% 
-    select(window, prop_sig) %>% 
-    distinct() %>% 
-    select(window, prop_sig) %>% 
-    left_join(read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.purebred.nsl.windows.txt", 
-                       col_type = cols(SNP = col_character())),
-              by = c("window"="SNP")) %>% 
-  ungroup()
+  group_by(window) %>% 
+    mutate(MeanY =  mean(abs(norm_nsl)),
+           prop_sig = sum(sig)/n(),
+           SNPcount = n()) %>% 
+    distinct() %>% ungroup() 
+
+# pb_sim_nsl =
+#   read_tsv("output/selscan_window/200907_SIM.purebred.nsl.out.100bins.norm.windows.txt",
+#            #col_names = c("SNP", "BP", "freq", "sl1", "sl0", "nsl", "norm_nsl", "sig", "CHR", "window"),
+#            col_types = cols(SNP = col_character(), window = col_character())) %>% 
+#     group_by(window) %>% 
+#     mutate(prop_sig = sum(sig)/n()) %>% 
+#     select(window, prop_sig) %>% 
+#     distinct() %>% 
+#     select(window, prop_sig) %>% 
+#     left_join(read_tsv("output/200907_SIM/selscan/nsl/200907_SIM.purebred.nsl.windows.txt", 
+#                        col_type = cols(SNP = col_character())),
+#               by = c("window"="SNP")) %>% 
+#   ungroup()
 
 
 sim_nsl_sig_windows =
@@ -624,6 +676,49 @@ selscan_manhattans(sim_nsl %>%
                      col = abs(norm_nsl),
                    sigsnps = pb_sim_nsl_sigsnps)
 ```
+
+
+## Simmental nSL QTL Enrichment
+```{r}
+sim_nsl %>% 
+  #dplyr::rename(SNP = window) %>% 
+  filter(SNPcount > 3 & MeanY > 2.34) %>% 
+  mutate(CHR = as.numeric(str_split_fixed(window, ":", 2)[,1]),
+         BP = as.numeric(str_split_fixed(window, ":", 2)[,2])) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>%
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
+
+sim_nsl %>% 
+  #dplyr::rename(SNP = window) %>% 
+  filter(SNPcount > 3 & MeanY > 2.34) %>% 
+  mutate(CHR = as.numeric(str_split_fixed(window, ":", 2)[,1]),
+         BP = as.numeric(str_split_fixed(window, ":", 2)[,2])) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>%
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, CHR,  adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type) %>% 
+  group_by(QTL) %>% 
+  top_n(1, wt = N_QTLs) %>% 
+  arrange(adj.pval) %>% 
+  View()
+
+pb_sim_nsl %>% 
+  #dplyr::rename(SNP = window) %>% 
+  filter(SNPcount > 3 & MeanY > 2.31) %>% 
+  mutate(CHR = as.numeric(str_split_fixed(window, ":", 2)[,1]),
+         BP = as.numeric(str_split_fixed(window, ":", 2)[,2])) %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>%
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
+```
+
+
 
 ### Annotating selscan hits
 
@@ -696,7 +791,7 @@ ran_raisd =
                  skip = 1,
                  delim = "\t",
                  col_names = c("BP", "start", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
-        #filter(Mu > 100) %>% 
+        filter(Mu > 100) %>% 
         mutate(CHR = .x,
                SNP = paste(CHR, BP, sep = ":"))) %>% 
     reduce(bind_rows)
@@ -739,6 +834,8 @@ ran_raisd %>%
 
 sum(c(20, 25, 12, 25, 16, 11, 11, 13, 6, 4, 14, 13, 11, 16, 8, 16, 2, 4, 7, 4, 11, 9, 5, 4, 4, 9, 6, 6, 4))
 ```
+
+
 ####nSL overlaps
 ```{r}
 
@@ -823,10 +920,11 @@ ran_raisd %>%
   find_genes_qtls_around_markers(db_file=qtl,
                                      marker_file= ., method = "qtl",
                                      marker = "haplotype", interval = 0, nThreads = 2) %>% 
-  filter(QTL_type != "Milk") %>% View()
+  filter(QTL_type != "Milk") %>% #View()
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
-  datatable()
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
+
 
 ran_raisd %>% 
   filter(Mu >=285)%>% 
@@ -836,8 +934,12 @@ ran_raisd %>%
                                      marker = "haplotype", interval = 0, nThreads = 2) %>% 
   filter(QTL_type != "Milk") %>% 
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval)%>% 
+  select(QTL, CHR, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type) %>% 
+  group_by(QTL) %>% 
+  top_n(1, wt = N_QTLs) %>% 
   arrange(adj.pval) %>% 
-  datatable()
+  View()
 
 ```
 
@@ -859,7 +961,7 @@ sim_raisd =
                  skip = 1,
                  delim = "\t",
                  col_names = c("BP", "stat", "finish", "VAR", "SFS", "LD", "Mu")) %>% 
-        #filter(Mu > 100) %>% 
+        filter(Mu > 100) %>% 
         mutate(CHR = .x,
                SNP = paste(CHR, BP, sep = ":"))
       ) %>% 
@@ -905,6 +1007,36 @@ sim_raisd %>%
    mutate(dist = BP - lag(BP, 1)) %>% 
    filter(is.na(dist) | dist > 100000)
 ```
+
+## QTL Enrichments
+```{r}
+sim_raisd %>% 
+  filter(Mu >=285)%>% 
+  dplyr::rename(BP1 = stat, BP2 = finish) %>% 
+  find_genes_qtls_around_markers(db_file=qtl,
+                                     marker_file= ., method = "qtl",
+                                     marker = "haplotype", interval = 0, nThreads = 2) %>% 
+  filter(QTL_type != "Milk") %>% #View()
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
+
+sim_raisd %>% 
+  filter(Mu >=285)%>% 
+  dplyr::rename(BP1 = stat, BP2 = finish) %>% 
+  find_genes_qtls_around_markers(db_file=qtl,
+                                     marker_file= ., method = "qtl",
+                                     marker = "haplotype", interval = 0, nThreads = 2) %>% 
+  filter(QTL_type != "Milk") %>% #View()
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, CHR, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type) %>% 
+  group_by(QTL) %>% 
+  top_n(1, wt = N_QTLs) %>% 
+  arrange(adj.pval) %>% 
+  View()
+```
+
 
 #### Selection Signature Overlaps
 27 of the 48 genes we ID here are within sweep regions, accounting for 46 of the 902 total sweep regions in meta assembly

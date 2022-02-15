@@ -13,8 +13,6 @@ editor_options:
 
 ```{r, setup, include = FALSE}
 set.seed(325333)
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-knitr::opts_knit$set(root.dir = here::here())
 library(workflowr)
 library(knitr)
 library(maps)
@@ -38,6 +36,8 @@ library(vroom)
 library(qvalue)
 library(moments)
 #source("../code/annotation_functions.R")
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = here::here())
 ```
 
 ```{r}
@@ -824,7 +824,6 @@ For full dataset, raw age:
 
 Reading in single-chromosome COJO files.
 ```{r}
-
 ran_age_seq_cojo = 
   list.files(path='output/200910_RAN/seq_cojo/',pattern="200910_RAN.age.chr") %>% 
   purrr::map(
@@ -1381,6 +1380,17 @@ ran_age_seq_cojo %>%
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
   select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
+
+ran_age_seq_cojo %>%
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>%
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2) %>% 
+  arrange(adj.pval) %>% 
+  select(QTL, CHR, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type) %>% 
+  group_by(QTL) %>% 
+  top_n(1, wt = N_QTLs) %>% 
+  arrange(adj.pval) %>% 
+  View()
 ```
 
 #### Young (Genome)
@@ -1391,6 +1401,17 @@ ran_young_seq_cojo %>%
   qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "genome", nThreads = 2) %>% 
   arrange(adj.pval) %>% 
   select(QTL, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type)
+
+ran_young_seq_cojo %>% 
+  qtl_annotation() %>% 
+  filter(QTL_type != "Milk") %>% 
+  qtl_enrich(qtl_db = qtl, qtl_file = ., qtl_type = "Name", enrich_type = "chromosome", nThreads = 2)%>% 
+  arrange(adj.pval) %>% 
+  select(QTL, CHR, adj.pval, pvalue, N_QTLs, N_QTLs_db, QTL_type) %>% 
+  group_by(QTL) %>% 
+  top_n(1, wt = N_QTLs) %>% 
+  arrange(adj.pval) %>% 
+  View()
 ```
 
 #### Age (per-Chromosome)

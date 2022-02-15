@@ -53,7 +53,8 @@ Reading in files
 ```{r}
 ran_seq_gpsm_age = 
   seq(1,29) %>% 
-    purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.age.chr",.x,".mlma.gz"))) %>% 
+    purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.age.chr",.x,".mlma.gz"))%>% 
+                 filter(p<0.01)) %>% 
     purrr::reduce(bind_rows)
 
 #read_gwas("output/200910_RAN/gwas/200910_RAN.age.850K.mlma.gz")
@@ -67,16 +68,19 @@ ran_seq_gpsm_young_age =
   seq(1,29) %>% 
     purrr::map(~read_gwas(paste0("output/200910_RAN/seq_gwas/200910_RAN.young_age.chr",.x,".mlma.gz")) %>% 
                  filter(p < 0.01)) %>% 
-    purrr::reduce(bind_rows)
+    purrr::reduce(bind_rows) %>% 
+  filter(p != 0)
 
 sim_seq_gpsm_purebred_age = 
   seq(1,29) %>% 
-    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.pb_age.chr",.x,".mlma.gz"))) %>% 
+    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.pb_age.chr",.x,".mlma.gz")) %>% 
+                 filter(p<0.01)) %>% 
     purrr::reduce(bind_rows)
 
 sim_seq_gpsm_age = 
   seq(1,29) %>% 
-    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.full_age.chr",.x,".mlma.gz"))) %>% 
+    purrr::map(~read_gwas(paste0("output/200907_SIM/seq_gwas/200907_SIM.full_age.chr",.x,".mlma.gz")) %>% 
+                 filter(p<0.01)) %>% 
     purrr::reduce(bind_rows)
 
 ran_age_seq_cojo = 
@@ -97,7 +101,8 @@ ran_old_seq_cojo =
            col_names = c("Chr", "SNP", "bp", "freq", "refA", "b", "se", "p", "n", "freq_geno", "bJ", "bJ_se", "pJ", "LD_r"),
            skip = 1) %>% 
     select(SNP, CHR = Chr, BP = bp, p, pJ)) %>% 
-    purrr::reduce(bind_rows) 
+    purrr::reduce(bind_rows) %>% 
+  filter(p < 5e-8)
 
 ran_young_seq_cojo = 
   list.files(path='output/200910_RAN/seq_cojo/',pattern="200910_RAN.young_age.chr") %>% 
@@ -107,7 +112,8 @@ ran_young_seq_cojo =
            skip = 1) %>% 
     mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
     select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
-    purrr::reduce(bind_rows)
+    purrr::reduce(bind_rows) %>% 
+  filter(p < 5e-8)
 
 sim_pb_seq_cojo = 
   list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.pb_age.chr") %>% 
@@ -117,7 +123,8 @@ sim_pb_seq_cojo =
            skip = 1)  %>% 
     mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
     select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
-    purrr::reduce(bind_rows)
+    purrr::reduce(bind_rows)%>% 
+  filter(p < 5e-8)
 
 sim_seq_cojo = 
   list.files(path='output/200907_SIM/seq_cojo/',pattern="200907_SIM.full_age") %>% 
@@ -127,7 +134,8 @@ sim_seq_cojo =
            skip = 1)  %>% 
     mutate(chrbp = paste(Chr, bp, sep = ":")) %>% 
     select(SNP, CHR = Chr, BP = bp, p, pJ, chrbp)) %>% 
-    purrr::reduce(bind_rows) 
+    purrr::reduce(bind_rows) %>% 
+  filter(p < 5e-8)
 
 
 ```
@@ -1034,5 +1042,49 @@ plot_grid(
   )
 
 ggsave("output/figures/QQPLOTS.png", height = 10, width = 10, units = "in")
+```
+
+### WCGALP GPSM FIGURE
+```{r}
+young_ran_manhattan= 
+ran_seq_gpsm_young_age %>% 
+    ggmanhattan2(inputfile = ., value = p, 
+                 sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_young_seq_cojo$SNP)+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(1, max(c(-log10(ran_seq_gpsm_age$p), -log10(ran_seq_gpsm_young_age$p))))
+
+full_ran_manhattan= 
+ran_seq_gpsm_age %>% 
+    ggmanhattan2(inputfile = ., value = p, 
+                 sig_threshold_p = 4.289e-9,
+                 sigsnps = ran_age_seq_cojo$SNP)+
+    geom_hline(yintercept = 7.3, color = "blue")+
+    ylim(1, max(c(-log10(ran_seq_gpsm_age$p), -log10(ran_seq_gpsm_young_age$p))))
+
+full_sim_manhattan =
+  sim_seq_gpsm_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps2 = sim_seq_cojo$SNP)+
+    geom_hline(yintercept = 7.3, color = "blue", size = 0.25)+
+    ylim(1, max(c(-log10(sim_seq_gpsm_purebred_age$p), -log10(sim_seq_gpsm_age$p))))
+
+pb_sim_manhattan =
+  sim_seq_gpsm_purebred_age %>% 
+    ggmanhattan2(sig_threshold_p = 4.289e-9,
+                 sigsnps2 = sim_pb_seq_cojo$SNP)+
+    geom_hline(yintercept = 7.3, color = "blue", size = 0.25)+
+    ylim(1, max(c(-log10(sim_seq_gpsm_purebred_age$p), -log10(sim_seq_gpsm_age$p))))
+
+
+plot_grid(full_ran_manhattan,
+          full_sim_manhattan,
+          young_ran_manhattan,
+          pb_sim_manhattan,
+          nrow = 2, labels = c("A", "C", "B", "D"))
+
+ggsave("output/figures/WCGALP.png", width = 10, height = 4, units = "in")
+
+max(c(-log10(sim_seq_gpsm_purebred_age$p), -log10(sim_seq_gpsm_age$p)))
 ```
 
